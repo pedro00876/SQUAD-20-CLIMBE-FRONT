@@ -7,7 +7,7 @@ export function LoginPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Login attempt:', { email, password, remember });
+    // Logic for login will go here
   };
 
   const BrickPattern = () => {
