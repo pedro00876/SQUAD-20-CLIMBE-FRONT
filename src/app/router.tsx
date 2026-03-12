@@ -1,11 +1,17 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
 import { Layout } from '@/components/layout/page-wrapper';
+import { LoginPage } from '@/pages/login';
 import { routes } from '@/config/routes';
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const router = createBrowserRouter([
   {
+    path: '/',
+    element: <Navigate to={routes.dashboard} replace />,
+  },
+  {
     path: routes.login,
-    element: <div>Login Page (Skeleton)</div>,
+    element: <LoginPage />,
   },
   {
     element: <Layout />,
@@ -47,5 +53,5 @@ export const router = createBrowserRouter([
 ]);
 
 export function AppRouter() {
-  return <RouterProvider router={router} />;
+  return <RouterProvider router={router} future={{ v7_startTransition: true }} />;
 }
