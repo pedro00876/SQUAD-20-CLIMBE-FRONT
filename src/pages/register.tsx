@@ -8,8 +8,8 @@ import { Input } from '@/components/ui/input';
 import { routes } from '@/config/routes';
 import { maskCPF, maskPhone, unmask } from '@/utils/masks';
 
-const LOGO_BRANCA = '/assets/logos/Marca Climbe-04.png';
-const LOGO_PRETA = '/assets/logos/Marca Climbe-03.png';
+const LOGO_BRANCA = '/assets/logos/Marca Climbe-02.png';
+const LOGO_PRETA = '/assets/logos/Marca Climbe-01.png';
 
 const registerSchema = z.object({
   fullName: z.string().min(3, 'Nome muito curto'),

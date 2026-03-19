@@ -39,10 +39,6 @@ export const router = createBrowserRouter([
         path: routes.register,
         element: <RegisterPage />,
       },
-      {
-        path: '/test-layout',
-        element: <Layout><div>Conteúdo de Teste de Responsividade</div></Layout>,
-      },
       // Rotas protegidas — redireciona para /login se não autenticado
       {
         element: <PrivateRoute />,
