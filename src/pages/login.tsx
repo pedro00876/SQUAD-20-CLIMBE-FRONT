@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useLogin } from '@/features/auth/hooks';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { routes } from '@/config/routes';
 
-const LOGO_BRANCA = '/assets/logos/Marca Climbe-03.png';
-const LOGO_PRETA = '/assets/logos/Marca Climbe-01.png';
+const LOGO_BRANCA = '/assets/logos/Marca Climbe-04.png';
+const LOGO_PRETA = '/assets/logos/Marca Climbe-03.png';
 
 export function LoginPage() {
   const { login, isLoading, isError } = useLogin();
@@ -61,17 +63,17 @@ export function LoginPage() {
   };
 
   return (
-    <div className="flex h-screen w-full overflow-hidden font-sans">
+    <div className="flex h-screen w-full overflow-hidden font-sans bg-white lg:bg-climbe-secondary">
       {/* PAINEL ESQUERDO */}
-      <div className="flex-grow bg-climbe-secondary relative flex flex-col p-20 overflow-hidden">
+      <div className="hidden lg:flex flex-grow bg-climbe-secondary relative flex-col p-20 overflow-hidden">
         {/* Logo Section */}
-        <div className="fade-down mb-20">
-          <img 
-            src={LOGO_BRANCA} 
-            alt="Climbe" 
-            className="h-12 object-contain"
+        <div className="fade-down mb-16">
+          <img
+            src={LOGO_BRANCA}
+            alt="Climbe"
+            className="h-20 object-contain ml-[-8px]"
           />
-          <p className="text-white/40 uppercase tracking-[0.4em] text-[10px] font-bold mt-4 ml-1">
+          <p className="text-white/40 uppercase tracking-[0.5em] text-[9px] font-bold mt-1 ml-1">
             Gestão inteligente de contratos.
           </p>
         </div>
@@ -90,12 +92,12 @@ export function LoginPage() {
       </div>
 
       {/* PAINEL DIREITO */}
-      <div className="w-[35%] min-w-[500px] bg-white flex flex-col p-20 justify-center fade-in shadow-2xl z-20 overflow-y-auto custom-scrollbar">
+      <div className="w-full lg:w-[35%] lg:min-w-[500px] bg-white flex flex-col p-8 sm:p-20 justify-center fade-in shadow-2xl z-20 overflow-y-auto custom-scrollbar">
         <div className="mb-14">
-          <img 
-            src={LOGO_PRETA} 
-            alt="Climbe" 
-            className="h-10 object-contain mb-8"
+          <img
+            src={LOGO_PRETA}
+            alt="Climbe"
+            className="h-20 object-contain mb-12"
           />
           <h2 className="text-climbe-secondary text-5xl font-black mb-4 tracking-tighter">Bem-vindo.</h2>
           <p className="text-gray-400 font-light text-lg">Faça login para gerenciar sua carteira.</p>
@@ -166,7 +168,7 @@ export function LoginPage() {
 
         <div className="mt-12 text-center border-t border-gray-50 pt-10">
           <p className="text-sm text-gray-400 font-light tracking-tight">
-            Ainda não tem acesso? <a href="#" className="text-climbe-primary font-bold hover:underline underline-offset-4">Solicitar conta</a>
+            Ainda não tem acesso? <Link to={routes.register} className="text-climbe-primary font-bold hover:underline underline-offset-4">Solicitar conta</Link>
           </p>
         </div>
 
