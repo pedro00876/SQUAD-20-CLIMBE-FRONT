@@ -3,6 +3,15 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { Layout } from '@/components/layout/page-wrapper';
 import { PrivateRoute } from '@/components/auth/PrivateRoute';
 import { LoginPage } from '@/pages/login';
+import { RegisterPage } from '@/pages/register';
+import { DashboardPage } from '@/pages/dashboard';
+import { EmpresasPage } from '@/pages/empresas';
+import { UsuariosPage } from '@/pages/usuarios';
+import { PropostasPage } from '@/pages/propostas';
+import { DocumentosPage } from '@/pages/documentos';
+import { ReunioesPage } from '@/pages/reunioes';
+import { RelatoriosPage } from '@/pages/relatorios';
+import { NotificacoesPage } from '@/pages/notificacoes';
 import { routes } from '@/config/routes';
 
 // Layout raiz que injeta o AuthProvider dentro do contexto do router
@@ -26,6 +35,14 @@ export const router = createBrowserRouter([
         path: routes.login,
         element: <LoginPage />,
       },
+      {
+        path: routes.register,
+        element: <RegisterPage />,
+      },
+      {
+        path: '/test-layout',
+        element: <Layout><div>Conteúdo de Teste de Responsividade</div></Layout>,
+      },
       // Rotas protegidas — redireciona para /login se não autenticado
       {
         element: <PrivateRoute />,
@@ -35,35 +52,35 @@ export const router = createBrowserRouter([
             children: [
               {
                 path: routes.dashboard,
-                element: <div>Dashboard Page (Skeleton)</div>,
+                element: <DashboardPage />,
               },
               {
                 path: routes.empresas,
-                element: <div>Empresas Page (Skeleton)</div>,
+                element: <EmpresasPage />,
               },
               {
                 path: routes.usuarios,
-                element: <div>Usuários Page (Skeleton)</div>,
+                element: <UsuariosPage />,
               },
               {
                 path: routes.propostas,
-                element: <div>Propostas Page (Skeleton)</div>,
+                element: <PropostasPage />,
               },
               {
                 path: routes.documentos,
-                element: <div>Documentos Page (Skeleton)</div>,
+                element: <DocumentosPage />,
               },
               {
                 path: routes.reunioes,
-                element: <div>Reuniões Page (Skeleton)</div>,
+                element: <ReunioesPage />,
               },
               {
                 path: routes.relatorios,
-                element: <div>Relatórios Page (Skeleton)</div>,
+                element: <RelatoriosPage />,
               },
               {
                 path: routes.notificacoes,
-                element: <div>Notificações Page (Skeleton)</div>,
+                element: <NotificacoesPage />,
               },
             ],
           },
