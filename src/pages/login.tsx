@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { routes } from '@/config/routes';
 
-const LOGO_BRANCA = '/assets/logos/Marca Climbe-02.png';
-const LOGO_PRETA = '/assets/logos/Marca Climbe-01.png';
+const LOGO_BRANCA = '/assets/logos/logo-light.png';
+const LOGO_PRETA = '/assets/logos/logo-dark.png';
 
 export function LoginPage() {
   const { login, isLoading, isError } = useLogin();

@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { routes } from '@/config/routes';
 
-const LOGO_BRANCA = '/assets/logos/Marca Climbe-02.png';
+const LOGO_BRANCA = '/assets/logos/logo-light.png';
 
 const menuItems = [
   { path: routes.dashboard, label: 'Dashboard', icon: LayoutDashboard },
