@@ -12,8 +12,9 @@ import {
   X
 } from 'lucide-react';
 import { routes } from '@/config/routes';
+import { ASSETS } from '@/config/assets';
 
-const LOGO_BRANCA = '/assets/logos/logo-light.png';
+const LOGO_BRANCA = ASSETS.logos.light;
 
 const menuItems = [
   { path: routes.dashboard, label: 'Dashboard', icon: LayoutDashboard },

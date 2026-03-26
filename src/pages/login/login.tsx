@@ -4,9 +4,10 @@ import { useLogin } from '@/features/auth/hooks';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { routes } from '@/config/routes';
+import { ASSETS } from '@/config/assets';
 
-const LOGO_BRANCA = '/assets/logos/logo-light.png';
-const LOGO_PRETA = '/assets/logos/logo-dark.png';
+const LOGO_BRANCA = ASSETS.logos.light;
+const LOGO_PRETA = ASSETS.logos.dark;
 
 export function LoginPage() {
   const { login, isLoading, isError } = useLogin();

@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { routes } from '@/config/routes';
 import { maskCPF, maskPhone, unmask } from '@/utils/masks';
+import { ASSETS } from '@/config/assets';
 
-const LOGO_BRANCA = '/assets/logos/logo-light.png';
-const LOGO_PRETA = '/assets/logos/logo-dark.png';
+const LOGO_BRANCA = ASSETS.logos.light;
+const LOGO_PRETA = ASSETS.logos.dark;
 
 const registerSchema = z.object({
   fullName: z.string().min(3, 'Nome muito curto'),

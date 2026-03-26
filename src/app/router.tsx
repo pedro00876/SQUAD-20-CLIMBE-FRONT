@@ -2,16 +2,16 @@ import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-rou
 import { AuthProvider } from '@/contexts/AuthContext';
 import { Layout } from '@/components/layout/page-wrapper';
 import { PrivateRoute } from '@/components/auth/PrivateRoute';
-import { LoginPage } from '@/pages/login';
-import { RegisterPage } from '@/pages/register';
-import { DashboardPage } from '@/pages/dashboard';
-import { EmpresasPage } from '@/pages/empresas';
-import { UsuariosPage } from '@/pages/usuarios';
-import { PropostasPage } from '@/pages/propostas';
-import { DocumentosPage } from '@/pages/documentos';
-import { ReunioesPage } from '@/pages/reunioes';
-import { RelatoriosPage } from '@/pages/relatorios';
-import { NotificacoesPage } from '@/pages/notificacoes';
+import { LoginPage } from '@/pages/login/login';
+import { RegisterPage } from '@/pages/register/register';
+import { DashboardPage } from '@/pages/dashboard/dashboard';
+import { EmpresasPage } from '@/pages/empresas/empresas';
+import { UsuariosPage } from '@/pages/usuarios/usuarios';
+import { PropostasPage } from '@/pages/propostas/propostas';
+import { DocumentosPage } from '@/pages/documentos/documentos';
+import { ReunioesPage } from '@/pages/reunioes/reunioes';
+import { RelatoriosPage } from '@/pages/relatorios/relatorios';
+import { NotificacoesPage } from '@/pages/notificacoes/notificacoes';
 import { routes } from '@/config/routes';
 
 // Layout raiz que injeta o AuthProvider dentro do contexto do router
