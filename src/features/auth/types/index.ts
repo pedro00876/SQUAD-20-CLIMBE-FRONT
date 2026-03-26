@@ -11,8 +11,7 @@ export interface User {
 }
 
 export interface LoginResponse {
-  token: string;
-  user: User;
+  // O token agora é gerenciado via cookie HttpOnly
 }
 export interface RegisterRequest {
   fullName: string;
@@ -20,5 +19,4 @@ export interface RegisterRequest {
   password: string;
   cpf: string;
   phone: string;
-  roleId: number;
 }

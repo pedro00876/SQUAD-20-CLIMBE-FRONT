@@ -1,16 +1,15 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { User, LoginResponse } from '@/features/auth/types';
+import type { User } from '@/features/auth/types';
 import { routes } from '@/config/routes';
 
-const TOKEN_KEY = '@App:token';
 const USER_KEY = '@App:user';
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (data: LoginResponse) => void;
+  login: () => void;
   logout: () => void;
 }
 
@@ -21,27 +20,32 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Restaura sessão ao iniciar
+
   useEffect(() => {
     const storedUser = localStorage.getItem(USER_KEY);
-    const storedToken = localStorage.getItem(TOKEN_KEY);
-    if (storedUser && storedToken) {
+    if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
     setIsLoading(false);
   }, []);
 
-  const login = (data: LoginResponse) => {
-    localStorage.setItem(TOKEN_KEY, data.token);
-    localStorage.setItem(USER_KEY, JSON.stringify(data.user));
-    setUser(data.user);
+  const login = () => {
+    const placeholderUser: User = {
+      id: 'unknown',
+      name: 'Usuário',
+      email: '',
+      role: 'USER'
+    };
+
+    localStorage.setItem(USER_KEY, JSON.stringify(placeholderUser));
+    setUser(placeholderUser);
     navigate(routes.dashboard);
   };
 
   const logout = () => {
-    localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     setUser(null);
+    // Nota: O backend deve invalidar o cookie na rota de logout
     navigate(routes.login);
   };
 

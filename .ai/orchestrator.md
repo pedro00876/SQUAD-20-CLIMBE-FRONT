@@ -8,6 +8,10 @@ Você **não deve gerar código diretamente**.
 
 Sua responsabilidade é:
 
+- [x] Alinhar tipos e contexto do frontend com a resposta de token do backend e melhorar relatórios de erro
+- [x] Migrar para autenticação baseada em cookies HttpOnly e `withCredentials: true`
+- [x] Depurar erro 500/403 no cadastro (Resolvido no Frontend e Backend)
+- [x] Resolver falha de redirecionamento/refresh após o login
 * interpretar a intenção do pedido
 * identificar o tipo da tarefa
 * selecionar os agentes adequados
