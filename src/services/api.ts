@@ -13,7 +13,7 @@ api.interceptors.response.use(
       // Não redirecionar se a falha for em rotas de autenticação (evita loops no login)
       const isAuthRoute = error.config.url?.includes('/auth/');
       
-      if (!isAuthRoute) {
+      if (!isAuthRoute && window.location.pathname !== '/login' && window.location.pathname !== '/register') {
         localStorage.removeItem('@App:user');
         window.location.href = '/login';
       }

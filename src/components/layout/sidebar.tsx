@@ -1,12 +1,12 @@
 import { NavLink } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Building2, 
-  Users, 
-  FileText, 
-  Files, 
-  Calendar, 
-  BarChart3, 
+import {
+  LayoutDashboard,
+  Building2,
+  Users,
+  FileText,
+  Files,
+  Calendar,
+  BarChart3,
   Bell,
   ChevronRight,
   X
@@ -37,7 +37,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     <>
       {/* Overlay — apenas mobile */}
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 z-[60] lg:hidden backdrop-blur-sm transition-opacity"
           onClick={onClose}
         />
@@ -51,12 +51,12 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       `}>
         {/* Logo Area & Close Button */}
         <div className="p-8 mb-4 flex items-center justify-between">
-          <img 
-            src={LOGO_BRANCA} 
-            alt="Climbe" 
+          <img
+            src={LOGO_BRANCA}
+            alt="Climbe"
             className="h-10 object-contain"
           />
-          <button 
+          <button
             onClick={onClose}
             className="lg:hidden p-2 hover:bg-climbe-support/20 rounded-lg transition-colors"
           >
@@ -69,7 +69,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           <p className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-4 mt-2">
             Menu Principal
           </p>
-          
+
           {menuItems.map((item) => (
             <NavLink
               key={item.path}
@@ -79,8 +79,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               }}
               className={({ isActive }) => `
                 flex items-center justify-between px-4 py-3.5 rounded-xl transition-all group
-                ${isActive 
-                  ? 'bg-climbe-primary text-climbe-secondary shadow-lg shadow-climbe-primary/20 font-bold' 
+                ${isActive
+                  ? 'bg-climbe-primary text-climbe-secondary shadow-lg shadow-climbe-primary/20 font-bold'
                   : 'text-gray-400 hover:bg-climbe-support/30 hover:text-white'
                 }
               `}
@@ -91,9 +91,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                     <item.icon size={20} strokeWidth={isActive ? 2.5 : 2} />
                     <span className="text-sm tracking-wide">{item.label}</span>
                   </div>
-                  <ChevronRight 
-                    size={14} 
-                    className={`opacity-0 group-hover:opacity-100 transition-opacity transform group-hover:translate-x-1 ${isActive ? 'opacity-100' : ''}`} 
+                  <ChevronRight
+                    size={14}
+                    className={`opacity-0 group-hover:opacity-100 transition-opacity transform group-hover:translate-x-1 ${isActive ? 'opacity-100' : ''}`}
                   />
                 </>
               )}
@@ -101,18 +101,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           ))}
         </nav>
 
-        {/* Footer Info */}
-        <div className="p-6 border-t border-climbe-support/20">
-          <div className="flex items-center gap-3 p-3 bg-climbe-support/10 rounded-2xl border border-climbe-support/20">
-            <div className="w-10 h-10 rounded-xl bg-climbe-primary flex items-center justify-center text-climbe-secondary font-black text-xs">
-              CL
-            </div>
-            <div className="flex flex-col">
-              <span className="text-xs font-bold text-white tracking-wide">Climbe v1.0</span>
-              <span className="text-[10px] text-gray-500 font-medium">Gestão Pro</span>
-            </div>
-          </div>
-        </div>
+
       </aside>
     </>
   );

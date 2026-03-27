@@ -81,18 +81,18 @@ export function RegisterPage() {
       </div>
 
       {/* PAINEL DIREITO */}
-      <div className="w-full lg:w-[35%] lg:min-w-[500px] bg-white flex flex-col p-8 sm:p-20 justify-center fade-in shadow-2xl z-20 overflow-y-auto custom-scrollbar">
-        <div className="mb-14">
+      <div className="w-full lg:w-[35%] lg:min-w-[500px] bg-white flex flex-col p-6 sm:p-8 justify-center fade-in shadow-2xl z-20">
+        <div className="mb-6">
           <img
             src={LOGO_PRETA}
             alt="Climbe"
-            className="h-20 object-contain mb-12"
+            className="h-10 object-contain mb-4"
           />
-          <h2 className="text-climbe-secondary text-5xl font-black mb-4 tracking-tighter">Cadastro.</h2>
-          <p className="text-gray-400 font-light text-lg">Preencha os dados para solicitar acesso.</p>
+          <h2 className="text-climbe-secondary text-3xl font-black mb-1 tracking-tighter">Cadastro.</h2>
+          <p className="text-gray-400 font-light text-sm">Preencha os dados para solicitar acesso.</p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
             <label className="block text-[11px] font-black uppercase tracking-[0.2em] text-climbe-secondary ml-1">Nome Completo</label>
             <Input
@@ -162,7 +162,7 @@ export function RegisterPage() {
           <Button
             type="submit"
             size="lg"
-            className="w-full h-16 shadow-none mt-4"
+            className="w-full h-12 shadow-none mt-2"
             disabled={isLoading}
           >
             {isLoading ? (
@@ -174,7 +174,7 @@ export function RegisterPage() {
           </Button>
         </form>
 
-        <div className="mt-12 text-center border-t border-gray-50 pt-10">
+        <div className="mt-4 text-center border-t border-gray-50 pt-4">
           <p className="text-sm text-gray-400 font-light tracking-tight">
             Já tem uma conta? <Link to={routes.login} className="text-climbe-primary font-bold hover:underline underline-offset-4">Fazer login</Link>
           </p>
