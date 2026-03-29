@@ -18,6 +18,11 @@ export function Header({ onMenuClick }: HeaderProps) {
       .toUpperCase()
       .substring(0, 2);
   };
+  const getFirstTwoNames = (name: string) => {
+    if (!name) return '';
+    const parts = name.trim().split(/\s+/);
+    return parts.slice(0, 2).join(' ');
+  };
 
   return (
     <header className="h-24 bg-white border-b border-gray-100 flex items-center justify-between px-6 lg:px-10 sticky top-0 z-40 shadow-sm gap-4">
@@ -54,7 +59,7 @@ export function Header({ onMenuClick }: HeaderProps) {
         <div className="flex items-center gap-4 group cursor-pointer">
           <div className="flex flex-col items-end">
             <span className="text-sm font-bold text-climbe-secondary tracking-tight">
-              {user?.name || 'Usuário'}
+              {getFirstTwoNames(user?.name || 'Usuário')}
             </span>
             <span className="text-[10px] font-black uppercase tracking-[0.15em] text-climbe-primary">
               {user?.role || 'Administrador'}

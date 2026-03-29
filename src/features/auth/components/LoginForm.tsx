@@ -84,7 +84,7 @@ export function LoginForm() {
             {isSubmitting ? 'Autenticando...' : 'Entrar'}
           </Button>
 
-          {/* <div className="relative w-full text-center">
+          <div className="relative w-full text-center">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-muted"></div>
             </div>
@@ -93,9 +93,9 @@ export function LoginForm() {
             </div>
           </div>
 
-          <Button type="button" variant="outline" className="w-full" onClick={() => {}} disabled={isSubmitting}>
+          <Button type="button" variant="outline" className="w-full" onClick={() => { window.location.href = 'http://localhost:8080/api/auth/login/google'; }} disabled={isSubmitting}>
             Continuar com Google
-          </Button> */}
+          </Button>
         </CardFooter>
       </form>
     </Card>
