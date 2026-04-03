@@ -5,16 +5,18 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
+    --foreground: 80 5.1% 11.6%; /* Climbe Preto (#1E1F1C) */
+    --primary: 175.3 42.5% 62.5%; /* Climbe Azul (#79C6C0) */
+    --primary-foreground: 80 5.1% 11.6%; /* Texto preto para legibilidade alta sobre azul claro */
+    --border: 214.3 31.8% 91.4%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --background: 80 5.1% 11.6%; /* Climbe Preto (#1E1F1C) para o fundo escuro */
+    --foreground: 0 0% 100%;
+    --primary: 175.3 42.5% 62.5%; /* Climbe Azul */
+    --primary-foreground: 80 5.1% 11.6%;
+    --border: 60 1.6% 23.9%; /* Climbe Cinza de Apoio (#3E3E3C) como borda em temas escuros */
   }
 }
 
@@ -24,6 +26,73 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'Poppins', sans-serif;
     font-feature-settings: 'rlig' 1, 'calt' 1;
   }
+
+  /* Custom Scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-gray-200 rounded-full hover:bg-climbe-primary/30 transition-colors;
+  }
 }
+
+
+@layer utilities {
+  .fade-up {
+    animation: fadeUp 0.6s ease-out forwards;
+  }
+  .fade-down {
+    animation: fadeDown 0.6s ease-out forwards;
+  }
+  .fade-in {
+    animation: fadeIn 0.8s ease-out forwards;
+  }
+  .animate-bar {
+    animation: scaleY 1s ease-out forwards;
+    transform-origin: bottom;
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeDown {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleY {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+
+#brick-container div {
+  transition: opacity 0.5s ease-in;
+}
+
