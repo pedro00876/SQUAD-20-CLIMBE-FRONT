@@ -9,6 +9,7 @@ import {
   BarChart3,
   Bell,
   ChevronRight,
+  ScrollText,
   X
 } from 'lucide-react';
 import { routes } from '@/config/routes';
@@ -25,6 +26,7 @@ const menuItems = [
   { path: routes.reunioes, label: 'Reuniões', icon: Calendar },
   { path: routes.relatorios, label: 'Relatórios', icon: BarChart3 },
   { path: routes.notificacoes, label: 'Notificações', icon: Bell },
+  { path: routes.contratos, label: 'Contratos', icon: ScrollText },
 ];
 
 interface SidebarProps {

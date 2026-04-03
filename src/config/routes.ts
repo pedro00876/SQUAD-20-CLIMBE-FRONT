@@ -9,4 +9,5 @@ export const routes = {
   reunioes: '/reunioes',
   relatorios: '/relatorios',
   notificacoes: '/notificacoes',
-} as const;
+  contratos: '/contratos',
+};
