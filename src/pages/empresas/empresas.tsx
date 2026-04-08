@@ -33,51 +33,12 @@ const initialForm: EmpresaFormValues = {
   zipCode: '',
 };
 
-const EMPRESAS_STORAGE_KEY = 'climbe-demo-empresas';
-
-function createLocalId() {
-  return Date.now() + Math.floor(Math.random() * 1000);
-}
-
-function normalizeEmpresa(base: Empresa, incoming?: Partial<Empresa> | null): Empresa {
-  return {
-    id: incoming?.id ?? base.id ?? createLocalId(),
-    legalName: incoming?.legalName ?? base.legalName,
-    tradeName: incoming?.tradeName ?? base.tradeName,
-    cnpj: incoming?.cnpj ?? base.cnpj,
-    email: incoming?.email ?? base.email,
-    phone: incoming?.phone ?? base.phone,
-    representativeName: incoming?.representativeName ?? base.representativeName,
-    representativeCpf: incoming?.representativeCpf ?? base.representativeCpf,
-    representativePhone: incoming?.representativePhone ?? base.representativePhone,
-    address: {
-      street: incoming?.address?.street ?? base.address?.street,
-      number: incoming?.address?.number ?? base.address?.number,
-      neighborhood: incoming?.address?.neighborhood ?? base.address?.neighborhood,
-      city: incoming?.address?.city ?? base.address?.city,
-      state: incoming?.address?.state ?? base.address?.state,
-      zipCode: incoming?.address?.zipCode ?? base.address?.zipCode,
-    },
-  };
-}
-
 export function EmpresasPage() {
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEmpresa, setEditingEmpresa] = useState<Empresa | null>(null);
   const [form, setForm] = useState<EmpresaFormValues>(initialForm);
   const [feedback, setFeedback] = useState<string | null>(null);
-  const [recentEmpresas, setRecentEmpresas] = useState<Empresa[]>(() => {
-    const stored = window.localStorage.getItem(EMPRESAS_STORAGE_KEY);
-    if (!stored) return [];
-
-    try {
-      return JSON.parse(stored) as Empresa[];
-    } catch {
-      return [];
-    }
-  });
-
   const debouncedSearch = useDebounce(search, 300);
   const { data, isLoading, isError, refetch } = useEmpresas({ page: 0, size: 24, search: debouncedSearch });
   const createEmpresa = useCreateEmpresa();
@@ -90,10 +51,6 @@ export function EmpresasPage() {
       setForm(initialForm);
     }
   }, [isModalOpen]);
-
-  useEffect(() => {
-    window.localStorage.setItem(EMPRESAS_STORAGE_KEY, JSON.stringify(recentEmpresas));
-  }, [recentEmpresas]);
 
   function updateForm<K extends keyof EmpresaFormValues>(field: K, value: EmpresaFormValues[K]) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -153,21 +110,10 @@ export function EmpresasPage() {
 
     try {
       if (editingEmpresa?.id) {
-        const updatedEmpresa = await updateEmpresa.mutateAsync({ id: editingEmpresa.id, payload });
-        const normalizedEmpresa = normalizeEmpresa(payload, updatedEmpresa);
-        setRecentEmpresas((current) =>
-          current.map((empresa) => (empresa.id === editingEmpresa.id ? normalizedEmpresa : empresa)),
-        );
+        await updateEmpresa.mutateAsync({ id: editingEmpresa.id, payload });
         setFeedback('Empresa atualizada com sucesso.');
       } else {
-        const createdEmpresa = await createEmpresa.mutateAsync(payload);
-        const normalizedEmpresa = normalizeEmpresa(payload, createdEmpresa);
-        setRecentEmpresas((current) => [
-          normalizedEmpresa,
-          ...current.filter((empresa) =>
-            normalizedEmpresa.id ? empresa.id !== normalizedEmpresa.id : empresa.email !== normalizedEmpresa.email,
-          ),
-        ]);
+        await createEmpresa.mutateAsync(payload);
         setFeedback('Empresa cadastrada com sucesso.');
       }
       await refetch();
@@ -189,15 +135,14 @@ export function EmpresasPage() {
       if (empresa.id) {
         await deleteEmpresa.mutateAsync(empresa.id);
       }
-      setRecentEmpresas((current) => current.filter((item) => item.id !== empresa.id));
       setFeedback('Empresa excluída com sucesso.');
       await refetch();
     } catch (error) {
       const isNotFound = axios.isAxiosError(error) && error.response?.status === 404;
 
       if (isNotFound) {
-        setRecentEmpresas((current) => current.filter((item) => item.id !== empresa.id));
         setFeedback('Empresa excluída com sucesso.');
+        await refetch();
         return;
       }
 
@@ -210,7 +155,8 @@ export function EmpresasPage() {
   }
 
   const fetchedEmpresas = data?.content ?? [];
-  const empresas = [...recentEmpresas, ...fetchedEmpresas].filter(
+
+  const empresas = fetchedEmpresas.filter(
     (empresa, index, array) =>
       !!empresa.legalName &&
       !!empresa.cnpj &&
@@ -287,7 +233,7 @@ export function EmpresasPage() {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        className="max-h-[90vh] max-w-2xl overflow-y-auto bg-climbe-secondary text-white"
+        className="max-h-[90vh] max-w-2xl overflow-y-auto bg-climbe-secondary px-8 pb-8 pt-12 text-white"
       >
         <div className="space-y-6">
           <div>
