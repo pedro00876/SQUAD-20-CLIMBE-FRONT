@@ -1,0 +1,24 @@
+spring.application.name=sistema_climbe
+server.port=8080
+
+spring.datasource.url=jdbc:postgresql://localhost:5433/user_db
+spring.datasource.username=admin
+spring.datasource.password=admin
+spring.jpa.show-sql=false
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+spring.jpa.hibernate.ddl-auto=update
+
+cors.allowed-origins=
+
+jwt.secret=NDBONDYzNTI2NjU1NkE1ODZFMzI3MjM1NzUzODc4MkY0MTNGNDQyODQ3MkI0QjYyNTA2NDUzNjc1NjZCNTk3MA==
+jwt.expiration-ms=1800000
+jwt.refresh-expiration-ms=604800000
+
+springdoc.api-docs.path=/v3/api-docs
+springdoc.swagger-ui.path=/swagger-ui.html
+
+#OAUTH config
+
+spring.security.oauth2.client.registration.google.client-id=SEU_CLIENT_ID
+spring.security.oauth2.client.registration.google.client-secret=SEU_CLIENT_SECRET_AQUI
+spring.security.oauth2.client.registration.google.scope=profile,email
