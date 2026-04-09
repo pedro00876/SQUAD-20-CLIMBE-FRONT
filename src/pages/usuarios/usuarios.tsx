@@ -3,8 +3,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Pencil, Plus, Trash2, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Modal } from '@/components/ui/modal';
+import { UsuarioModal } from '@/features/usuarios/components';
 import {
   useCreateUsuario,
   useDeleteUsuario,
@@ -200,90 +199,16 @@ export function UsuariosPage() {
         </div>
       </div>
 
-      <Modal
+      <UsuarioModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        className="max-w-2xl bg-climbe-secondary text-white"
-      >
-        <div className="space-y-5">
-          <div>
-            <h3 className="text-xl font-black italic text-white">
-              {editingUser ? 'Editar usuário' : 'Novo usuário'}
-            </h3>
-            <p className="mt-1 text-sm text-white/80">Preencha os dados principais para salvar o cadastro.</p>
-          </div>
-
-          <form className="space-y-4" onSubmit={handleSubmit} noValidate>
-            <div className="space-y-2">
-              <Label htmlFor="fullName" className="font-bold text-white">Nome completo</Label>
-              <Input
-                id="fullName"
-                className="text-black placeholder:text-gray-400"
-                value={form.fullName}
-                onChange={(event) => setForm((current) => ({ ...current, fullName: event.target.value }))}
-                required
-              />
-            </div>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="cpf" className="font-bold text-white">CPF</Label>
-                <Input
-                  id="cpf"
-                  className="text-black placeholder:text-gray-400"
-                  value={form.cpf}
-                  onChange={(event) => setForm((current) => ({ ...current, cpf: maskCPF(event.target.value) }))}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone" className="font-bold text-white">Telefone</Label>
-                <Input
-                  id="phone"
-                  className="text-black placeholder:text-gray-400"
-                  value={form.phone}
-                  onChange={(event) => setForm((current) => ({ ...current, phone: maskPhone(event.target.value) }))}
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email" className="font-bold text-white">E-mail</Label>
-              <Input
-                id="email"
-                type="email"
-                className="text-black placeholder:text-gray-400"
-                value={form.email}
-                onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="status" className="font-bold text-white">Status</Label>
-              <select
-                id="status"
-                value={form.status}
-                onChange={(event) => setForm((current) => ({ ...current, status: event.target.value }))}
-                className="flex h-12 w-full rounded-xl border-transparent bg-gray-50 px-5 py-3 text-sm text-black outline-none focus:ring-2 focus:ring-climbe-primary/50"
-              >
-                <option value="ATIVO">Ativo</option>
-                <option value="INATIVO">Inativo</option>
-              </select>
-            </div>
-
-            <div className="flex justify-end gap-3 pt-2">
-              <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={createUsuario.isPending || updateUsuario.isPending}>
-                {createUsuario.isPending || updateUsuario.isPending
-                  ? 'Salvando...'
-                  : editingUser
-                    ? 'Salvar alterações'
-                    : 'Cadastrar usuário'}
-              </Button>
-            </div>
-          </form>
-        </div>
-      </Modal>
+        editingUser={editingUser}
+        form={form}
+        onChangeForm={(field, value) => setForm((current) => ({ ...current, [field]: value }))}
+        onSubmit={handleSubmit}
+        isSubmitting={createUsuario.isPending || updateUsuario.isPending}
+        feedback={feedback}
+      />
     </div>
   );
 }

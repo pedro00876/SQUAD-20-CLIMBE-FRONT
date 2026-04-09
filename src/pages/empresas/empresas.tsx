@@ -3,8 +3,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Building2, Pencil, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Modal } from '@/components/ui/modal';
+import { EmpresaModal } from '@/features/empresas/components';
 import {
   useCreateEmpresa,
   useDeleteEmpresa,
@@ -230,7 +229,7 @@ export function EmpresasPage() {
         </div>
       </div>
 
-      <Modal
+      <EmpresaModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         className="max-h-[90vh] max-w-2xl overflow-y-auto bg-climbe-secondary px-8 pb-8 pt-12 text-white"

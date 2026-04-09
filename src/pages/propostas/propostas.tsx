@@ -3,8 +3,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { FileText, Pencil, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Modal } from '@/components/ui/modal';
+import { PropostaModal } from '@/features/propostas/components';
 import { useEmpresas } from '@/features/empresas/hooks';
 import {
   useCreateProposta,
@@ -226,88 +225,18 @@ export function PropostasPage() {
         ) : null}
       </div>
 
-      <Modal
+      <PropostaModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        className="max-w-2xl bg-climbe-secondary text-white"
-      >
-        <div className="space-y-5">
-          <div>
-            <h3 className="text-xl font-black italic text-white">
-              {editingProposta ? 'Editar proposta' : 'Nova proposta'}
-            </h3>
-            <p className="mt-1 text-sm text-white/80">Associe a proposta à empresa, ao responsável e ao status atual.</p>
-          </div>
-
-          <form className="space-y-4" onSubmit={handleSubmit} noValidate>
-            <div className="space-y-2">
-              <Label htmlFor="enterpriseId" className="font-bold text-white">Empresa</Label>
-              <select
-                id="enterpriseId"
-                value={form.enterpriseId}
-                onChange={(event) => setForm((current) => ({ ...current, enterpriseId: event.target.value }))}
-                className="flex h-12 w-full rounded-xl border-transparent bg-gray-50 px-5 py-3 text-sm text-black outline-none focus:ring-2 focus:ring-climbe-primary/50"
-                required
-              >
-                <option value="">Selecione uma empresa</option>
-                {empresas
-                  .filter((empresa) => empresa.id && empresa.legalName)
-                  .map((empresa) => (
-                    <option key={empresa.id} value={empresa.id}>
-                      {empresa.tradeName || empresa.legalName}
-                    </option>
-                  ))}
-              </select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="userId" className="font-bold text-white">Responsável</Label>
-              <select
-                id="userId"
-                value={form.userId}
-                onChange={(event) => setForm((current) => ({ ...current, userId: event.target.value }))}
-                className="flex h-12 w-full rounded-xl border-transparent bg-gray-50 px-5 py-3 text-sm text-black outline-none focus:ring-2 focus:ring-climbe-primary/50"
-                required
-              >
-                <option value="">Selecione um responsável</option>
-                {usuarios
-                  .filter((usuario) => usuario.id && usuario.fullName)
-                  .map((usuario) => (
-                    <option key={usuario.id} value={usuario.id}>
-                      {usuario.fullName}
-                    </option>
-                  ))}
-              </select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="status" className="font-bold text-white">Status</Label>
-              <select
-                id="status"
-                value={form.status}
-                onChange={(event) => setForm((current) => ({ ...current, status: event.target.value }))}
-                className="flex h-12 w-full rounded-xl border-transparent bg-gray-50 px-5 py-3 text-sm text-black outline-none focus:ring-2 focus:ring-climbe-primary/50"
-              >
-                <option value="PENDENTE">Pendente</option>
-                <option value="EM_ANALISE">Em análise</option>
-                <option value="APROVADA">Aprovada</option>
-                <option value="RECUSADA">Recusada</option>
-              </select>
-            </div>
-
-            <div className="flex justify-end gap-3 pt-2">
-              <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={createProposta.isPending || updateProposta.isPending}>
-                {createProposta.isPending || updateProposta.isPending
-                  ? 'Salvando...'
-                  : editingProposta
-                    ? 'Salvar alterações'
-                    : 'Cadastrar proposta'}
-              </Button>
-            </div>
-          </form>
-        </div>
-      </Modal>
+        editingProposta={editingProposta}
+        form={form}
+        onChangeForm={(field, value) => setForm((current) => ({ ...current, [field]: value }))}
+        onSubmit={handleSubmit}
+        isSubmitting={createProposta.isPending || updateProposta.isPending}
+        feedback={feedback}
+        empresas={empresas}
+        usuarios={usuarios}
+      />
     </div>
   );
 }
