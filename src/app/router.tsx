@@ -1,51 +1,102 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-router-dom';
+import { AuthProvider } from '@/contexts/AuthContext';
 import { Layout } from '@/components/layout/page-wrapper';
+import { PrivateRoute } from '@/components/auth/PrivateRoute';
+import { LoginPage } from '@/pages/login/login';
+import { RegisterPage } from '@/pages/register/register';
+import { DashboardPage } from '@/pages/dashboard/dashboard';
+import { EmpresasPage } from '@/pages/empresas/empresas';
+import { UsuariosPage } from '@/pages/usuarios/usuarios';
+import { PropostasPage } from '@/pages/propostas/propostas';
+import { DocumentosPage } from '@/pages/documentos/documentos';
+import { ReunioesPage } from '@/pages/reunioes/reunioes';
+import { RelatoriosPage } from '@/pages/relatorios/relatorios';
+import { NotificacoesPage } from '@/pages/notificacoes/notificacoes';
 import { routes } from '@/config/routes';
+
+function RootLayout() {
+  return (
+    <AuthProvider>
+      <Outlet />
+    </AuthProvider>
+  );
+}
 
 export const router = createBrowserRouter([
   {
-    path: routes.login,
-    element: <div>Login Page (Skeleton)</div>,
-  },
-  {
-    element: <Layout />,
+    element: <RootLayout />,
     children: [
       {
-        path: routes.dashboard,
-        element: <div>Dashboard Page (Skeleton)</div>,
+        path: '/',
+        element: <Navigate to={routes.dashboard} replace />,
       },
       {
-        path: routes.empresas,
-        element: <div>Empresas Page (Skeleton)</div>,
+        path: routes.login,
+        element: <LoginPage />,
       },
       {
-        path: routes.usuarios,
-        element: <div>Usuários Page (Skeleton)</div>,
+        path: routes.register,
+        element: <RegisterPage />,
       },
       {
-        path: routes.propostas,
-        element: <div>Propostas Page (Skeleton)</div>,
+        element: <Layout />,
+        children: [
+          {
+            path: routes.demoDashboard,
+            element: <DashboardPage />,
+          },
+          {
+            path: routes.demoRelatorios,
+            element: <RelatoriosPage />,
+          },
+        ],
       },
       {
-        path: routes.documentos,
-        element: <div>Documentos Page (Skeleton)</div>,
-      },
-      {
-        path: routes.reunioes,
-        element: <div>Reuniões Page (Skeleton)</div>,
-      },
-      {
-        path: routes.relatorios,
-        element: <div>Relatórios Page (Skeleton)</div>,
-      },
-      {
-        path: routes.notificacoes,
-        element: <div>Notificações Page (Skeleton)</div>,
+        element: <PrivateRoute />,
+        children: [
+          {
+            element: <Layout />,
+            children: [
+              {
+                path: routes.dashboard,
+                element: <DashboardPage />,
+              },
+              {
+                path: routes.empresas,
+                element: <EmpresasPage />,
+              },
+              {
+                path: routes.usuarios,
+                element: <UsuariosPage />,
+              },
+              {
+                path: routes.propostas,
+                element: <PropostasPage />,
+              },
+              {
+                path: routes.documentos,
+                element: <DocumentosPage />,
+              },
+              {
+                path: routes.reunioes,
+                element: <ReunioesPage />,
+              },
+              {
+                path: routes.relatorios,
+                element: <RelatoriosPage />,
+              },
+              {
+                path: routes.notificacoes,
+                element: <NotificacoesPage />,
+              },
+            ],
+          },
+        ],
       },
     ],
   },
 ]);
 
 export function AppRouter() {
-  return <RouterProvider router={router} />;
+  return <RouterProvider router={router} future={{ v7_startTransition: true }} />;
 }
