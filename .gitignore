@@ -27,3 +27,9 @@ dist-ssr
 .env
 .env.*
 !.env.example
+
+.backend-gradle-home/
+.backend-src-clean/.gradle/
+.backend-src-clean/build/
+node_modules/
+dist/

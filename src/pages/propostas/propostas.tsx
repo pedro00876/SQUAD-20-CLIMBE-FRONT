@@ -14,8 +14,6 @@ import {
 import { useUsuarios } from '@/features/usuarios/hooks';
 import { useDebounce } from '@/hooks/useDebounce';
 import type { Proposta, PropostaFormValues } from '@/types/proposta.types';
-import type { Empresa } from '@/types/empresa.types';
-import type { User } from '@/types/user.types';
 
 const initialForm: PropostaFormValues = {
   enterpriseId: '',
@@ -23,34 +21,9 @@ const initialForm: PropostaFormValues = {
   status: 'PENDENTE',
 };
 
-const EMPRESAS_STORAGE_KEY = 'climbe-demo-empresas';
-const USUARIOS_STORAGE_KEY = 'climbe-demo-usuarios';
-const PROPOSTAS_STORAGE_KEY = 'climbe-demo-propostas';
-
-function createLocalId() {
-  return Date.now() + Math.floor(Math.random() * 1000);
-}
-
 function formatDate(value?: string) {
   if (!value) return 'Data não informada';
   return new Date(value).toLocaleString('pt-BR');
-}
-
-function normalizeProposta(base: Proposta, incoming: Partial<Proposta> | null | undefined, empresas: Empresa[], usuarios: User[]): Proposta {
-  const enterpriseId = incoming?.enterpriseId ?? base.enterpriseId;
-  const userId = incoming?.userId ?? base.userId;
-  const empresa = empresas.find((item) => item.id === enterpriseId);
-  const usuario = usuarios.find((item) => item.id === userId);
-
-  return {
-    id: incoming?.id ?? base.id ?? createLocalId(),
-    enterpriseId,
-    enterpriseName: incoming?.enterpriseName ?? base.enterpriseName ?? empresa?.tradeName ?? empresa?.legalName,
-    userId,
-    userName: incoming?.userName ?? base.userName ?? usuario?.fullName,
-    status: incoming?.status ?? base.status,
-    createdAt: incoming?.createdAt ?? base.createdAt,
-  };
 }
 
 export function PropostasPage() {
@@ -59,17 +32,6 @@ export function PropostasPage() {
   const [editingProposta, setEditingProposta] = useState<Proposta | null>(null);
   const [form, setForm] = useState<PropostaFormValues>(initialForm);
   const [feedback, setFeedback] = useState<string | null>(null);
-  const [recentPropostas, setRecentPropostas] = useState<Proposta[]>(() => {
-    const stored = window.localStorage.getItem(PROPOSTAS_STORAGE_KEY);
-    if (!stored) return [];
-
-    try {
-      return JSON.parse(stored) as Proposta[];
-    } catch {
-      return [];
-    }
-  });
-
   const debouncedSearch = useDebounce(search, 300);
   const { data, isLoading, isError, refetch } = usePropostas({ page: 0, size: 20, search: debouncedSearch });
   const { data: empresasData } = useEmpresas({ page: 0, size: 100 });
@@ -85,40 +47,16 @@ export function PropostasPage() {
     }
   }, [isModalOpen]);
 
-  useEffect(() => {
-    window.localStorage.setItem(PROPOSTAS_STORAGE_KEY, JSON.stringify(recentPropostas));
-  }, [recentPropostas]);
-
-  const storedEmpresas = (() => {
-    const stored = window.localStorage.getItem(EMPRESAS_STORAGE_KEY);
-    if (!stored) return [] as Empresa[];
-
-    try {
-      return JSON.parse(stored) as Empresa[];
-    } catch {
-      return [] as Empresa[];
-    }
-  })();
-
-  const storedUsuarios = (() => {
-    const stored = window.localStorage.getItem(USUARIOS_STORAGE_KEY);
-    if (!stored) return [] as User[];
-
-    try {
-      return JSON.parse(stored) as User[];
-    } catch {
-      return [] as User[];
-    }
-  })();
-
-  const empresas = [...storedEmpresas, ...(empresasData?.content ?? [])].filter(
+  const fetchedEmpresas = empresasData?.content ?? [];
+  const empresas = fetchedEmpresas.filter(
     (empresa, index, array) =>
       !!empresa.id &&
       !!empresa.legalName &&
       array.findIndex((item) => item.id === empresa.id) === index,
   );
 
-  const usuarios = [...storedUsuarios, ...(usuariosData?.content ?? [])].filter(
+  const fetchedUsuarios = usuariosData?.content ?? [];
+  const usuarios = fetchedUsuarios.filter(
     (usuario, index, array) =>
       !!usuario.id &&
       !!usuario.fullName &&
@@ -155,23 +93,10 @@ export function PropostasPage() {
 
     try {
       if (editingProposta?.id) {
-        const updatedProposta = await updateProposta.mutateAsync({ id: editingProposta.id, payload });
-        const normalizedProposta = normalizeProposta(payload, updatedProposta, empresas, usuarios);
-        setRecentPropostas((current) =>
-          current.map((proposta) => (proposta.id === editingProposta.id ? normalizedProposta : proposta)),
-        );
+        await updateProposta.mutateAsync({ id: editingProposta.id, payload });
         setFeedback('Proposta atualizada com sucesso.');
       } else {
-        const createdProposta = await createProposta.mutateAsync(payload);
-        const normalizedProposta = normalizeProposta(payload, createdProposta, empresas, usuarios);
-        setRecentPropostas((current) => [
-          normalizedProposta,
-          ...current.filter((proposta) =>
-            normalizedProposta.id
-              ? proposta.id !== normalizedProposta.id
-              : !(proposta.enterpriseId === normalizedProposta.enterpriseId && proposta.userId === normalizedProposta.userId),
-          ),
-        ]);
+        await createProposta.mutateAsync(payload);
         setFeedback('Proposta cadastrada com sucesso.');
       }
       await refetch();
@@ -193,15 +118,14 @@ export function PropostasPage() {
       if (proposta.id) {
         await deleteProposta.mutateAsync(proposta.id);
       }
-      setRecentPropostas((current) => current.filter((item) => item.id !== proposta.id));
       setFeedback('Proposta excluída com sucesso.');
       await refetch();
     } catch (error) {
       const isNotFound = axios.isAxiosError(error) && error.response?.status === 404;
 
       if (isNotFound) {
-        setRecentPropostas((current) => current.filter((item) => item.id !== proposta.id));
         setFeedback('Proposta excluída com sucesso.');
+        await refetch();
         return;
       }
 
@@ -214,7 +138,7 @@ export function PropostasPage() {
   }
 
   const fetchedPropostas = data?.content ?? [];
-  const propostas = [...recentPropostas, ...fetchedPropostas].filter(
+  const propostas = fetchedPropostas.filter(
     (proposta, index, array) =>
       !!proposta.enterpriseId &&
       !!proposta.userId &&

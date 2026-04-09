@@ -32,51 +32,12 @@ const initialForm: EmpresaFormValues = {
   zipCode: '',
 };
 
-const EMPRESAS_STORAGE_KEY = 'climbe-demo-empresas';
-
-function createLocalId() {
-  return Date.now() + Math.floor(Math.random() * 1000);
-}
-
-function normalizeEmpresa(base: Empresa, incoming?: Partial<Empresa> | null): Empresa {
-  return {
-    id: incoming?.id ?? base.id ?? createLocalId(),
-    legalName: incoming?.legalName ?? base.legalName,
-    tradeName: incoming?.tradeName ?? base.tradeName,
-    cnpj: incoming?.cnpj ?? base.cnpj,
-    email: incoming?.email ?? base.email,
-    phone: incoming?.phone ?? base.phone,
-    representativeName: incoming?.representativeName ?? base.representativeName,
-    representativeCpf: incoming?.representativeCpf ?? base.representativeCpf,
-    representativePhone: incoming?.representativePhone ?? base.representativePhone,
-    address: {
-      street: incoming?.address?.street ?? base.address?.street,
-      number: incoming?.address?.number ?? base.address?.number,
-      neighborhood: incoming?.address?.neighborhood ?? base.address?.neighborhood,
-      city: incoming?.address?.city ?? base.address?.city,
-      state: incoming?.address?.state ?? base.address?.state,
-      zipCode: incoming?.address?.zipCode ?? base.address?.zipCode,
-    },
-  };
-}
-
 export function EmpresasPage() {
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEmpresa, setEditingEmpresa] = useState<Empresa | null>(null);
   const [form, setForm] = useState<EmpresaFormValues>(initialForm);
   const [feedback, setFeedback] = useState<string | null>(null);
-  const [recentEmpresas, setRecentEmpresas] = useState<Empresa[]>(() => {
-    const stored = window.localStorage.getItem(EMPRESAS_STORAGE_KEY);
-    if (!stored) return [];
-
-    try {
-      return JSON.parse(stored) as Empresa[];
-    } catch {
-      return [];
-    }
-  });
-
   const debouncedSearch = useDebounce(search, 300);
   const { data, isLoading, isError, refetch } = useEmpresas({ page: 0, size: 24, search: debouncedSearch });
   const createEmpresa = useCreateEmpresa();
@@ -89,10 +50,6 @@ export function EmpresasPage() {
       setForm(initialForm);
     }
   }, [isModalOpen]);
-
-  useEffect(() => {
-    window.localStorage.setItem(EMPRESAS_STORAGE_KEY, JSON.stringify(recentEmpresas));
-  }, [recentEmpresas]);
 
   function updateForm<K extends keyof EmpresaFormValues>(field: K, value: EmpresaFormValues[K]) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -152,21 +109,10 @@ export function EmpresasPage() {
 
     try {
       if (editingEmpresa?.id) {
-        const updatedEmpresa = await updateEmpresa.mutateAsync({ id: editingEmpresa.id, payload });
-        const normalizedEmpresa = normalizeEmpresa(payload, updatedEmpresa);
-        setRecentEmpresas((current) =>
-          current.map((empresa) => (empresa.id === editingEmpresa.id ? normalizedEmpresa : empresa)),
-        );
+        await updateEmpresa.mutateAsync({ id: editingEmpresa.id, payload });
         setFeedback('Empresa atualizada com sucesso.');
       } else {
-        const createdEmpresa = await createEmpresa.mutateAsync(payload);
-        const normalizedEmpresa = normalizeEmpresa(payload, createdEmpresa);
-        setRecentEmpresas((current) => [
-          normalizedEmpresa,
-          ...current.filter((empresa) =>
-            normalizedEmpresa.id ? empresa.id !== normalizedEmpresa.id : empresa.email !== normalizedEmpresa.email,
-          ),
-        ]);
+        await createEmpresa.mutateAsync(payload);
         setFeedback('Empresa cadastrada com sucesso.');
       }
       await refetch();
@@ -188,15 +134,14 @@ export function EmpresasPage() {
       if (empresa.id) {
         await deleteEmpresa.mutateAsync(empresa.id);
       }
-      setRecentEmpresas((current) => current.filter((item) => item.id !== empresa.id));
       setFeedback('Empresa excluída com sucesso.');
       await refetch();
     } catch (error) {
       const isNotFound = axios.isAxiosError(error) && error.response?.status === 404;
 
       if (isNotFound) {
-        setRecentEmpresas((current) => current.filter((item) => item.id !== empresa.id));
         setFeedback('Empresa excluída com sucesso.');
+        await refetch();
         return;
       }
 
@@ -209,7 +154,8 @@ export function EmpresasPage() {
   }
 
   const fetchedEmpresas = data?.content ?? [];
-  const empresas = [...recentEmpresas, ...fetchedEmpresas].filter(
+
+  const empresas = fetchedEmpresas.filter(
     (empresa, index, array) =>
       !!empresa.legalName &&
       !!empresa.cnpj &&
@@ -286,13 +232,205 @@ export function EmpresasPage() {
       <EmpresaModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        editingEmpresa={editingEmpresa}
-        form={form}
-        onChangeForm={updateForm}
-        onSubmit={handleSubmit}
-        isSubmitting={createEmpresa.isPending || updateEmpresa.isPending}
-        feedback={feedback}
-      />
+        className="max-h-[90vh] max-w-2xl overflow-y-auto bg-climbe-secondary px-8 pb-8 pt-12 text-white"
+      >
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-xl font-black italic text-white">{editingEmpresa ? 'Editar empresa' : 'Nova empresa'}</h3>
+            <p className="mt-1 text-sm text-white/80">
+              Preencha os dados cadastrais, endereço completo e informações do representante legal.
+            </p>
+          </div>
+
+          <form className="space-y-5" onSubmit={handleSubmit} noValidate>
+            <div className="rounded-2xl bg-white/10 px-4 py-3">
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-white">Dados da empresa</p>
+            </div>
+
+            <div className="space-y-3">
+              <Label htmlFor="legalName" className="font-bold text-white">Razão social</Label>
+              <Input
+                id="legalName"
+                className="text-black placeholder:text-gray-400"
+                value={form.legalName}
+                onChange={(event) => updateForm('legalName', event.target.value)}
+                placeholder="Ex.: Climbe Investimentos LTDA"
+                required
+              />
+            </div>
+
+            <div className="space-y-3">
+              <Label htmlFor="tradeName" className="font-bold text-white">Nome fantasia</Label>
+              <Input
+                id="tradeName"
+                className="text-black placeholder:text-gray-400"
+                value={form.tradeName}
+                onChange={(event) => updateForm('tradeName', event.target.value)}
+                placeholder="Ex.: Climbe"
+              />
+            </div>
+
+            <div className="space-y-3">
+              <Label htmlFor="cnpj" className="font-bold text-white">CNPJ</Label>
+              <Input
+                id="cnpj"
+                className="text-black placeholder:text-gray-400"
+                value={form.cnpj}
+                onChange={(event) => updateForm('cnpj', maskCNPJ(event.target.value))}
+                placeholder="00.000.000/0000-00"
+                required
+              />
+            </div>
+
+            <div className="space-y-3">
+              <Label htmlFor="email" className="font-bold text-white">E-mail de contato</Label>
+              <Input
+                id="email"
+                type="email"
+                className="text-black placeholder:text-gray-400"
+                value={form.email}
+                onChange={(event) => updateForm('email', event.target.value)}
+                placeholder="contato@empresa.com.br"
+                required
+              />
+            </div>
+
+            <div className="space-y-3">
+              <Label htmlFor="phone" className="font-bold text-white">Telefone de contato</Label>
+              <Input
+                id="phone"
+                className="text-black placeholder:text-gray-400"
+                value={form.phone}
+                onChange={(event) => updateForm('phone', maskPhone(event.target.value))}
+                placeholder="(00) 00000-0000"
+              />
+            </div>
+
+            <div className="rounded-2xl bg-white/10 px-4 py-3">
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-white">Endereço</p>
+            </div>
+
+            <div className="space-y-3">
+              <Label htmlFor="street" className="font-bold text-white">Logradouro</Label>
+              <Input
+                id="street"
+                className="text-black placeholder:text-gray-400"
+                value={form.street}
+                onChange={(event) => updateForm('street', event.target.value)}
+                placeholder="Ex.: Rua das Flores"
+              />
+            </div>
+
+            <div className="space-y-3">
+              <Label htmlFor="number" className="font-bold text-white">Número</Label>
+              <Input
+                id="number"
+                className="text-black placeholder:text-gray-400"
+                value={form.number}
+                onChange={(event) => updateForm('number', event.target.value)}
+                placeholder="Ex.: 123"
+              />
+            </div>
+
+            <div className="space-y-3">
+              <Label htmlFor="neighborhood" className="font-bold text-white">Bairro</Label>
+              <Input
+                id="neighborhood"
+                className="text-black placeholder:text-gray-400"
+                value={form.neighborhood}
+                onChange={(event) => updateForm('neighborhood', event.target.value)}
+                placeholder="Ex.: Centro"
+              />
+            </div>
+
+            <div className="space-y-3">
+              <Label htmlFor="city" className="font-bold text-white">Cidade</Label>
+              <Input
+                id="city"
+                className="text-black placeholder:text-gray-400"
+                value={form.city}
+                onChange={(event) => updateForm('city', event.target.value)}
+                placeholder="Ex.: Aracaju"
+              />
+            </div>
+
+            <div className="space-y-3">
+              <Label htmlFor="state" className="font-bold text-white">UF</Label>
+              <Input
+                id="state"
+                className="text-black placeholder:text-gray-400"
+                value={form.state}
+                onChange={(event) => updateForm('state', event.target.value)}
+                maxLength={2}
+                placeholder="SE"
+              />
+            </div>
+
+            <div className="space-y-3">
+              <Label htmlFor="zipCode" className="font-bold text-white">CEP</Label>
+              <Input
+                id="zipCode"
+                className="text-black placeholder:text-gray-400"
+                value={form.zipCode}
+                onChange={(event) => updateForm('zipCode', event.target.value)}
+                placeholder="00000-000"
+              />
+            </div>
+
+            <div className="rounded-2xl bg-white/10 px-4 py-3">
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-white">Representante legal</p>
+            </div>
+
+            <div className="space-y-3">
+              <Label htmlFor="representativeName" className="font-bold text-white">
+                Nome do representante legal
+              </Label>
+              <Input
+                id="representativeName"
+                className="text-black placeholder:text-gray-400"
+                value={form.representativeName}
+                onChange={(event) => updateForm('representativeName', event.target.value)}
+                placeholder="Ex.: Maria da Silva"
+              />
+            </div>
+
+            <div className="space-y-3">
+              <Label htmlFor="representativeCpf" className="font-bold text-white">CPF do representante</Label>
+              <Input
+                id="representativeCpf"
+                className="text-black placeholder:text-gray-400"
+                value={form.representativeCpf}
+                onChange={(event) => updateForm('representativeCpf', maskCPF(event.target.value))}
+                placeholder="000.000.000-00"
+              />
+            </div>
+
+            <div className="space-y-3">
+              <Label htmlFor="representativePhone" className="font-bold text-white">Contato do representante</Label>
+              <Input
+                id="representativePhone"
+                className="text-black placeholder:text-gray-400"
+                value={form.representativePhone}
+                onChange={(event) => updateForm('representativePhone', maskPhone(event.target.value))}
+                placeholder="(00) 00000-0000"
+              />
+            </div>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={createEmpresa.isPending || updateEmpresa.isPending}>
+                {createEmpresa.isPending || updateEmpresa.isPending
+                  ? 'Salvando...'
+                  : editingEmpresa
+                    ? 'Salvar alterações'
+                    : 'Cadastrar empresa'}
+              </Button>
+            </div>
+          </form>
+        </div>
+      </Modal>
     </div>
   );
 }

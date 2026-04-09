@@ -23,40 +23,12 @@ const initialForm: UserFormValues = {
   status: 'ATIVO',
 };
 
-const USUARIOS_STORAGE_KEY = 'climbe-demo-usuarios';
-
-function createLocalId() {
-  return Date.now() + Math.floor(Math.random() * 1000);
-}
-
-function normalizeUsuario(base: User, incoming?: Partial<User> | null): User {
-  return {
-    id: incoming?.id ?? base.id ?? createLocalId(),
-    fullName: incoming?.fullName ?? base.fullName,
-    cpf: incoming?.cpf ?? base.cpf,
-    email: incoming?.email ?? base.email,
-    phone: incoming?.phone ?? base.phone,
-    status: incoming?.status ?? base.status,
-  };
-}
-
 export function UsuariosPage() {
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [form, setForm] = useState<UserFormValues>(initialForm);
   const [feedback, setFeedback] = useState<string | null>(null);
-  const [recentUsers, setRecentUsers] = useState<User[]>(() => {
-    const stored = window.localStorage.getItem(USUARIOS_STORAGE_KEY);
-    if (!stored) return [];
-
-    try {
-      return JSON.parse(stored) as User[];
-    } catch {
-      return [];
-    }
-  });
-
   const debouncedSearch = useDebounce(search, 300);
   const { data, isLoading, isError, refetch } = useUsuarios({ page: 0, size: 20, search: debouncedSearch });
   const createUsuario = useCreateUsuario();
@@ -69,10 +41,6 @@ export function UsuariosPage() {
       setEditingUser(null);
     }
   }, [isModalOpen]);
-
-  useEffect(() => {
-    window.localStorage.setItem(USUARIOS_STORAGE_KEY, JSON.stringify(recentUsers));
-  }, [recentUsers]);
 
   function openCreateModal() {
     setFeedback(null);
@@ -108,19 +76,10 @@ export function UsuariosPage() {
 
     try {
       if (editingUser?.id) {
-        const updatedUser = await updateUsuario.mutateAsync({ id: editingUser.id, payload });
-        const normalizedUser = normalizeUsuario(payload, updatedUser);
-        setRecentUsers((current) =>
-          current.map((user) => (user.id === editingUser.id ? normalizedUser : user)),
-        );
+        await updateUsuario.mutateAsync({ id: editingUser.id, payload });
         setFeedback('Usuário atualizado com sucesso.');
       } else {
-        const createdUser = await createUsuario.mutateAsync(payload);
-        const normalizedUser = normalizeUsuario(payload, createdUser);
-        setRecentUsers((current) => [
-          normalizedUser,
-          ...current.filter((user) => (normalizedUser.id ? user.id !== normalizedUser.id : user.email !== normalizedUser.email)),
-        ]);
+        await createUsuario.mutateAsync(payload);
         setFeedback('Usuário cadastrado com sucesso.');
       }
       await refetch();
@@ -142,15 +101,14 @@ export function UsuariosPage() {
       if (user.id) {
         await deleteUsuario.mutateAsync(user.id);
       }
-      setRecentUsers((current) => current.filter((item) => item.id !== user.id));
       setFeedback('Usuário excluído com sucesso.');
       await refetch();
     } catch (error) {
       const isNotFound = axios.isAxiosError(error) && error.response?.status === 404;
 
       if (isNotFound) {
-        setRecentUsers((current) => current.filter((item) => item.id !== user.id));
         setFeedback('Usuário excluído com sucesso.');
+        await refetch();
         return;
       }
 
@@ -163,7 +121,8 @@ export function UsuariosPage() {
   }
 
   const fetchedUsers = data?.content ?? [];
-  const users = [...recentUsers, ...fetchedUsers].filter(
+
+  const users = fetchedUsers.filter(
     (user, index, array) =>
       !!user.fullName &&
       !!user.cpf &&

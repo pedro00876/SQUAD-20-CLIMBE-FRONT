@@ -1,16 +1,18 @@
 export interface Documento {
-  id?: string;
-  nome: string;
-  url?: string;
-  tipo: string;
-  empresaId?: string;
-  descricao?: string;
+  id?: number;
+  enterpriseId: number;
+  enterpriseName?: string;
+  documentType: string;
+  url: string;
+  validated?: boolean;
+  analystId?: number | null;
+  analystName?: string;
 }
 
 export interface DocumentoFormValues {
-  nome: string;
-  tipo: string;
-  empresaId: string;
-  descricao: string;
+  enterpriseId: string;
+  documentType: string;
   url: string;
+  validated: boolean;
+  analystId: string;
 }
