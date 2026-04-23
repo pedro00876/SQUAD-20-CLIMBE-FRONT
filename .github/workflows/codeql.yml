@@ -1,0 +1,53 @@
+name: "CodeQL"
+
+on:
+  push:
+    branches: [ "main", "hml" ]
+  pull_request:
+    branches: [ "main", "hml" ]
+  schedule:
+    - cron: '0 3 * * 1' # toda segunda às 03h
+
+jobs:
+  analyze:
+    name: Analyze (JS/TS)
+    runs-on: ubuntu-latest
+
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'javascript', 'typescript' ]
+
+    steps:
+      # pega o código
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # configura node (importante pro teu projeto)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # instala dependências
+      - name: Install dependencies
+        run: npm install
+
+      # inicia o CodeQL
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+
+      # build automático (funciona bem com node)
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      # roda análise
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
