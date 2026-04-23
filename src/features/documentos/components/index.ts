@@ -1,1 +1,1 @@
-export { DocumentoModal } from './DocumentoModal';
+export {};

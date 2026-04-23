@@ -1,1 +1,1 @@
-export { ReuniaoModal } from './ReuniaoModal';
+export {};

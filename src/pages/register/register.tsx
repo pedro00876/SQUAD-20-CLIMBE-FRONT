@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { routes } from '@/config/routes';
 import { ASSETS } from '@/config/assets';
 import { useRegister } from '@/features/auth/hooks';
-import { useAuthContext } from '@/contexts/AuthContext';
 import { maskCPF, maskPhone, unmask } from '@/utils/masks';
 
 const LOGO_BRANCA = ASSETS.logos.light;
@@ -25,7 +24,6 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 
 export function RegisterPage() {
   const { register: performRegister, isLoading, isError, error } = useRegister();
-  const { login } = useAuthContext();
   
   const {
     register,
@@ -173,22 +171,6 @@ export function RegisterPage() {
                 Processando...
               </span>
             ) : 'SOLICITAR CADASTRO'}
-          </Button>
-
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full h-12 shadow-none border-dashed border-climbe-primary/30 text-climbe-secondary hover:bg-climbe-primary/5"
-            onClick={() =>
-              login({
-                id: 'demo-user',
-                name: 'Usuario Demo',
-                email: 'demo@climbe.com',
-                role: 'ADMIN',
-              })
-            }
-          >
-            Acessar modo demo
           </Button>
         </form>
 

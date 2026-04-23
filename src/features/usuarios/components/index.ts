@@ -1,1 +1,1 @@
-export { UsuarioModal } from './UsuarioModal';
+export {};

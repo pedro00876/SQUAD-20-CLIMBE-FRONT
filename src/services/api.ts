@@ -3,7 +3,7 @@ import { env } from '@/config/env';
 
 export const api = axios.create({
   baseURL: env.apiUrl,
-  withCredentials: false,
+  withCredentials: true,
 });
 
 api.interceptors.response.use(

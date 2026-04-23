@@ -1,13 +1,4 @@
 import { BarChart3 } from 'lucide-react';
-import { BarChart } from '@/components/charts/bar-chart';
-import { ChartShell } from '@/components/charts/chart-shell';
-import { DonutChart } from '@/components/charts/donut-chart';
-import { MetricCard } from '@/components/charts/metric-card';
-import {
-  kpiPerformanceData,
-  reportsBreakdownData,
-  reportsTrendData,
-} from '@/features/dashboard/data/demo-analytics';
 
 export function RelatoriosPage() {
   return (
@@ -17,72 +8,37 @@ export function RelatoriosPage() {
           <BarChart3 size={20} />
           <span className="text-[10px] font-black uppercase tracking-[0.2em]">Análise</span>
         </div>
-        <h1 className="text-4xl font-black tracking-tighter text-climbe-secondary italic">Relatórios</h1>
-        <p className="max-w-2xl font-light text-gray-400">
-          Visualize o desempenho das operações com indicadores consolidados, comparativos estratégicos e acompanhamento por área.
+        <h1 className="text-4xl font-black text-climbe-secondary tracking-tighter italic">Relatórios</h1>
+        <p className="text-gray-400 font-light max-w-2xl">
+          Analise o desempenho da sua empresa através de dados precisos e relatórios customizados.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
-        {kpiPerformanceData.map((item, index) => (
-          <MetricCard
-            key={item.label}
-            label={item.label}
-            value={`${item.value}%`}
-            delta={index % 2 === 0 ? 'Meta acima' : 'Acompanhar'}
-            tone={index % 2 === 0 ? 'positive' : 'neutral'}
-          />
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 gap-8 xl:grid-cols-[1.25fr_0.95fr]">
-        <ChartShell
-          eyebrow="Desempenho"
-          title="Entrega semanal de relatórios"
-          description="Visão consolidada para acompanhamento por período e comparação entre equipes."
-          className="border-transparent bg-climbe-secondary text-white"
-          inverse
-        >
-          <div className="space-y-6">
-            <BarChart data={reportsTrendData} />
-            <div className="flex items-center justify-between border-t border-white/10 pt-4">
-              <span className="text-sm text-white/60">Total processado no ciclo demo</span>
-              <strong className="text-2xl font-black text-climbe-primary">81 entregas</strong>
-            </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="bg-climbe-secondary p-10 rounded-[40px] text-white space-y-6">
+          <h4 className="text-xl font-bold italic tracking-tight">Crescimento Mensal</h4>
+          <div className="h-48 flex items-end gap-3 px-2">
+            {[40, 70, 45, 90, 65, 100].map((h, i) => (
+              <div key={i} className={`flex-1 rounded-sm ${i === 5 ? 'bg-climbe-primary' : 'bg-white/10'}`} style={{ height: `${h}%` }} />
+            ))}
           </div>
-        </ChartShell>
-
-        <ChartShell
-          eyebrow="Cobertura"
-          title="Distribuição por área"
-          description="Acompanhe a participação de cada área no volume total de relatórios."
-        >
-          <DonutChart data={reportsBreakdownData} />
-        </ChartShell>
-      </div>
-
-      <ChartShell
-        eyebrow="Leitura rápida"
-        title="Indicadores prioritários"
-        description="Resumo executivo com os principais indicadores de acompanhamento."
-      >
-        <div className="space-y-4">
-          {kpiPerformanceData.map((item) => (
-            <div key={item.label} className="rounded-[24px] bg-gray-50 p-4">
-              <div className="mb-2 flex items-center justify-between gap-4">
-                <span className="font-semibold text-climbe-secondary">{item.label}</span>
-                <span className="text-sm font-black text-climbe-primary">{item.value}%</span>
-              </div>
-              <div className="h-3 overflow-hidden rounded-full bg-white">
-                <div
-                  className="h-full rounded-full bg-climbe-primary transition-all duration-700"
-                  style={{ width: `${item.value}%` }}
-                />
-              </div>
-            </div>
-          ))}
+          <div className="flex justify-between items-center pt-4 border-t border-white/10">
+            <span className="text-xs text-white/40">Total Gerado:</span>
+            <span className="text-climbe-primary font-black italic">R$ 145.200,00</span>
+          </div>
         </div>
-      </ChartShell>
+        <div className="bg-white p-10 rounded-[40px] border border-gray-100 shadow-sm space-y-6">
+           <h4 className="text-xl font-bold text-climbe-secondary italic tracking-tight">Principais KPIs</h4>
+           <div className="space-y-4">
+             {[1, 2, 3].map(i => (
+               <div key={i} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
+                  <div className="h-3 w-32 bg-gray-200 rounded-full" />
+                  <div className="h-3 w-12 bg-climbe-primary rounded-full" />
+               </div>
+             ))}
+           </div>
+        </div>
+      </div>
     </div>
   );
 }

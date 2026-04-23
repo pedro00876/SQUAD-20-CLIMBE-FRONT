@@ -1,1 +1,1 @@
-export { PropostaModal } from './PropostaModal';
+export {};

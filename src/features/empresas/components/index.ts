@@ -1,1 +1,1 @@
-export { EmpresaModal } from './EmpresaModal';
+export {};

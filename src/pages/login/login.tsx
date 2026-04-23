@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLogin } from '@/features/auth/hooks';
-import { useAuthContext } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { routes } from '@/config/routes';
@@ -12,7 +11,6 @@ const LOGO_PRETA = ASSETS.logos.dark;
 
 export function LoginPage() {
   const { login, isLoading, isError } = useLogin();
-  const { login: loginDemo } = useAuthContext();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
@@ -197,22 +195,6 @@ export function LoginPage() {
              <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
           </svg>
           <span className="text-gray-600 font-semibold text-sm">Continuar com Google</span>
-        </Button>
-
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full h-12 shadow-none border-dashed border-climbe-primary/30 text-climbe-secondary hover:bg-climbe-primary/5"
-          onClick={() =>
-            loginDemo({
-              id: 'demo-user',
-              name: 'Usuario Demo',
-              email: 'demo@climbe.com',
-              role: 'ADMIN',
-            })
-          }
-        >
-          Entrar em modo demo
         </Button>
       </div>
     </div>

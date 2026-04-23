@@ -14,6 +14,7 @@ import { RelatoriosPage } from '@/pages/relatorios/relatorios';
 import { NotificacoesPage } from '@/pages/notificacoes/notificacoes';
 import { routes } from '@/config/routes';
 
+// Layout raiz que injeta o AuthProvider dentro do contexto do router
 function RootLayout() {
   return (
     <AuthProvider>
@@ -38,19 +39,7 @@ export const router = createBrowserRouter([
         path: routes.register,
         element: <RegisterPage />,
       },
-      {
-        element: <Layout />,
-        children: [
-          {
-            path: routes.demoDashboard,
-            element: <DashboardPage />,
-          },
-          {
-            path: routes.demoRelatorios,
-            element: <RelatoriosPage />,
-          },
-        ],
-      },
+      // Rotas protegidas — redireciona para /login se não autenticado
       {
         element: <PrivateRoute />,
         children: [
