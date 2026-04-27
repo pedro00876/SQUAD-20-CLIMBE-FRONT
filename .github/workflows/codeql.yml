@@ -37,6 +37,7 @@ jobs:
       # instala dependências
       - name: Install dependencies
         run: npm install
+        working-directory: frontend
 
       # inicia o CodeQL
       - name: Initialize CodeQL

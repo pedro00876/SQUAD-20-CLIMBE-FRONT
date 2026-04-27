@@ -54,6 +54,8 @@ export function RegisterPage() {
       ...data,
       cpf: unmask(data.cpf),
       phone: unmask(data.phone),
+      cargoId: 1,
+      roleId: 1,
     });
   };
 

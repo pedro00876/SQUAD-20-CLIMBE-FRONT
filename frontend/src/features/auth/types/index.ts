@@ -19,4 +19,6 @@ export interface RegisterRequest {
   password: string;
   cpf: string;
   phone: string;
+  cargoId?: number;
+  roleId?: number;
 }
