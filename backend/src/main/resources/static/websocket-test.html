@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste de WebSocket STOMP</title>
+    <!-- Importando SockJS e STOMP da web -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .log-box { width: 100%; height: 300px; border: 1px solid #ccc; overflow-y: scroll; padding: 10px; background: #f9f9f9; }
+        .notification { padding: 10px; background-color: #d4edda; border-color: #c3e6cb; color: #155724; border-radius: 5px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <h2>Console de Teste WebSocket (Notificações)</h2>
+    <p>Para esse teste funcionar, você já precisa ter logado na aplicação no <strong>mesmo navegador</strong> (assim o cookie do JWT já vai existir no seu Chrome/Firefox para o domínio localhost).</p>
+    
+    <div>
+        <button onclick="conectar()" style="padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">1. Conectar ao WebSocket</button>
+        <button onclick="desconectar()" style="padding: 10px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">Desconectar</button>
+    </div>
+    
+    <br/>
+    <h3>Log em tempo real:</h3>
+    <div id="logs" class="log-box"></div>
+
+    <script type="text/javascript">
+        var stompClient = null;
+
+        function log(message, isNotification = false) {
+            var logBox = document.getElementById('logs');
+            var p = document.createElement('p');
+            p.innerHTML = message;
+            if(isNotification) {
+                p.className = 'notification';
+                p.innerHTML = "🔔 <strong>NOVA NOTIFICAÇÃO RECEBIDA:</strong> " + message;
+            }
+            logBox.appendChild(p);
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        function conectar() {
+            var socket = new SockJS('http://localhost:8080/ws-notifications');
+            stompClient = Stomp.over(socket);
+            
+            log("Iniciando tentativa de conexão...");
+
+            stompClient.connect({}, function (frame) {
+                log("Conectado com sucesso! Frame: " + frame);
+                
+                log("Inscrito na fila secreta do usuário conectado...");
+                stompClient.subscribe('/user/queue/notifications', function (notificacao) {
+                    var bodyObj = JSON.parse(notificacao.body);
+                    log(JSON.stringify(bodyObj, null, 2), true);
+                });
+            }, function(error) {
+                log("Erro na conexão (Você está logado? Possui o Cookie accessToken?): <br>" + error, false);
+            });
+        }
+
+        function desconectar() {
+            if (stompClient !== null) {
+                stompClient.disconnect();
+            }
+            log("Desconectado.");
+        }
+    </script>
+</body>
+</html>

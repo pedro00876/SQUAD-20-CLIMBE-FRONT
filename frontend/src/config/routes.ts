@@ -1,6 +1,5 @@
 export const routes = {
   login: '/login',
-  register: '/register',
   dashboard: '/dashboard',
   empresas: '/empresas',
   usuarios: '/usuarios',
@@ -9,4 +8,5 @@ export const routes = {
   reunioes: '/reunioes',
   relatorios: '/relatorios',
   notificacoes: '/notificacoes',
+  pendingApproval: '/pending-approval',
 } as const;

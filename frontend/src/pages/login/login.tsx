@@ -1,19 +1,31 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useLogin } from '@/features/auth/hooks';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { routes } from '@/config/routes';
 import { ASSETS } from '@/config/assets';
+import { env } from '@/config/env';
 
 const LOGO_BRANCA = ASSETS.logos.light;
 const LOGO_PRETA = ASSETS.logos.dark;
 
 export function LoginPage() {
-  const { login, isLoading, isError } = useLogin();
+  const { login, isLoading, isError, error } = useLogin();
+  const { isAuthenticated } = useAuthContext();
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
+  const pendingApprovalError = (error as any)?.response?.status === 403
+    && (error as any)?.response?.data?.message === 'PENDING_APPROVAL';
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(routes.dashboard);
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,8 +146,16 @@ export function LoginPage() {
             <div className="flex items-center gap-2.5 px-1 py-1 animate-in fade-in slide-in-from-top-1">
               <div className="w-1 h-1 rounded-full bg-red-400" />
               <p className="text-red-500 text-[11px] font-semibold uppercase tracking-widest">
-                E-mail ou senha incorretos
+                {pendingApprovalError ? 'Aguardando aprovação do CEO' : 'E-mail ou senha incorretos'}
               </p>
+            </div>
+          )}
+
+          {pendingApprovalError && (
+            <div className="px-1">
+              <Link to="/primeiro-acesso" className="text-xs text-climbe-primary font-bold hover:underline underline-offset-4">
+                Ir para primeiro acesso
+              </Link>
             </div>
           )}
 
@@ -169,7 +189,7 @@ export function LoginPage() {
 
         <div className="mt-6 text-center border-t border-gray-50 pt-4">
           <p className="text-sm text-gray-400 font-light tracking-tight">
-            Ainda não tem acesso? <Link to={routes.register} className="text-climbe-primary font-bold hover:underline underline-offset-4">Solicitar conta</Link>
+            Ainda não tem acesso? <Link to="/primeiro-acesso" className="text-climbe-primary font-bold hover:underline underline-offset-4">Primeiro Acesso</Link>
           </p>
         </div>
 
@@ -186,7 +206,7 @@ export function LoginPage() {
           type="button"
           variant="outline"
           className="w-full h-12 shadow-none border-gray-200 hover:bg-gray-50 flex items-center justify-center gap-3"
-          onClick={() => { window.location.href = 'http://localhost:8080/api/auth/login/google'; }}
+          onClick={() => { window.location.href = `${env.apiUrl}/login/oauth2/authorization/google`; }}
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="20px" height="20px">
              <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>

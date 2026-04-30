@@ -1,9 +1,10 @@
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { routes } from '@/config/routes';
 
 export function PrivateRoute() {
-  const { isAuthenticated, isLoading } = useAuthContext();
+  const { isAuthenticated, isLoading, isPending } = useAuthContext();
+  const location = useLocation();
 
   if (isLoading) {
     return (
@@ -13,5 +14,13 @@ export function PrivateRoute() {
     );
   }
 
-  return isAuthenticated ? <Outlet /> : <Navigate to={routes.login} replace />;
+  if (!isAuthenticated) {
+    return <Navigate to={routes.login} replace />;
+  }
+
+  if (isPending && location.pathname !== routes.pendingApproval) {
+    return <Navigate to={routes.pendingApproval} replace />;
+  }
+
+  return <Outlet />;
 }

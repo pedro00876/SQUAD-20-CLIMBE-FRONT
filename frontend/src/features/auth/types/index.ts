@@ -4,15 +4,24 @@ export interface LoginRequest {
 }
 
 export interface User {
-  id: string;
-  name: string;
+  id: string | number;
+  name?: string;
+  fullName?: string;
   email: string;
   role: string;
+  status?: 'ACTIVE' | 'ATIVO' | 'PENDING' | 'PENDENTE' | 'DISABLED';
+  active?: boolean;
 }
 
 export interface LoginResponse {
   // O token agora é gerenciado via cookie HttpOnly
 }
+export interface Permission {
+  id: number;
+  nome: string;
+  descricao: string;
+}
+
 export interface RegisterRequest {
   fullName: string;
   email: string;

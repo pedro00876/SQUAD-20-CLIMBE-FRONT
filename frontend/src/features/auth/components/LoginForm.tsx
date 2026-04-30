@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 
+import { env } from '@/config/env';
+
 export function LoginForm() {
   const { login } = useAuthContext();
 
@@ -93,7 +95,7 @@ export function LoginForm() {
             </div>
           </div>
 
-          <Button type="button" variant="outline" className="w-full" onClick={() => { window.location.href = 'http://localhost:8080/api/auth/login/google'; }} disabled={isSubmitting}>
+          <Button type="button" variant="outline" className="w-full" onClick={() => { window.location.href = `${env.apiUrl}/login/oauth2/authorization/google`; }} disabled={isSubmitting}>
             Continuar com Google
           </Button>
         </CardFooter>

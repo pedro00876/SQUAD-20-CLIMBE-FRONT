@@ -2,9 +2,11 @@ import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-rou
 import { AuthProvider } from '@/contexts/AuthContext';
 import { Layout } from '@/components/layout/page-wrapper';
 import { PrivateRoute } from '@/components/auth/PrivateRoute';
+import { RoleRoute } from '@/components/auth/RoleRoute';
 import { LoginPage } from '@/pages/login/login';
-import { RegisterPage } from '@/pages/register/register';
+import { FirstAccessPage } from '@/pages/first-access/first-access';
 import { DashboardPage } from '@/pages/dashboard/dashboard';
+import { PendingApprovalPage } from '@/pages/pending-approval/pending-approval';
 import { EmpresasPage } from '@/pages/empresas/empresas';
 import { UsuariosPage } from '@/pages/usuarios/usuarios';
 import { PropostasPage } from '@/pages/propostas/propostas';
@@ -29,20 +31,24 @@ export const router = createBrowserRouter([
     children: [
       {
         path: '/',
-        element: <Navigate to={routes.dashboard} replace />,
+        element: <Navigate to={routes.login} replace />,
       },
       {
         path: routes.login,
         element: <LoginPage />,
       },
       {
-        path: routes.register,
-        element: <RegisterPage />,
+        path: '/primeiro-acesso',
+        element: <FirstAccessPage />,
       },
       // Rotas protegidas — redireciona para /login se não autenticado
       {
         element: <PrivateRoute />,
         children: [
+          {
+            path: '/pending-approval',
+            element: <PendingApprovalPage />,
+          },
           {
             element: <Layout />,
             children: [
@@ -55,8 +61,13 @@ export const router = createBrowserRouter([
                 element: <EmpresasPage />,
               },
               {
-                path: routes.usuarios,
-                element: <UsuariosPage />,
+                element: <RoleRoute allowedRoles={['CEO']} />,
+                children: [
+                  {
+                    path: routes.usuarios,
+                    element: <UsuariosPage />,
+                  },
+                ],
               },
               {
                 path: routes.propostas,

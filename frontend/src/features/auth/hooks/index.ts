@@ -22,20 +22,31 @@ export function useLogin() {
   };
 }
 
-export function useRegister() {
-  const { login } = useAuthContext();
-
+export function useRequestAccess() {
   const mutation = useMutation({
-    mutationFn: (data: RegisterRequest) => authService.register(data),
-    onSuccess: async () => {
-      await login();
-    },
+    mutationFn: (email: string) => authService.requestAccess(email),
+  });
+
+  return {
+    requestAccess: mutation.mutate,
+    requestAccessAsync: mutation.mutateAsync,
+    isLoading: mutation.isPending,
+    isSuccess: mutation.isSuccess,
+    isError: mutation.isError,
+    error: mutation.error,
+  };
+}
+
+export function useRegister() {
+  const mutation = useMutation({
+    mutationFn: (payload: RegisterRequest) => authService.register(payload),
   });
 
   return {
     register: mutation.mutate,
     registerAsync: mutation.mutateAsync,
     isLoading: mutation.isPending,
+    isSuccess: mutation.isSuccess,
     isError: mutation.isError,
     error: mutation.error,
   };

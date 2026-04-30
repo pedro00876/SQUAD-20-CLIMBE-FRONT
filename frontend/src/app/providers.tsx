@@ -3,6 +3,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { PermissionProvider } from '@/contexts/PermissionContext';
 
+import { Toaster } from 'sonner';
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -22,6 +24,7 @@ export function Providers({ children }: ProvidersProps) {
       <ThemeProvider>
         <PermissionProvider>
           {children}
+          <Toaster richColors position="top-right" />
         </PermissionProvider>
       </ThemeProvider>
     </QueryClientProvider>
