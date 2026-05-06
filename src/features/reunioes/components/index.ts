@@ -1,1 +1,0 @@
-export { ReuniaoModal } from './ReuniaoModal';
