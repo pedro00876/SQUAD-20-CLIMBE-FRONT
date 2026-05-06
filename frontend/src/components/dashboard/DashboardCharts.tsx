@@ -1,5 +1,7 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
+const chartPrimaryColor = '#79C6C0';
+
 const data = [
   { name: 'Jan', value: 400 },
   { name: 'Fev', value: 300 },
@@ -10,7 +12,7 @@ const data = [
 ];
 
 const pieData = [
-  { name: 'Ativas', value: 45, color: '#00FF00' },
+  { name: 'Ativas', value: 45, color: chartPrimaryColor },
   { name: 'Pendentes', value: 25, color: '#888888' },
   { name: 'Concluídas', value: 30, color: '#111111' },
 ];
@@ -45,7 +47,7 @@ export function RevenueChart() {
           />
           <Bar 
             dataKey="value" 
-            fill="#00FF00" 
+            fill={chartPrimaryColor} 
             radius={[6, 6, 0, 0]} 
             barSize={32}
           />
