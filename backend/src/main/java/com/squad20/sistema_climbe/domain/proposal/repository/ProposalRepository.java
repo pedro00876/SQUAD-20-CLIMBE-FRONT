@@ -15,6 +15,8 @@ public interface ProposalRepository extends JpaRepository<Proposal, Long> {
 
     List<Proposal> findByUser_Id(Long userId);
 
+    long countByStatus(String status);
+
     // Batch soft delete por empresa. @SQLRestriction não se aplica a UPDATE — a cláusula IS NULL é explícita aqui.
     @Modifying
     @Query("UPDATE Proposal p SET p.deletedAt = :deletedAt WHERE p.enterprise.id = :enterpriseId AND p.deletedAt IS NULL")

@@ -3,8 +3,23 @@ import { StatCard } from '@/components/dashboard/StatCard';
 import { RevenueChart, StatusPieChart } from '@/components/dashboard/DashboardCharts';
 import { GoogleCalendar } from '@/components/dashboard/GoogleCalendar';
 import { motion } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
+import { dashboardService } from '@/services/dashboard.service';
 
 export function DashboardPage() {
+  const { data: stats, isLoading } = useQuery({
+    queryKey: ['dashboard-stats'],
+    queryFn: dashboardService.getStats
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-[50vh]">
+        <div className="w-12 h-12 border-4 border-climbe-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 pb-12">
       {/* Header */}
@@ -27,28 +42,28 @@ export function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard 
           title="Propostas" 
-          value="124" 
+          value={String(stats?.totalProposals || 0)} 
           subValue="+12% este mês" 
           icon={FileText} 
           trend="up"
         />
         <StatCard 
           title="Contratos" 
-          value="48" 
+          value={String(stats?.totalContracts || 0)} 
           subValue="8 novos este mês" 
           icon={Briefcase} 
           trend="up"
         />
         <StatCard 
           title="Clientes" 
-          value="89" 
+          value={String(stats?.totalClients || 0)} 
           subValue="+4 desde a semana passada" 
           icon={Users} 
           trend="neutral"
         />
         <StatCard 
           title="Receita" 
-          value="R$ 45k" 
+          value={stats?.totalRevenue || 'R$ 0'} 
           subValue="+22% vs anterior" 
           icon={TrendingUp} 
           trend="up"
@@ -58,13 +73,13 @@ export function DashboardPage() {
       {/* Middle Section: Charts + Calendar */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
         {/* Gráfico de Barras */}
-        <div className="lg:col-span-4 bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm flex flex-col">
+        <div className="lg:col-span-4 bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm flex flex-col min-w-0">
           <div className="mb-8">
             <h3 className="font-bold text-climbe-secondary italic leading-tight">Fluxo de Propostas</h3>
             <p className="text-[10px] text-gray-400 uppercase tracking-widest font-medium">Volume Semestral</p>
           </div>
           <div className="flex-1 flex items-center">
-            <RevenueChart />
+            <RevenueChart data={stats?.monthlyRevenue} />
           </div>
         </div>
 
@@ -74,13 +89,13 @@ export function DashboardPage() {
         </div>
 
         {/* Gráfico de Pizza */}
-        <div className="lg:col-span-4 bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm flex flex-col">
+        <div className="lg:col-span-4 bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm flex flex-col min-w-0">
           <div className="mb-8">
             <h3 className="font-bold text-climbe-secondary italic leading-tight">Distribuição de Status</h3>
             <p className="text-[10px] text-gray-400 uppercase tracking-widest font-medium">Performance de Conversão</p>
           </div>
           <div className="flex-1 flex items-center">
-            <StatusPieChart />
+            <StatusPieChart data={stats?.proposalStatusDistribution} />
           </div>
           <div className="mt-6 flex justify-around">
              <div className="flex flex-col items-center">
@@ -93,7 +108,7 @@ export function DashboardPage() {
              </div>
              <div className="flex flex-col items-center">
                 <div className="w-2 h-2 rounded-full bg-climbe-secondary mb-1" />
-                <span className="text-[10px] font-bold text-gray-400 uppercase">Concluídas</span>
+                <span className="text-[10px] font-bold text-gray-400 uppercase">Recusadas</span>
              </div>
           </div>
         </div>
@@ -108,11 +123,7 @@ export function DashboardPage() {
           </button>
         </div>
         <div className="p-8 space-y-6">
-          {[
-            { name: "Nova Proposta - Cliente ABC", time: "Há 2 horas", status: "PENDENTE", color: "bg-gray-100" },
-            { name: "Contrato Assinado - Tech Corp", time: "Há 5 horas", status: "CONCLUÍDO", color: "bg-climbe-primary" },
-            { name: "Reunião Agendada", time: "Há 1 dia", status: "AGENDADO", color: "bg-climbe-secondary text-white" }
-          ].map((activity, i) => (
+          {(stats?.recentActivities || []).map((activity, i) => (
             <div key={i} className="flex items-center justify-between py-4 border-b border-gray-50 last:border-0 group cursor-pointer hover:bg-gray-50/50 -mx-4 px-4 rounded-2xl transition-all">
               <div className="flex items-center gap-4">
                 <div className={`w-10 h-10 rounded-xl ${activity.color} flex items-center justify-center font-black italic text-xs`}>

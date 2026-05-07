@@ -156,8 +156,8 @@ export function GoogleCalendar() {
       </div>
 
       <div className="p-4 grid grid-cols-7 gap-1 border-b border-gray-50">
-        {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(day => (
-          <div key={day} className="text-[10px] font-black text-gray-300 text-center py-2 uppercase tracking-tighter">
+        {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((day, index) => (
+          <div key={`${day}-${index}`} className="text-[10px] font-black text-gray-300 text-center py-2 uppercase tracking-tighter">
             {day}
           </div>
         ))}

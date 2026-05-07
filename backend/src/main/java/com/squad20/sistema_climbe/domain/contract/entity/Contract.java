@@ -34,6 +34,9 @@ public class Contract extends BaseEntity {
     @Column(name = "data_fim")
     private LocalDate endDate;
 
+    @Column(name = "valor_total")
+    private java.math.BigDecimal totalValue;
+
     @Column(name = "status", length = 50)
     private String status;
 }

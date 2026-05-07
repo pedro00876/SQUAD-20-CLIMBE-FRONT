@@ -10,4 +10,5 @@ export const routes = {
   notificacoes: '/notificacoes',
   pendingApproval: '/pending-approval',
   contratos: '/contratos',
+  perfil: '/perfil',
 } as const;
