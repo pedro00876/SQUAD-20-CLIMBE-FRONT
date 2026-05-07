@@ -135,9 +135,9 @@ export function GoogleCalendar() {
             <p className="text-[10px] text-gray-400 uppercase tracking-widest font-medium">Google Integration</p>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-2">
-          <button 
+          <button
             onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
             className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
           >
@@ -146,7 +146,7 @@ export function GoogleCalendar() {
           <span className="text-sm font-bold text-climbe-secondary min-w-[100px] text-center italic">
             {format(currentMonth, 'MMMM yyyy', { locale: ptBR })}
           </span>
-          <button 
+          <button
             onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
             className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
           >
@@ -189,7 +189,7 @@ export function GoogleCalendar() {
           const displayCount = dayEvents.length > 9 ? '9+' : String(dayEvents.length);
           const eventPreview = dayEvents[0]?.summary || 'Reunião';
           return (
-            <motion.div 
+            <motion.div
               key={idx}
               whileHover={{ scale: 1.05 }}
               className={`
@@ -225,7 +225,7 @@ export function GoogleCalendar() {
                 <div className="h-16 rounded-2xl bg-gray-100 animate-pulse" />
               </div>
             ) : upcomingEvents.length > 0 ? upcomingEvents.map(event => (
-              <motion.div 
+              <motion.div
                 key={event.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
