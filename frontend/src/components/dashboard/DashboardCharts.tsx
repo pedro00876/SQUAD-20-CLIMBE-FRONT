@@ -17,11 +17,20 @@ const pieData = [
   { name: 'Concluídas', value: 30, color: '#111111' },
 ];
 
-export function RevenueChart() {
+export function RevenueChart({ data: propData }: { data?: any[] }) {
+  const chartData = propData || [
+    { name: 'Jan', value: 400 },
+    { name: 'Fev', value: 300 },
+    { name: 'Mar', value: 600 },
+    { name: 'Abr', value: 800 },
+    { name: 'Mai', value: 500 },
+    { name: 'Jun', value: 700 },
+  ];
+
   return (
-    <div className="h-[300px] w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data}>
+    <div className="h-[300px] w-full min-w-0">
+      <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+        <BarChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
           <XAxis 
             dataKey="name" 
@@ -57,13 +66,21 @@ export function RevenueChart() {
   );
 }
 
-export function StatusPieChart() {
+export function StatusPieChart({ data: propData }: { data?: any[] }) {
+  const chartData = propData || [
+    { name: 'Ativas', value: 45, color: chartPrimaryColor },
+    { name: 'Pendentes', value: 25, color: '#888888' },
+    { name: 'Concluídas', value: 30, color: '#111111' },
+  ];
+
+  const colors = [chartPrimaryColor, '#888888', '#111111'];
+
   return (
-    <div className="h-[300px] w-full relative flex items-center justify-center">
-      <ResponsiveContainer width="100%" height="100%">
+    <div className="h-[300px] w-full min-w-0 relative flex items-center justify-center">
+      <ResponsiveContainer width="100%" height="100%" minWidth={0}>
         <PieChart>
           <Pie
-            data={pieData}
+            data={chartData}
             cx="50%"
             cy="50%"
             innerRadius={60}
@@ -71,8 +88,8 @@ export function StatusPieChart() {
             paddingAngle={8}
             dataKey="value"
           >
-            {pieData.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.color} />
+            {chartData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={entry.color || colors[index % colors.length]} />
             ))}
           </Pie>
           <Tooltip />

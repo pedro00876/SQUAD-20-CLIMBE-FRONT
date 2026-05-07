@@ -15,6 +15,7 @@ import { ReunioesPage } from '@/pages/reunioes/reunioes';
 import { RelatoriosPage } from '@/pages/relatorios/relatorios';
 import { NotificacoesPage } from '@/pages/notificacoes/notificacoes';
 import { ContratosPage } from '@/pages/contratos/contratos';
+import { PerfilPage } from '@/pages/perfil/perfil';
 import { routes } from '@/config/routes';
 
 // Layout raiz que injeta o AuthProvider dentro do contexto do router
@@ -93,6 +94,10 @@ export const router = createBrowserRouter([
               {
                 path: routes.contratos,
                 element: <ContratosPage />,
+              },
+              {
+                path: routes.perfil,
+                element: <PerfilPage />,
               },
             ],
           },

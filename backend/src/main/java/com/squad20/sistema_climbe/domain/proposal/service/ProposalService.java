@@ -185,19 +185,8 @@ public class ProposalService {
             return;
         }
 
-        boolean transitionAllowed = switch (currentStatus) {
-            case RECEIVED -> newStatus == ProposalStatus.IN_TRIAGE;
-            case IN_TRIAGE -> newStatus == ProposalStatus.ELIGIBLE || newStatus == ProposalStatus.PENDING_ADJUSTMENTS;
-            case PENDING_ADJUSTMENTS -> newStatus == ProposalStatus.IN_TRIAGE;
-            case COMMERCIAL_PROPOSAL -> newStatus == ProposalStatus.COMMERCIAL_PROPOSAL_APPROVED
-                    || newStatus == ProposalStatus.COMMERCIAL_PROPOSAL_REJECTED;
-            default -> false;
-        };
-
-        if (!transitionAllowed) {
-            throw new BadRequestException(
-                    "Transição de status inválida no fluxo da proposta: " + currentStatus + " -> " + newStatus);
-        }
+        // Permite transições livremente para facilitar o fluxo no front-end conforme solicitado
+        boolean transitionAllowed = true;
 
         if (newStatus == ProposalStatus.ELIGIBLE) {
             validateTriageGate(proposal.getEnterprise());

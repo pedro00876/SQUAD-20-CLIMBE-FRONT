@@ -1,8 +1,17 @@
-import { BarChart3 } from 'lucide-react';
+import { BarChart3, FileText, Loader2, Calendar } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { reportService, type Report } from '@/services/report.service';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 export function RelatoriosPage() {
+  const { data: reportsPage, isLoading } = useQuery({
+    queryKey: ['reports'],
+    queryFn: () => reportService.list(0, 100)
+  });
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-12">
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-3 text-climbe-primary">
           <BarChart3 size={20} />
@@ -14,31 +23,45 @@ export function RelatoriosPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="bg-climbe-secondary p-10 rounded-[40px] text-white space-y-6">
-          <h4 className="text-xl font-bold italic tracking-tight">Crescimento Mensal</h4>
-          <div className="h-48 flex items-end gap-3 px-2">
-            {[40, 70, 45, 90, 65, 100].map((h, i) => (
-              <div key={i} className={`flex-1 rounded-sm ${i === 5 ? 'bg-climbe-primary' : 'bg-white/10'}`} style={{ height: `${h}%` }} />
-            ))}
-          </div>
-          <div className="flex justify-between items-center pt-4 border-t border-white/10">
-            <span className="text-xs text-white/40">Total Gerado:</span>
-            <span className="text-climbe-primary font-black italic">R$ 145.200,00</span>
-          </div>
+      {isLoading ? (
+        <div className="flex items-center justify-center h-[50vh]">
+          <Loader2 className="w-12 h-12 text-climbe-primary animate-spin" />
         </div>
-        <div className="bg-white p-10 rounded-[40px] border border-gray-100 shadow-sm space-y-6">
-           <h4 className="text-xl font-bold text-climbe-secondary italic tracking-tight">Principais KPIs</h4>
-           <div className="space-y-4">
-             {[1, 2, 3].map(i => (
-               <div key={i} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
-                  <div className="h-3 w-32 bg-gray-200 rounded-full" />
-                  <div className="h-3 w-12 bg-climbe-primary rounded-full" />
+      ) : (reportsPage?.content || []).length === 0 ? (
+        <div className="bg-white p-20 rounded-[40px] border border-gray-100 shadow-sm flex flex-col items-center justify-center text-center space-y-4">
+          <div className="w-24 h-24 rounded-[32px] bg-gray-50 flex items-center justify-center text-gray-200">
+            <BarChart3 size={48} />
+          </div>
+          <h3 className="text-2xl font-bold text-climbe-secondary italic">Nenhum relatório gerado</h3>
+          <p className="text-sm text-gray-400 max-w-xs">Os relatórios técnicos e comerciais aparecerão aqui assim que forem processados pelo sistema.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {reportsPage.content.map((report: Report) => (
+            <div key={report.id} className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm hover:shadow-xl transition-all group">
+               <div className="w-12 h-12 rounded-2xl bg-climbe-secondary text-white flex items-center justify-center mb-6">
+                 <FileText size={24} />
                </div>
-             ))}
-           </div>
+               
+               <div className="space-y-2">
+                 <h4 className="text-lg font-bold text-climbe-secondary italic">{report.name}</h4>
+                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">TIPO: {report.type}</p>
+                 <p className="text-sm text-gray-500 line-clamp-2">{report.content}</p>
+               </div>
+
+               <div className="flex items-center justify-between pt-6 mt-6 border-t border-gray-50">
+                  <div className="flex items-center gap-2 text-gray-400">
+                    <Calendar size={12} />
+                    <span className="text-[10px] font-bold">
+                      {report.createdAt ? format(new Date(report.createdAt), "dd/MM/yyyy", { locale: ptBR }) : '--'}
+                    </span>
+                  </div>
+                  <button className="text-[10px] font-black text-climbe-primary uppercase tracking-widest hover:underline">Ver Detalhes</button>
+               </div>
+            </div>
+          ))}
         </div>
-      </div>
+      )}
     </div>
   );
 }

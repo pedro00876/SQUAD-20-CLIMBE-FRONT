@@ -20,6 +20,8 @@ public class ContractDTO {
 
     private LocalDate endDate;
 
+    private java.math.BigDecimal totalValue;
+
     @Size(max = 50)
     private String status;
 }

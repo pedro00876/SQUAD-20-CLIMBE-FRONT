@@ -8,13 +8,13 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
 public interface ContractRepository extends JpaRepository<Contract, Long> {
 
     List<Contract> findByProposal_Id(Long proposalId);
 
-    // Batch soft delete por proposta. @SQLRestriction não se aplica a UPDATE — a cláusula IS NULL é explícita aqui.
-    // c.proposal.id usa FK direta (proposta_id), sem JOIN — geração SQL simples.
+    @Query("SELECT SUM(c.totalValue) FROM Contract c WHERE c.deletedAt IS NULL")
+    java.math.BigDecimal sumTotalValue();
+
     @Modifying
     @Query("UPDATE Contract c SET c.deletedAt = :deletedAt WHERE c.proposal.id = :proposalId AND c.deletedAt IS NULL")
     void softDeleteByProposalId(@Param("proposalId") Long proposalId, @Param("deletedAt") LocalDateTime deletedAt);
