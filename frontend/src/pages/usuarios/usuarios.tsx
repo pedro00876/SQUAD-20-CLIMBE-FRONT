@@ -8,12 +8,44 @@ import { toast } from 'sonner';
 
 export function UsuariosPage() {
   const [page, setPage] = useState(0);
+  const [search, setSearch] = useState('');
+  const pageSize = 10;
   const queryClient = useQueryClient();
 
+  const isUserActive = (user: User) => {
+    const status = user.status?.toUpperCase();
+    return user.active === true || status === 'ATIVO' || status === 'ACTIVE';
+  };
+
+  const getRoleLabel = (user: User) => {
+    if (user.cargo?.nome) return user.cargo.nome;
+    if (typeof user.role === 'string') return user.role;
+    if (user.role?.nome) return user.role.nome;
+    return 'Sem Cargo';
+  };
+
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['users', page],
-    queryFn: () => userService.listUsers(page, 10),
+    queryKey: ['users', page, pageSize],
+    queryFn: () => userService.listUsers(page, pageSize),
   });
+
+  const filteredUsers = (data?.content || []).filter((user: User) => {
+    const term = search.trim().toLowerCase();
+    if (!term) return true;
+
+    return [
+      user.fullName,
+      user.email,
+      user.cpf,
+      getRoleLabel(user),
+      user.status,
+    ].some(value => value?.toLowerCase().includes(term));
+  });
+
+  const totalPages = data?.totalPages || 1;
+  const isSearching = search.trim().length > 0;
+  const canGoBack = !isSearching && page > 0;
+  const canGoForward = !isSearching && page + 1 < totalPages;
 
   const approveMutation = useMutation({
     mutationFn: (id: string) => userService.approveUser(id),
@@ -21,8 +53,9 @@ export function UsuariosPage() {
       toast.success('Usuário aprovado com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['users'] });
     },
-    onError: () => {
-      toast.error('Erro ao aprovar usuário.');
+    onError: (error: any) => {
+      const message = error?.response?.data?.message || error?.response?.data?.error || 'Erro ao aprovar usuário.';
+      toast.error(message);
     }
   });
 
@@ -62,23 +95,28 @@ export function UsuariosPage() {
           <input 
             type="text" 
             placeholder="Buscar por nome ou e-mail..."
+            value={search}
+            onChange={e => {
+              setSearch(e.target.value);
+              setPage(0);
+            }}
             className="w-full max-w-md px-6 py-3.5 bg-gray-50 border-transparent rounded-2xl text-sm focus:ring-2 focus:ring-climbe-primary/10 outline-none"
           />
           <div className="flex items-center gap-4 text-xs text-gray-400">
-            <span>Página {page + 1} de {data?.totalPages || 1}</span>
+            <span>Página {page + 1} de {totalPages}</span>
             <div className="flex gap-2">
               <Button 
                 variant="outline" 
                 size="sm" 
-                disabled={page === 0}
-                onClick={() => setPage(p => p - 1)}
+                disabled={!canGoBack}
+                onClick={() => setPage(p => Math.max(0, p - 1))}
               >
                 Anterior
               </Button>
               <Button 
                 variant="outline" 
                 size="sm" 
-                disabled={page + 1 >= (data?.totalPages || 1)}
+                disabled={!canGoForward}
                 onClick={() => setPage(p => p + 1)}
               >
                 Próxima
@@ -89,7 +127,7 @@ export function UsuariosPage() {
 
         <div className="p-8">
           <div className="space-y-4">
-            {data?.content.map((user: User) => (
+            {filteredUsers.map((user: User) => (
               <div key={user.id} className="flex items-center justify-between p-5 hover:bg-gray-50 rounded-2xl transition-colors border border-transparent hover:border-gray-100">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-full bg-climbe-primary/10 flex items-center justify-center text-climbe-secondary font-black text-sm">
@@ -99,13 +137,13 @@ export function UsuariosPage() {
                     <h5 className="text-sm font-bold text-climbe-secondary italic">{user.fullName}</h5>
                     <p className="text-xs text-gray-400">{user.email}</p>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">{user.cargo?.nome || 'Sem Cargo'}</span>
+                      <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">{getRoleLabel(user)}</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-4">
-                  {user.active ? (
+                  {isUserActive(user) ? (
                     <div className="flex items-center gap-2 px-4 py-1.5 bg-green-50 text-green-600 rounded-full text-[10px] font-black uppercase tracking-wider">
                       <CheckCircle size={12} />
                       Ativo
@@ -117,7 +155,7 @@ export function UsuariosPage() {
                     </div>
                   )}
 
-                  {!user.active && (
+                  {!isUserActive(user) && (
                     <Button 
                       size="sm" 
                       className="h-8 text-[10px] font-black"
@@ -131,7 +169,7 @@ export function UsuariosPage() {
               </div>
             ))}
 
-            {data?.content.length === 0 && (
+            {filteredUsers.length === 0 && (
               <div className="text-center py-12">
                 <p className="text-gray-400 text-sm italic">Nenhum usuário encontrado.</p>
               </div>

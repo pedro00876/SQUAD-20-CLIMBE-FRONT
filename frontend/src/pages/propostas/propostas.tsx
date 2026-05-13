@@ -227,18 +227,18 @@ export function PropostasPage() {
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
         <div className="space-y-6">
           <div>
-            <h2 className="text-2xl font-black text-climbe-secondary italic tracking-tight">Nova Proposta</h2>
-            <p className="text-xs text-gray-400">Inicie um novo processo comercial selecionando o cliente.</p>
+            <h2 className="text-2xl font-black text-white italic tracking-tight">Nova Proposta</h2>
+            <p className="text-xs text-slate-300">Inicie um novo processo comercial selecionando o cliente.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest">Selecionar Empresa</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">Selecionar Empresa</Label>
               <select 
                 required
                 value={selectedEnterpriseId}
                 onChange={e => setSelectedEnterpriseId(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 border-transparent rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-climbe-primary/10 transition-all outline-none border focus:border-climbe-primary/20 appearance-none"
+                className="w-full px-4 py-3 bg-white border-transparent rounded-xl text-sm text-slate-900 focus:bg-white focus:ring-2 focus:ring-climbe-primary/40 transition-all outline-none border focus:border-climbe-primary/40 appearance-none"
               >
                 <option value="">Selecione uma empresa...</option>
                 {(enterprisesPage?.content || []).map((enterprise: any) => (
@@ -249,12 +249,12 @@ export function PropostasPage() {
               </select>
             </div>
 
-            <div className="p-4 bg-climbe-primary/5 rounded-2xl border border-climbe-primary/10 space-y-2">
+            <div className="p-4 bg-white/5 rounded-2xl border border-white/10 space-y-2">
                <div className="flex items-center gap-2 text-climbe-primary">
                  <User size={14} />
                  <span className="text-[10px] font-black uppercase tracking-widest">Responsável</span>
                </div>
-               <p className="text-xs font-bold text-climbe-secondary italic">{user?.name}</p>
+               <p className="text-xs font-bold text-slate-200 italic">{user?.name}</p>
             </div>
 
             <div className="flex gap-3 pt-4">
@@ -262,14 +262,14 @@ export function PropostasPage() {
                 type="button" 
                 variant="ghost" 
                 onClick={() => setIsModalOpen(false)}
-                className="flex-1 font-bold"
+                className="flex-1 font-bold text-climbe-primary hover:bg-white/10 hover:text-climbe-primary"
               >
                 Cancelar
               </Button>
               <Button 
                 type="submit" 
                 disabled={createMutation.isPending || !selectedEnterpriseId}
-                className="flex-1 bg-climbe-secondary text-white font-black italic rounded-xl"
+                className="flex-1 bg-climbe-primary text-climbe-secondary font-black italic rounded-xl shadow-lg shadow-climbe-primary/20 hover:bg-climbe-primary/90 disabled:bg-white/10 disabled:text-slate-400 disabled:shadow-none"
               >
                 {createMutation.isPending ? 'CRIANDO...' : 'CRIAR PROPOSTA'}
               </Button>

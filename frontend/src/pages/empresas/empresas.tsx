@@ -1,4 +1,4 @@
-import { Building2, Plus, Mail, Phone, User, MapPin, Loader2 } from 'lucide-react';
+import { Building2, Plus, Mail, User, MapPin, Loader2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { enterpriseService, type CreateEnterpriseRequest } from '@/services/enterprise.service';
 import { useState } from 'react';
@@ -130,67 +130,73 @@ export function EmpresasPage() {
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
         <div className="space-y-6 max-h-[80vh] overflow-y-auto p-2">
           <div>
-            <h2 className="text-2xl font-black text-climbe-secondary italic tracking-tight">Nova Empresa</h2>
+            <h2 className="text-2xl font-black text-white italic tracking-tight">Nova Empresa</h2>
             <p className="text-xs text-gray-400">Preencha os dados básicos da empresa cliente.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2 space-y-2">
+              <div className="col-span-2 space-y-2 text-slate-200">
                 <Label className="text-[10px] font-black uppercase tracking-widest">Razão Social</Label>
                 <Input 
                   required
                   value={formData.legalName}
                   onChange={e => setFormData({...formData, legalName: e.target.value})}
                   placeholder="Nome legal da empresa" 
+                  className="bg-white text-slate-900 placeholder:text-slate-400"
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest">Nome Fantasia</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">Nome Fantasia</Label>
                 <Input 
                   value={formData.tradeName}
                   onChange={e => setFormData({...formData, tradeName: e.target.value})}
                   placeholder="Ex: Climbe" 
+                  className="bg-white text-slate-900 placeholder:text-slate-400"
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest">CNPJ</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">CNPJ</Label>
                 <Input 
                   required
                   value={formData.cnpj}
                   onChange={e => setFormData({...formData, cnpj: e.target.value})}
                   placeholder="00.000.000/0000-00" 
+                  className="bg-white text-slate-900 placeholder:text-slate-400"
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest">E-mail</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">E-mail</Label>
                 <Input 
                   required
                   type="email"
                   value={formData.email}
                   onChange={e => setFormData({...formData, email: e.target.value})}
                   placeholder="empresa@exemplo.com" 
+                  className="bg-white text-slate-900 placeholder:text-slate-400"
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest">Telefone</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">Telefone</Label>
                 <Input 
                   value={formData.phone}
                   onChange={e => setFormData({...formData, phone: e.target.value})}
                   placeholder="(00) 0000-0000" 
+                  className="bg-white text-slate-900 placeholder:text-slate-400"
                 />
               </div>
             </div>
 
-            <div className="pt-4 border-t border-gray-50">
+            <div className="pt-4 border-t border-white/20">
               <h3 className="text-xs font-black text-climbe-primary uppercase tracking-widest mb-4">Representante</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2 space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest">Nome do Representante</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">Nome do Representante</Label>
                   <Input 
                     value={formData.representativeName}
                     onChange={e => setFormData({...formData, representativeName: e.target.value})}
                     placeholder="Nome completo" 
+                    className="bg-white text-slate-900 placeholder:text-slate-400"
                   />
                 </div>
               </div>
@@ -201,14 +207,14 @@ export function EmpresasPage() {
                 type="button" 
                 variant="ghost" 
                 onClick={() => setIsModalOpen(false)}
-                className="flex-1 font-bold"
+                className="flex-1 font-bold text-climbe-primary hover:bg-white/10 hover:text-climbe-primary"
               >
                 Cancelar
               </Button>
               <Button 
                 type="submit" 
                 disabled={createMutation.isPending}
-                className="flex-1 bg-climbe-secondary text-white font-black italic rounded-xl"
+                className="flex-1 bg-climbe-primary text-climbe-secondary font-black italic rounded-xl shadow-lg shadow-climbe-primary/20 hover:bg-climbe-primary/90"
               >
                 {createMutation.isPending ? 'SALVANDO...' : 'SALVAR EMPRESA'}
               </Button>

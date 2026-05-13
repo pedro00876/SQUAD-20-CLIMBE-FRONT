@@ -7,8 +7,9 @@ export interface User {
   email: string;
   cpf: string;
   phone: string;
-  active: boolean;
-  role?: Cargo;
+  status?: string;
+  active?: boolean;
+  role?: string | Cargo;
   cargo?: Cargo;
 }
 
@@ -16,6 +17,8 @@ export interface UserPatchRequest {
   fullName?: string;
   email?: string;
   phone?: string;
+  status?: string;
+  role?: string;
   cargoId?: number;
   active?: boolean;
 }
