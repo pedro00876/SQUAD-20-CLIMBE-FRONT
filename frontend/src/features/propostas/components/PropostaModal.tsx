@@ -3,6 +3,7 @@ import { User } from 'lucide-react';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import type { Enterprise } from '@/services/enterprise.service';
 
 interface PropostaModalProps {
   isOpen: boolean;
@@ -11,7 +12,7 @@ interface PropostaModalProps {
   onSelectedEnterpriseIdChange: (value: string) => void;
   onSubmit: (event: FormEvent) => void;
   isSubmitting: boolean;
-  enterprises: any[];
+  enterprises: Enterprise[];
   responsibleName?: string;
 }
 
@@ -26,7 +27,7 @@ export function PropostaModal({
   responsibleName,
 }: PropostaModalProps) {
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal isOpen={isOpen} onClose={onClose} className="max-w-lg bg-climbe-secondary text-white">
       <div className="space-y-6">
         <div>
           <h2 className="text-2xl font-black italic tracking-tight text-white">Nova Proposta</h2>

@@ -15,8 +15,12 @@ const initialEnterpriseForm: CreateEnterpriseRequest = {
   representativeCpf: '',
   representativePhone: '',
   address: {
+    street: '',
+    number: '',
+    neighborhood: '',
     city: '',
     state: '',
+    zipCode: '',
   },
 };
 
