@@ -58,14 +58,14 @@ export function EmpresaModal({
         <div>
           <h2 className="text-2xl font-black italic tracking-tight text-white">Nova Empresa</h2>
           <p className="text-xs text-slate-300">
-            Preencha os dados cadastrais, endereco e representante da empresa cliente.
+            Preencha os dados cadastrais, endereço e representante da empresa cliente.
           </p>
         </div>
 
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2 md:col-span-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">Razao Social</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">Razão Social</Label>
               <Input
                 required
                 value={formData.legalName}
@@ -120,7 +120,7 @@ export function EmpresaModal({
           </div>
 
           <div className="border-t border-white/20 pt-4">
-            <h3 className="mb-4 text-xs font-black uppercase tracking-widest text-climbe-primary">Endereco</h3>
+            <h3 className="mb-4 text-xs font-black uppercase tracking-widest text-climbe-primary">Endereço</h3>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <div className="space-y-2 md:col-span-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">Logradouro</Label>
@@ -133,7 +133,7 @@ export function EmpresaModal({
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">Numero</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">Número</Label>
                 <Input
                   value={formData.address?.number || ''}
                   onChange={(e) => updateAddress('number', e.target.value)}

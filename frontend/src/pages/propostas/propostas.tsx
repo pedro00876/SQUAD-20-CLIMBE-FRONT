@@ -121,7 +121,7 @@ export function PropostasPage() {
           </div>
           <h1 className="text-4xl font-black italic tracking-tighter text-climbe-secondary">Propostas</h1>
           <p className="max-w-2xl font-light text-gray-400">
-            Acompanhe o status de todas as propostas enviadas e em negociacao.
+            Acompanhe o status de todas as propostas enviadas e em negociação.
           </p>
         </div>
 
@@ -145,7 +145,7 @@ export function PropostasPage() {
           </div>
           <h3 className="text-2xl font-bold italic text-climbe-secondary">Nenhuma proposta ativa</h3>
           <p className="max-w-xs text-sm text-gray-400">
-            Clique no botao acima para criar sua primeira proposta comercial e iniciar o fluxo.
+            Clique no botão acima para criar sua primeira proposta comercial e iniciar o fluxo.
           </p>
         </div>
       ) : (
@@ -158,7 +158,7 @@ export function PropostasPage() {
                   <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Criado por</th>
                   <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Data</th>
                   <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Status</th>
-                  <th className="px-8 py-6 text-right text-[10px] font-black uppercase tracking-widest text-gray-400">Acoes</th>
+                  <th className="px-8 py-6 text-right text-[10px] font-black uppercase tracking-widest text-gray-400">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -250,7 +250,7 @@ export function PropostasPage() {
 
           <form onSubmit={handleContractSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest">Data de Inicio</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest">Data de Início</Label>
               <Input
                 type="date"
                 required

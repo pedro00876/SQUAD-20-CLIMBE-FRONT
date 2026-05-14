@@ -55,9 +55,9 @@ export function PropostaModal({
           <div className="space-y-2 rounded-2xl border border-white/10 bg-white/5 p-4">
             <div className="flex items-center gap-2 text-climbe-primary">
               <User size={14} />
-              <span className="text-[10px] font-black uppercase tracking-widest">Responsavel</span>
+              <span className="text-[10px] font-black uppercase tracking-widest">Responsável</span>
             </div>
-            <p className="text-xs font-bold italic text-slate-200">{responsibleName || 'Usuario atual'}</p>
+            <p className="text-xs font-bold italic text-slate-200">{responsibleName || 'Usuário atual'}</p>
           </div>
 
           <div className="flex gap-3 pt-4">
