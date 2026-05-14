@@ -1,13 +1,32 @@
-import { Files, FileText, Download, Trash2, Loader2, Plus, Building2 } from 'lucide-react';
+import { Files, FileText, Download, Trash2, Loader2, Plus, Building2, Upload } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { documentService, type Document } from '@/services/document.service';
+import { enterpriseService, type Enterprise } from '@/services/enterprise.service';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Modal } from '@/components/ui/modal';
+
+const documentTypes = [
+  { value: 'BALANCO', label: 'Balanço da Empresa' },
+  { value: 'DRE', label: 'Demonstração de Resultados (DRE)' },
+  { value: 'DOCUMENTOS_GERENCIAIS', label: 'Documentos e planilhas gerenciais' },
+  { value: 'CNPJ', label: 'CNPJ' },
+  { value: 'CONTRATO_SOCIAL', label: 'Contrato Social' },
+  { value: 'COMMERCIAL_PROPOSAL', label: 'Proposta Comercial' },
+  { value: 'RELATORIO', label: 'Relatório' },
+];
 
 export function DocumentosPage() {
-  const [page, setPage] = useState(0);
+  const [page] = useState(0);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [selectedEnterpriseId, setSelectedEnterpriseId] = useState('');
+  const [documentType, setDocumentType] = useState('CNPJ');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadError, setUploadError] = useState('');
   const queryClient = useQueryClient();
 
   const { data: docsPage, isLoading } = useQuery({
@@ -15,10 +34,43 @@ export function DocumentosPage() {
     queryFn: () => documentService.list(page, 12)
   });
 
+  const { data: enterprisesPage } = useQuery({
+    queryKey: ['enterprises'],
+    queryFn: () => enterpriseService.list(0, 100)
+  });
+
   const deleteMutation = useMutation({
     mutationFn: documentService.delete,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documents'] });
+    }
+  });
+
+  const uploadMutation = useMutation({
+    mutationFn: () => {
+      if (!selectedEnterpriseId || !selectedFile) {
+        throw new Error('Selecione a empresa e o arquivo antes de enviar.');
+      }
+
+      return documentService.upload(
+        {
+          enterpriseId: Number(selectedEnterpriseId),
+          documentType,
+          validated: false,
+        },
+        selectedFile,
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      setIsUploadModalOpen(false);
+      setSelectedEnterpriseId('');
+      setDocumentType('CNPJ');
+      setSelectedFile(null);
+      setUploadError('');
+    },
+    onError: (error: any) => {
+      setUploadError(error?.response?.data?.message || error?.message || 'Não foi possível enviar o arquivo.');
     }
   });
 
@@ -30,6 +82,14 @@ export function DocumentosPage() {
       console.error('Erro ao buscar URL de visualização', error);
     }
   };
+
+  const handleUploadSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    setUploadError('');
+    uploadMutation.mutate();
+  };
+
+  const enterprises = enterprisesPage?.content || [];
 
   return (
     <div className="space-y-8 pb-12">
@@ -45,7 +105,10 @@ export function DocumentosPage() {
           </p>
         </div>
 
-        <Button className="bg-climbe-primary text-climbe-secondary font-black italic rounded-2xl px-6 py-6 shadow-lg shadow-climbe-primary/20 hover:scale-105 transition-all shrink-0">
+        <Button
+          onClick={() => setIsUploadModalOpen(true)}
+          className="bg-climbe-primary text-climbe-secondary font-black italic rounded-2xl px-6 py-6 shadow-lg shadow-climbe-primary/20 hover:scale-105 transition-all shrink-0"
+        >
           <Plus size={20} className="mr-2" />
           UPLOAD DE ARQUIVO
         </Button>
@@ -89,7 +152,9 @@ export function DocumentosPage() {
                
                <div className="space-y-4">
                  <div>
-                   <h4 className="font-bold text-climbe-secondary italic truncate" title={doc.name}>{doc.name}</h4>
+                   <h4 className="font-bold text-climbe-secondary italic truncate" title={doc.name || doc.documentType || 'Documento'}>
+                    {doc.name || doc.documentType || 'Documento'}
+                   </h4>
                    <div className="flex items-center gap-2 mt-1">
                      <Building2 size={10} className="text-gray-300" />
                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest truncate">{doc.enterpriseName}</p>
@@ -101,7 +166,7 @@ export function DocumentosPage() {
                       {doc.createdAt ? format(new Date(doc.createdAt), "dd/MM/yyyy", { locale: ptBR }) : '--'}
                     </span>
                     <span className="px-2 py-0.5 bg-gray-50 text-gray-400 text-[8px] font-black uppercase tracking-widest rounded-full">
-                      {doc.type}
+                      {doc.type || doc.documentType || 'ARQUIVO'}
                     </span>
                  </div>
                </div>
@@ -109,6 +174,89 @@ export function DocumentosPage() {
           ))}
         </div>
       )}
+
+      <Modal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        className="max-w-lg bg-climbe-secondary text-white"
+      >
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-2xl font-black italic tracking-tight text-white">Upload de Arquivo</h2>
+            <p className="text-xs text-slate-300">Selecione a empresa, o tipo de documento e o arquivo.</p>
+          </div>
+
+          <form onSubmit={handleUploadSubmit} className="space-y-5">
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">Empresa</Label>
+              <select
+                required
+                value={selectedEnterpriseId}
+                onChange={(event) => setSelectedEnterpriseId(event.target.value)}
+                className="w-full rounded-xl border border-transparent bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all focus:border-climbe-primary/40 focus:ring-2 focus:ring-climbe-primary/40"
+              >
+                <option value="">Selecione uma empresa...</option>
+                {enterprises.map((enterprise: Enterprise) => (
+                  <option key={enterprise.id} value={enterprise.id}>
+                    {enterprise.tradeName || enterprise.legalName} ({enterprise.cnpj})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">Tipo de Documento</Label>
+              <select
+                required
+                value={documentType}
+                onChange={(event) => setDocumentType(event.target.value)}
+                className="w-full rounded-xl border border-transparent bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all focus:border-climbe-primary/40 focus:ring-2 focus:ring-climbe-primary/40"
+              >
+                {documentTypes.map((type) => (
+                  <option key={type.value} value={type.value}>
+                    {type.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">Arquivo</Label>
+              <Input
+                required
+                type="file"
+                onChange={(event) => setSelectedFile(event.target.files?.[0] || null)}
+                className="bg-white text-slate-900 file:mr-4 file:rounded-lg file:border-0 file:bg-climbe-primary file:px-3 file:py-1 file:text-xs file:font-black file:text-climbe-secondary"
+              />
+            </div>
+
+            {uploadError && (
+              <p className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-xs font-bold text-red-100">
+                {uploadError}
+              </p>
+            )}
+
+            <div className="flex gap-3 pt-2">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setIsUploadModalOpen(false)}
+                className="flex-1 font-bold text-climbe-primary hover:bg-white/10 hover:text-climbe-primary"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={uploadMutation.isPending || !selectedEnterpriseId || !selectedFile}
+                className="flex-1 rounded-xl bg-climbe-primary font-black italic text-climbe-secondary shadow-lg shadow-climbe-primary/20 hover:bg-climbe-primary/90 disabled:bg-white/10 disabled:text-slate-400 disabled:shadow-none"
+              >
+                <Upload size={16} className="mr-2" />
+                {uploadMutation.isPending ? 'ENVIANDO...' : 'ENVIAR'}
+              </Button>
+            </div>
+          </form>
+        </div>
+      </Modal>
     </div>
   );
 }
