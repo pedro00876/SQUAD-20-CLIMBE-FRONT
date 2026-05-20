@@ -1,5 +1,6 @@
 import { ScrollText, Plus, Calendar, DollarSign, Loader2, CheckCircle2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { notificationService } from '@/services/notification.service';
 import { contractService, type CreateContractRequest } from '@/services/contract.service';
 import { proposalService } from '@/services/proposal.service';
 import { format } from 'date-fns';
@@ -52,7 +53,27 @@ export function ContratosPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.proposalId) return;
-    createMutation.mutate(formData);
+    
+    const proposal = approvedProposals.find((p: any) => p.id === formData.proposalId);
+    
+    createMutation.mutate(formData, {
+      onSuccess: () => {
+        // Notificar Compliance
+        notificationService.notifyCompliance({
+          razaoSocial: proposal?.enterpriseName,
+          cnpj: proposal?.cnpj,
+          analista: proposal?.responsibleAnalystName,
+          dataInicio: formData.startDate
+        });
+
+        // Enviar e-mail para a empresa
+        notificationService.sendEmail(
+          proposal?.enterpriseEmail || 'contato@empresa.com',
+          `Contrato disponível para assinatura — ${proposal?.enterpriseName}`,
+          `Seu contrato foi gerado e está disponível para assinatura. Acesse o sistema para visualizar e assinar o documento.`
+        );
+      }
+    });
   };
 
   return (

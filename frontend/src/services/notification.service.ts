@@ -23,5 +23,15 @@ export const notificationService = {
   
   delete: async (id: number) => {
     await api.delete(`/api/notifications/${id}`);
+  },
+
+  sendEmail: async (para: string, assunto: string, corpo: string) => {
+    const response = await api.post('/api/notifications/send-email', { para, assunto, corpo });
+    return response.data;
+  },
+
+  notifyCompliance: async (dados: any) => {
+    const response = await api.post('/api/notifications/compliance', dados);
+    return response.data;
   }
 };

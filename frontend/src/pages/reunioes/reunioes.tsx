@@ -5,6 +5,8 @@ import * as z from 'zod';
 import { Calendar, CalendarDays, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { notificationService } from '@/services/notification.service';
+import { userService } from '@/features/usuarios/services';
 import {
   meetingService,
   type MeetingCreateRequest,
@@ -163,6 +165,25 @@ export function ReunioesPage() {
       };
 
       const createdMeeting = await meetingService.createMeeting(payload);
+      
+      // Enviar e-mails para participantes
+      if (data.participantIds && data.participantIds.length > 0) {
+        for (const id of data.participantIds) {
+          try {
+            const participant = await userService.getUserDetails(id.toString());
+            if (participant.email) {
+              await notificationService.sendEmail(
+                participant.email,
+                `Reunião agendada — ${data.title}`,
+                `Você está convidado para uma reunião em ${data.date} às ${data.time} em ${data.location || (data.inPerson ? 'Presencial' : 'Online')}.`
+              );
+            }
+          } catch (err) {
+            console.error(`Erro ao enviar e-mail para participante ${id}:`, err);
+          }
+        }
+      }
+
       setMeetings((currentMeetings) => [createdMeeting, ...currentMeetings]);
       setMeetingsResponse((currentResponse) => {
         if (!currentResponse) {

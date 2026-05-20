@@ -48,6 +48,7 @@ export function EmpresasPage() {
     createMutation.mutate(formData);
   };
 
+
   return (
     <div className="space-y-8 pb-12">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">

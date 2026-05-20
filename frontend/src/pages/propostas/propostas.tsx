@@ -12,6 +12,8 @@ import { Label } from '@/components/ui/label';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { notificationService } from '@/services/notification.service';
+import { userService } from '@/features/usuarios/services';
 
 export function PropostasPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -64,6 +66,16 @@ export function PropostasPage() {
     },
   });
 
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+  const [isAnalystModalOpen, setIsAnalystModalOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+  const [selectedAnalystId, setSelectedAnalystId] = useState('');
+
+  const { data: usersPage } = useQuery({
+    queryKey: ['users'],
+    queryFn: () => userService.listUsers(0, 100)
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedEnterpriseId || !user?.id) return;
@@ -74,6 +86,45 @@ export function PropostasPage() {
     });
   };
 
+  const handleReject = () => {
+    if (!selectedProposal || !rejectReason) return;
+    
+    statusMutation.mutate({ 
+      id: selectedProposal.id, 
+      status: 'COMMERCIAL_PROPOSAL_REJECTED' 
+    }, {
+      onSuccess: () => {
+        notificationService.sendEmail(
+          selectedProposal.enterpriseEmail || 'contato@empresa.com',
+          `Proposta comercial reprovada — ${selectedProposal.enterpriseName}`,
+          `Sua proposta foi reprovada pelo seguinte motivo: ${rejectReason}. Entre em contato para revisão.`
+        );
+        setIsRejectModalOpen(false);
+        setRejectReason('');
+      }
+    });
+  };
+
+  const handleAssignAnalyst = () => {
+    if (!selectedProposal || !selectedAnalystId) return;
+    
+    const analyst = (usersPage?.content || []).find((u: any) => u.id === Number(selectedAnalystId));
+    
+    proposalService.update(selectedProposal.id, { responsibleAnalystId: Number(selectedAnalystId) })
+      .then(() => {
+        if (analyst && analyst.email) {
+          notificationService.sendEmail(
+            analyst.email,
+            `Você foi elencado como responsável pelo contrato — ${selectedProposal.enterpriseName}`,
+            `Olá, ${analyst.name}. Você foi selecionado como analista responsável pelo contrato da empresa ${selectedProposal.enterpriseName}. Acesse o sistema para mais detalhes.`
+          );
+        }
+        queryClient.invalidateQueries({ queryKey: ['proposals'] });
+        setIsAnalystModalOpen(false);
+      });
+  };
+
+  // ... (rest of the component logic)
   const handleContractSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedProposal) return;
@@ -156,6 +207,7 @@ export function PropostasPage() {
                 <tr className="border-b border-gray-50 bg-gray-50/50">
                   <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Empresa / Cliente</th>
                   <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Criado por</th>
+                  <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Analista</th>
                   <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Data</th>
                   <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Status</th>
                   <th className="px-8 py-6 text-right text-[10px] font-black uppercase tracking-widest text-gray-400">Ações</th>
@@ -181,6 +233,9 @@ export function PropostasPage() {
                         <span className="text-xs font-medium text-gray-600">{proposal.userName}</span>
                       </div>
                     </td>
+                    <td className="px-8 py-6 text-xs text-gray-400 font-medium">
+                      {proposal.responsibleAnalystName || 'Pendente'}
+                    </td>
                     <td className="px-8 py-6 text-xs font-medium text-gray-400">
                       {proposal.createdAt ? format(new Date(proposal.createdAt), 'dd/MM/yyyy', { locale: ptBR }) : '--'}
                     </td>
@@ -194,24 +249,43 @@ export function PropostasPage() {
                       <div className="flex justify-end gap-2">
                         {proposal.status?.toUpperCase() === 'RECEIVED' && (
                           <>
-                            <button
-                              onClick={() => statusMutation.mutate({ id: proposal.id, status: 'COMMERCIAL_PROPOSAL_APPROVED' })}
-                              className="rounded-lg p-2 text-climbe-primary transition-all hover:bg-climbe-primary/10"
+                            <button 
+                              onClick={() => {
+                                setSelectedProposal(proposal);
+                                setIsAnalystModalOpen(true); // Selecionar analista antes de aprovar ou como parte do processo
+                                statusMutation.mutate({ id: proposal.id, status: 'COMMERCIAL_PROPOSAL_APPROVED' });
+                              }}
+                              className="p-2 text-climbe-primary hover:bg-climbe-primary/10 rounded-lg transition-all"
                               title="Aprovar"
                             >
                               <CheckCircle2 size={18} />
                             </button>
-                            <button
-                              onClick={() => statusMutation.mutate({ id: proposal.id, status: 'COMMERCIAL_PROPOSAL_REJECTED' })}
-                              className="rounded-lg p-2 text-red-400 transition-all hover:bg-red-50"
+                            <button 
+                              onClick={() => {
+                                setSelectedProposal(proposal);
+                                setIsRejectModalOpen(true);
+                              }}
+                              className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-all"
                               title="Recusar"
                             >
                               <XCircle size={18} />
                             </button>
                           </>
                         )}
-                        {proposal.status?.toUpperCase() === 'COMMERCIAL_PROPOSAL_APPROVED' && (
-                          <button
+                        {proposal.status?.toUpperCase() === 'COMMERCIAL_PROPOSAL_APPROVED' && !proposal.responsibleAnalystId && (
+                          <button 
+                            onClick={() => {
+                              setSelectedProposal(proposal);
+                              setIsAnalystModalOpen(true);
+                            }}
+                            className="flex items-center gap-1.5 px-4 py-2 bg-climbe-primary text-climbe-secondary text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-105 transition-all italic"
+                          >
+                            <User size={14} />
+                            Selecionar Analista
+                          </button>
+                        )}
+                        {proposal.status?.toUpperCase() === 'COMMERCIAL_PROPOSAL_APPROVED' && proposal.responsibleAnalystId && (
+                          <button 
                             onClick={() => openContractModal(proposal)}
                             className="flex items-center gap-1.5 rounded-xl bg-climbe-secondary px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white transition-all hover:scale-105"
                           >
@@ -240,6 +314,93 @@ export function PropostasPage() {
         enterprises={enterprisesPage?.content || []}
         responsibleName={user?.name}
       />
+
+      {/* Modal de Reprovação */}
+      <Modal isOpen={isRejectModalOpen} onClose={() => setIsRejectModalOpen(false)}>
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-2xl font-black text-red-500 italic tracking-tight">Reprovar Proposta</h2>
+            <p className="text-xs text-gray-400">Informe o motivo da reprovação para notificar o cliente.</p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest">Motivo da Reprovação</Label>
+              <textarea 
+                required
+                value={rejectReason}
+                onChange={e => setRejectReason(e.target.value)}
+                rows={4}
+                className="w-full px-4 py-3 bg-gray-50 border-transparent rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-red-500/10 transition-all outline-none border focus:border-red-500/20"
+                placeholder="Descreva o motivo..."
+              />
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <Button 
+                type="button" 
+                variant="ghost" 
+                onClick={() => setIsRejectModalOpen(false)}
+                className="flex-1 font-bold"
+              >
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleReject}
+                disabled={statusMutation.isPending || !rejectReason}
+                className="flex-1 bg-red-500 text-white font-black italic rounded-xl"
+              >
+                {statusMutation.isPending ? 'REPROVANDO...' : 'REPROVAR E NOTIFICAR'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal de Seleção de Analista */}
+      <Modal isOpen={isAnalystModalOpen} onClose={() => setIsAnalystModalOpen(false)}>
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-2xl font-black text-climbe-secondary italic tracking-tight">Atribuir Analista</h2>
+            <p className="text-xs text-gray-400">Selecione o profissional responsável por este contrato.</p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest">Selecionar Analista</Label>
+              <select 
+                required
+                value={selectedAnalystId}
+                onChange={e => setSelectedAnalystId(e.target.value)}
+                className="w-full px-4 py-3 bg-gray-50 border-transparent rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-climbe-primary/10 transition-all outline-none border focus:border-climbe-primary/20 appearance-none"
+              >
+                <option value="">Selecione um analista...</option>
+                {(usersPage?.content || []).map((u: any) => (
+                  <option key={u.id} value={u.id}>{u.name} ({u.cargo || 'Analista'})</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <Button 
+                type="button" 
+                variant="ghost" 
+                onClick={() => setIsAnalystModalOpen(false)}
+                className="flex-1 font-bold"
+              >
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleAssignAnalyst}
+                disabled={!selectedAnalystId}
+                className="flex-1 bg-climbe-primary text-climbe-secondary font-black italic rounded-xl"
+              >
+                ATRIBUIR E NOTIFICAR
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Modal>
 
       <Modal isOpen={isContractModalOpen} onClose={() => setIsContractModalOpen(false)}>
         <div className="space-y-6">

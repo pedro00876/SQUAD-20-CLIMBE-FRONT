@@ -37,6 +37,11 @@ export const proposalService = {
     const response = await api.patch(`/api/proposals/${id}`, { status });
     return response.data;
   },
+
+  update: async (id: number, data: any) => {
+    const response = await api.patch(`/api/proposals/${id}`, data);
+    return response.data;
+  },
   
   delete: async (id: number) => {
     await api.delete(`/api/proposals/${id}`);

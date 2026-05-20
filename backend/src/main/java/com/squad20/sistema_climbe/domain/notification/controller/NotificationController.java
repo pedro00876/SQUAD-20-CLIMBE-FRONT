@@ -1,5 +1,6 @@
 package com.squad20.sistema_climbe.domain.notification.controller;
 
+import com.squad20.sistema_climbe.domain.notification.dto.EmailRequest;
 import com.squad20.sistema_climbe.domain.notification.dto.NotificationCreateRequest;
 import com.squad20.sistema_climbe.domain.notification.dto.NotificationDTO;
 import com.squad20.sistema_climbe.domain.notification.dto.NotificationPatchRequest;
@@ -67,6 +68,21 @@ public class NotificationController {
             @Parameter(description = "ID da notificação") @PathVariable Long id) {
         notificationService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Enviar e-mail", description = "Dispara um e-mail genérico")
+    @PostMapping("/send-email")
+    public ResponseEntity<Void> sendEmail(@Valid @RequestBody EmailRequest request) {
+        emailSenderService.sendEmail(request.getPara(), request.getAssunto(), request.getCorpo());
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "Notificar Compliance", description = "Envia notificação para a equipe de compliance")
+    @PostMapping("/compliance")
+    public ResponseEntity<Void> notifyCompliance(@RequestBody Object dados) {
+        // Por enquanto, apenas dispara um e-mail para o compliance fixo
+        emailSenderService.sendEmail("compliance@empresa.com", "Nova necessidade de contrato", dados.toString());
+        return ResponseEntity.ok().build();
     }
 
     @Operation(summary = "Testar disparo E-mail Rápido", description = "Força um envio de e-mail p/ o endereço fornecido para você testar as credenciais SMTP localmente.")
