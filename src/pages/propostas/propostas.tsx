@@ -1,8 +1,9 @@
-import { FileText, Plus, User, Loader2, CheckCircle2, XCircle, Clock, ScrollText, DollarSign } from 'lucide-react';
+import { FileText, Plus, User, Loader2, CheckCircle2, XCircle, Clock, ScrollText, DollarSign, Upload, Trash2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { proposalService } from '@/services/proposal.service';
 import { enterpriseService } from '@/services/enterprise.service';
 import { contractService, type CreateContractRequest } from '@/services/contract.service';
+import { documentService } from '@/services/document.service';
 import { PropostaModal } from '@/features/propostas/components';
 import { useState } from 'react';
 import { Modal } from '@/components/ui/modal';
@@ -18,10 +19,15 @@ import { userService } from '@/features/usuarios/services';
 export function PropostasPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isCommercialProposalModalOpen, setIsCommercialProposalModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedProposal, setSelectedProposal] = useState<any>(null);
   const { user } = useAuthContext();
   const queryClient = useQueryClient();
   const [selectedEnterpriseId, setSelectedEnterpriseId] = useState<string>('');
+  const [proposalActionError, setProposalActionError] = useState('');
+  const [commercialProposalFile, setCommercialProposalFile] = useState<File | null>(null);
 
   const [contractData, setContractData] = useState<CreateContractRequest>({
     proposalId: 0,
@@ -53,6 +59,39 @@ export function PropostasPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['proposals'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      setProposalActionError('');
+    },
+    onError: (error: any) => {
+      setProposalActionError(error?.response?.data?.message || 'Nao foi possivel atualizar o status da proposta.');
+    },
+  });
+
+  const commercialProposalMutation = useMutation({
+    mutationFn: () => {
+      if (!selectedProposal || !commercialProposalFile) {
+        throw new Error('Selecione o arquivo da proposta comercial.');
+      }
+
+      return documentService.upload(
+        {
+          enterpriseId: Number(selectedProposal.enterpriseId),
+          proposalId: Number(selectedProposal.id),
+          documentType: 'COMMERCIAL_PROPOSAL',
+          validated: false,
+        },
+        commercialProposalFile,
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['proposals'] });
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      setIsCommercialProposalModalOpen(false);
+      setSelectedProposal(null);
+      setCommercialProposalFile(null);
+      setProposalActionError('');
+    },
+    onError: (error: any) => {
+      setProposalActionError(error?.response?.data?.message || error?.message || 'Nao foi possivel enviar a proposta comercial.');
     },
   });
 
@@ -63,6 +102,20 @@ export function PropostasPage() {
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       setIsContractModalOpen(false);
       setSelectedProposal(null);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: proposalService.delete,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['proposals'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      setIsDeleteModalOpen(false);
+      setSelectedProposal(null);
+      setProposalActionError('');
+    },
+    onError: (error: any) => {
+      setProposalActionError(error?.response?.data?.message || 'Nao foi possivel excluir a proposta.');
     },
   });
 
@@ -116,7 +169,7 @@ export function PropostasPage() {
           notificationService.sendEmail(
             analyst.email,
             `Você foi elencado como responsável pelo contrato — ${selectedProposal.enterpriseName}`,
-            `Olá, ${analyst.name}. Você foi selecionado como analista responsável pelo contrato da empresa ${selectedProposal.enterpriseName}. Acesse o sistema para mais detalhes.`
+            `Olá, ${analyst.fullName || 'analista'}. Você foi selecionado como analista responsável pelo contrato da empresa ${selectedProposal.enterpriseName}. Acesse o sistema para mais detalhes.`
           );
         }
         queryClient.invalidateQueries({ queryKey: ['proposals'] });
@@ -144,6 +197,31 @@ export function PropostasPage() {
     setIsContractModalOpen(true);
   };
 
+  const openCommercialProposalModal = (proposal: any) => {
+    setSelectedProposal(proposal);
+    setCommercialProposalFile(null);
+    setProposalActionError('');
+    setIsCommercialProposalModalOpen(true);
+  };
+
+  const handleStatusChange = (proposal: any, status: string) => {
+    setSelectedProposal(proposal);
+    setProposalActionError('');
+    statusMutation.mutate({ id: proposal.id, status });
+  };
+
+  const handleCommercialProposalSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    setProposalActionError('');
+    commercialProposalMutation.mutate();
+  };
+
+  const handleDeleteProposal = () => {
+    if (!selectedProposal?.id) return;
+    setProposalActionError('');
+    deleteMutation.mutate(selectedProposal.id);
+  };
+
   const getStatusStyle = (status: string) => {
     const s = status?.toUpperCase();
     if (s === 'COMMERCIAL_PROPOSAL_APPROVED' || s === 'APROVADA') {
@@ -153,6 +231,21 @@ export function PropostasPage() {
       return 'bg-red-50 text-red-500 border-red-100';
     }
     return 'bg-gray-50 text-gray-400 border-gray-100';
+  };
+
+  const getStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      RECEIVED: 'Recebida',
+      IN_TRIAGE: 'Em triagem',
+      ELIGIBLE: 'Triagem aprovada',
+      PENDING_ADJUSTMENTS: 'Ajustes pendentes',
+      COMMERCIAL_PROPOSAL: 'Proposta comercial',
+      COMMERCIAL_PROPOSAL_APPROVED: 'Aprovada',
+      COMMERCIAL_PROPOSAL_REJECTED: 'Recusada',
+      READY_FOR_NEXT_STAGE: 'Proxima etapa',
+    };
+
+    return labels[status?.toUpperCase()] || status || '--';
   };
 
   const getStatusIcon = (status: string) => {
@@ -184,6 +277,12 @@ export function PropostasPage() {
           CRIAR NOVA PROPOSTA
         </Button>
       </div>
+
+      {proposalActionError && !isCommercialProposalModalOpen && (
+        <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-xs font-bold text-red-500">
+          {proposalActionError}
+        </p>
+      )}
 
       {isLoadingProposals ? (
         <div className="flex h-[50vh] items-center justify-center">
@@ -242,31 +341,72 @@ export function PropostasPage() {
                     <td className="px-8 py-6">
                       <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-widest ${getStatusStyle(proposal.status)}`}>
                         {getStatusIcon(proposal.status)}
-                        {proposal.status}
+                        {getStatusLabel(proposal.status)}
                       </span>
                     </td>
                     <td className="px-8 py-6 text-right">
                       <div className="flex justify-end gap-2">
                         {proposal.status?.toUpperCase() === 'RECEIVED' && (
+                          <button
+                            onClick={() => handleStatusChange(proposal, 'IN_TRIAGE')}
+                            className="flex items-center gap-1.5 rounded-xl bg-climbe-secondary px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white transition-all hover:scale-105"
+                          >
+                            <Clock size={14} />
+                            Iniciar triagem
+                          </button>
+                        )}
+                        {proposal.status?.toUpperCase() === 'IN_TRIAGE' && (
                           <>
-                            <button 
-                              onClick={() => {
-                                setSelectedProposal(proposal);
-                                setIsAnalystModalOpen(true); // Selecionar analista antes de aprovar ou como parte do processo
-                                statusMutation.mutate({ id: proposal.id, status: 'COMMERCIAL_PROPOSAL_APPROVED' });
-                              }}
+                            <button
+                              onClick={() => handleStatusChange(proposal, 'ELIGIBLE')}
+                              className="flex items-center gap-1.5 rounded-xl bg-climbe-primary px-4 py-2 text-[10px] font-black uppercase tracking-widest text-climbe-secondary transition-all hover:scale-105"
+                            >
+                              <CheckCircle2 size={14} />
+                              Aprovar triagem
+                            </button>
+                            <button
+                              onClick={() => handleStatusChange(proposal, 'PENDING_ADJUSTMENTS')}
+                              className="flex items-center gap-1.5 rounded-xl bg-red-50 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-red-500 transition-all hover:scale-105"
+                            >
+                              <XCircle size={14} />
+                              Ajustes
+                            </button>
+                          </>
+                        )}
+                        {proposal.status?.toUpperCase() === 'PENDING_ADJUSTMENTS' && (
+                          <button
+                            onClick={() => handleStatusChange(proposal, 'IN_TRIAGE')}
+                            className="flex items-center gap-1.5 rounded-xl bg-climbe-secondary px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white transition-all hover:scale-105"
+                          >
+                            <Clock size={14} />
+                            Retomar triagem
+                          </button>
+                        )}
+                        {(proposal.status?.toUpperCase() === 'ELIGIBLE' || proposal.status?.toUpperCase() === 'COMMERCIAL_PROPOSAL_REJECTED') && (
+                          <button
+                            onClick={() => openCommercialProposalModal(proposal)}
+                            className="flex items-center gap-1.5 rounded-xl bg-climbe-primary px-4 py-2 text-[10px] font-black uppercase tracking-widest text-climbe-secondary transition-all hover:scale-105"
+                          >
+                            <Upload size={14} />
+                            Enviar proposta
+                          </button>
+                        )}
+                        {proposal.status?.toUpperCase() === 'COMMERCIAL_PROPOSAL' && (
+                          <>
+                            <button
+                              onClick={() => handleStatusChange(proposal, 'COMMERCIAL_PROPOSAL_APPROVED')}
                               className="p-2 text-climbe-primary hover:bg-climbe-primary/10 rounded-lg transition-all"
-                              title="Aprovar"
+                              title="Aprovar proposta comercial"
                             >
                               <CheckCircle2 size={18} />
                             </button>
-                            <button 
+                            <button
                               onClick={() => {
                                 setSelectedProposal(proposal);
                                 setIsRejectModalOpen(true);
                               }}
                               className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-all"
-                              title="Recusar"
+                              title="Recusar proposta comercial"
                             >
                               <XCircle size={18} />
                             </button>
@@ -293,7 +433,26 @@ export function PropostasPage() {
                             Gerar Contrato
                           </button>
                         )}
-                        <button className="px-2 text-[10px] font-black uppercase tracking-widest text-climbe-secondary hover:underline">Ver</button>
+                        <button
+                          onClick={() => {
+                            setSelectedProposal(proposal);
+                            setIsDetailsModalOpen(true);
+                          }}
+                          className="px-2 text-[10px] font-black uppercase tracking-widest text-climbe-secondary hover:underline"
+                        >
+                          Ver
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedProposal(proposal);
+                            setProposalActionError('');
+                            setIsDeleteModalOpen(true);
+                          }}
+                          className="p-2 text-gray-400 hover:bg-red-50 hover:text-red-500 rounded-lg transition-all"
+                          title="Excluir proposta"
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -314,6 +473,160 @@ export function PropostasPage() {
         enterprises={enterprisesPage?.content || []}
         responsibleName={user?.name}
       />
+
+      <Modal
+        isOpen={isCommercialProposalModalOpen}
+        onClose={() => setIsCommercialProposalModalOpen(false)}
+        className="max-w-lg bg-climbe-secondary text-white"
+      >
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-2xl font-black italic tracking-tight text-white">Enviar Proposta Comercial</h2>
+            <p className="text-xs text-slate-300">Anexe o arquivo comercial para registrar esta etapa da proposta.</p>
+          </div>
+
+          <form onSubmit={handleCommercialProposalSubmit} className="space-y-5">
+            <div className="rounded-xl bg-gray-50 p-4 text-sm">
+              <span className="block text-[10px] font-black uppercase tracking-widest text-gray-400">Empresa</span>
+              <strong className="text-climbe-secondary">{selectedProposal?.enterpriseName || '--'}</strong>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">Arquivo da Proposta</Label>
+              <Input
+                required
+                type="file"
+                onChange={(event) => setCommercialProposalFile(event.target.files?.[0] || null)}
+                className="bg-white text-slate-900 file:mr-4 file:rounded-lg file:border-0 file:bg-climbe-primary file:px-3 file:py-1 file:text-xs file:font-black file:text-climbe-secondary"
+              />
+            </div>
+
+            {proposalActionError && (
+              <p className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-xs font-bold text-red-500">
+                {proposalActionError}
+              </p>
+            )}
+
+            <div className="flex gap-3 pt-4">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setIsCommercialProposalModalOpen(false)}
+                className="flex-1 font-bold text-climbe-primary hover:bg-white/10 hover:text-climbe-primary"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={commercialProposalMutation.isPending || !commercialProposalFile}
+                className="flex-1 rounded-xl bg-climbe-primary font-black italic text-climbe-secondary shadow-lg shadow-climbe-primary/20 hover:bg-climbe-primary/90 disabled:bg-white/10 disabled:text-slate-400 disabled:shadow-none"
+              >
+                <Upload size={16} className="mr-2" />
+                {commercialProposalMutation.isPending ? 'ENVIANDO...' : 'ENVIAR'}
+              </Button>
+            </div>
+          </form>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={isDetailsModalOpen}
+        onClose={() => setIsDetailsModalOpen(false)}
+        className="max-w-lg bg-climbe-secondary text-white"
+      >
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-2xl font-black italic tracking-tight text-white">Detalhes da Proposta</h2>
+            <p className="text-xs text-slate-300">Resumo dos dados cadastrados para acompanhamento comercial.</p>
+          </div>
+
+          <div className="grid gap-3 text-sm">
+            <div className="rounded-xl bg-gray-50 p-4">
+              <span className="block text-[10px] font-black uppercase tracking-widest text-gray-400">Empresa</span>
+              <strong className="text-climbe-secondary">{selectedProposal?.enterpriseName || '--'}</strong>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-xl bg-gray-50 p-4">
+                <span className="block text-[10px] font-black uppercase tracking-widest text-gray-400">Criado por</span>
+                <strong className="text-climbe-secondary">{selectedProposal?.userName || '--'}</strong>
+              </div>
+
+              <div className="rounded-xl bg-gray-50 p-4">
+                <span className="block text-[10px] font-black uppercase tracking-widest text-gray-400">Analista</span>
+                <strong className="text-climbe-secondary">{selectedProposal?.responsibleAnalystName || 'Pendente'}</strong>
+              </div>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-xl bg-gray-50 p-4">
+                <span className="block text-[10px] font-black uppercase tracking-widest text-gray-400">Status</span>
+                <strong className="text-climbe-secondary">{getStatusLabel(selectedProposal?.status)}</strong>
+              </div>
+
+              <div className="rounded-xl bg-gray-50 p-4">
+                <span className="block text-[10px] font-black uppercase tracking-widest text-gray-400">Data</span>
+                <strong className="text-climbe-secondary">
+                  {selectedProposal?.createdAt ? format(new Date(selectedProposal.createdAt), 'dd/MM/yyyy', { locale: ptBR }) : '--'}
+                </strong>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-2">
+            <Button
+              type="button"
+              onClick={() => setIsDetailsModalOpen(false)}
+              className="rounded-xl bg-climbe-primary font-black italic text-climbe-secondary"
+            >
+              FECHAR
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)}>
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-2xl font-black italic tracking-tight text-red-500">Excluir Proposta</h2>
+            <p className="text-xs text-gray-400">
+              Esta acao remove a proposta e os registros vinculados no fluxo, como contratos, relatorios e planilhas.
+            </p>
+          </div>
+
+          <div className="rounded-xl bg-gray-50 p-4 text-sm">
+            <span className="block text-[10px] font-black uppercase tracking-widest text-gray-400">Proposta</span>
+            <strong className="text-climbe-secondary">
+              #{selectedProposal?.id} - {selectedProposal?.enterpriseName || '--'}
+            </strong>
+          </div>
+
+          {proposalActionError && (
+            <p className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-xs font-bold text-red-500">
+              {proposalActionError}
+            </p>
+          )}
+
+          <div className="flex gap-3 pt-4">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setIsDeleteModalOpen(false)}
+              className="flex-1 font-bold"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={handleDeleteProposal}
+              disabled={deleteMutation.isPending}
+              className="flex-1 rounded-xl bg-red-500 font-black italic text-white hover:bg-red-600"
+            >
+              {deleteMutation.isPending ? 'EXCLUINDO...' : 'EXCLUIR'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Modal de Reprovação */}
       <Modal isOpen={isRejectModalOpen} onClose={() => setIsRejectModalOpen(false)}>
