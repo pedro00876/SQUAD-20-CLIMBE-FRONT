@@ -2,7 +2,7 @@ import { Search, Bell, LogOut, ChevronDown, Menu, Check, Trash2, Clock } from 'l
 import { useAuthContext } from '@/contexts/AuthContext';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { notificationService, type Notification } from '@/services/notification.service';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';

@@ -5,6 +5,7 @@ export interface DashboardStats {
   totalContracts: number;
   totalClients: number;
   totalRevenue: string;
+  monthlyRevenue: { name: string; value: number; color?: string }[];
   proposalStatusDistribution: { name: string; value: number }[];
   recentActivities: { name: string; time: string; status: string; color: string }[];
 }

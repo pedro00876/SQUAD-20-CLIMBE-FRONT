@@ -18,14 +18,7 @@ const pieData = [
 ];
 
 export function RevenueChart({ data: propData }: { data?: any[] }) {
-  const chartData = propData || [
-    { name: 'Jan', value: 400 },
-    { name: 'Fev', value: 300 },
-    { name: 'Mar', value: 600 },
-    { name: 'Abr', value: 800 },
-    { name: 'Mai', value: 500 },
-    { name: 'Jun', value: 700 },
-  ];
+  const chartData = propData || data;
 
   return (
     <div className="h-[300px] w-full min-w-0">
@@ -67,11 +60,7 @@ export function RevenueChart({ data: propData }: { data?: any[] }) {
 }
 
 export function StatusPieChart({ data: propData }: { data?: any[] }) {
-  const chartData = propData || [
-    { name: 'Ativas', value: 45, color: chartPrimaryColor },
-    { name: 'Pendentes', value: 25, color: '#888888' },
-    { name: 'Concluídas', value: 30, color: '#111111' },
-  ];
+  const chartData = propData || pieData;
 
   const colors = [chartPrimaryColor, '#888888', '#111111'];
 
