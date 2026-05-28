@@ -306,21 +306,21 @@ export function ContratosPage() {
       )}
 
       {/* Modal de Novo Contrato */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} className="max-w-lg bg-climbe-secondary text-white">
         <div className="space-y-6">
           <div>
-            <h2 className="text-2xl font-black text-climbe-secondary italic tracking-tight">Formalizar Contrato</h2>
-            <p className="text-xs text-gray-400">Selecione uma proposta aprovada para gerar o contrato.</p>
+            <h2 className="text-2xl font-black italic tracking-tight text-white">Formalizar Contrato</h2>
+            <p className="text-xs text-slate-300">Selecione uma proposta aprovada para gerar o contrato.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest">Proposta Aprovada</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">Proposta Aprovada</Label>
               <select 
                 required
                 value={formData.proposalId}
                 onChange={e => setFormData({...formData, proposalId: Number(e.target.value)})}
-                className="w-full px-4 py-3 bg-gray-50 border-transparent rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-climbe-primary/10 transition-all outline-none border focus:border-climbe-primary/20 appearance-none"
+                className="w-full rounded-xl border border-transparent bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all focus:border-climbe-primary/40 focus:ring-2 focus:ring-climbe-primary/40 appearance-none"
               >
                 <option value="">Selecione uma proposta...</option>
                 {approvedProposals.map((proposal: any) => (
@@ -332,23 +332,24 @@ export function ContratosPage() {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest">Data de Início</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">Data de Início</Label>
               <Input 
                 type="date"
                 required
+                className="bg-white text-slate-900"
                 value={formData.startDate}
                 onChange={e => setFormData({...formData, startDate: e.target.value})}
               />
             </div>
 
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest">Valor Total (R$)</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">Valor Total (R$)</Label>
               <div className="relative">
                 <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-climbe-primary" size={16} />
                 <Input 
                   type="number"
                   required
-                  className="pl-10"
+                  className="bg-white pl-10 text-slate-900"
                   value={formData.totalValue}
                   onChange={e => setFormData({...formData, totalValue: Number(e.target.value)})}
                   placeholder="0,00"
@@ -361,14 +362,14 @@ export function ContratosPage() {
                 type="button" 
                 variant="ghost" 
                 onClick={() => setIsModalOpen(false)}
-                className="flex-1 font-bold"
+                className="flex-1 font-black uppercase tracking-widest text-climbe-primary hover:bg-white/10 hover:text-climbe-primary"
               >
                 Cancelar
               </Button>
               <Button 
                 type="submit" 
                 disabled={createMutation.isPending || !formData.proposalId}
-                className="flex-1 bg-climbe-primary text-climbe-secondary font-black italic rounded-xl shadow-lg shadow-climbe-primary/20"
+                className="flex-1 rounded-xl bg-climbe-primary font-black italic text-climbe-secondary shadow-lg shadow-climbe-primary/20 hover:bg-climbe-primary/90 disabled:bg-white/10 disabled:text-slate-400 disabled:shadow-none"
               >
                 {createMutation.isPending ? 'GERANDO...' : 'FINALIZAR CONTRATO'}
               </Button>
