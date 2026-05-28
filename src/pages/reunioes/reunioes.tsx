@@ -75,8 +75,8 @@ export function ReunioesPage() {
     register,
     handleSubmit,
     reset,
-    formState: { errors },
-  } = useForm<MeetingFormData>({
+    formState: { errors: formErrors },
+  } = useForm<any>({
     resolver: zodResolver(meetingSchema),
     defaultValues: {
       enterpriseId: 1,
@@ -91,6 +91,7 @@ export function ReunioesPage() {
       participantIds: '',
     },
   });
+  const errors = formErrors as any;
 
   useEffect(() => {
     let isActive = true;

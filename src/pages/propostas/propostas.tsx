@@ -4,6 +4,7 @@ import { proposalService } from '@/services/proposal.service';
 import { enterpriseService } from '@/services/enterprise.service';
 import { contractService, type CreateContractRequest } from '@/services/contract.service';
 import { PropostaModal } from '@/features/propostas/components';
+import { ChecklistModal } from './components/ChecklistModal';
 import { useState } from 'react';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
@@ -22,11 +23,13 @@ export function PropostasPage() {
   const { user } = useAuthContext();
   const queryClient = useQueryClient();
   const [selectedEnterpriseId, setSelectedEnterpriseId] = useState<string>('');
+  
+  const [isChecklistModalOpen, setIsChecklistModalOpen] = useState(false);
+  const [checklistProposalId, setChecklistProposalId] = useState<number | null>(null);
 
   const [contractData, setContractData] = useState<CreateContractRequest>({
     proposalId: 0,
     startDate: format(new Date(), 'yyyy-MM-dd'),
-    totalValue: 0,
   });
 
   const { data: proposalsPage, isLoading: isLoadingProposals } = useQuery({
@@ -116,7 +119,7 @@ export function PropostasPage() {
           notificationService.sendEmail(
             analyst.email,
             `Você foi elencado como responsável pelo contrato — ${selectedProposal.enterpriseName}`,
-            `Olá, ${analyst.name}. Você foi selecionado como analista responsável pelo contrato da empresa ${selectedProposal.enterpriseName}. Acesse o sistema para mais detalhes.`
+            `Olá, ${analyst.fullName}. Você foi selecionado como analista responsável pelo contrato da empresa ${selectedProposal.enterpriseName}. Acesse o sistema para mais detalhes.`
           );
         }
         queryClient.invalidateQueries({ queryKey: ['proposals'] });
@@ -139,7 +142,6 @@ export function PropostasPage() {
     setContractData({
       proposalId: proposal.id,
       startDate: format(new Date(), 'yyyy-MM-dd'),
-      totalValue: 0,
     });
     setIsContractModalOpen(true);
   };
@@ -285,13 +287,25 @@ export function PropostasPage() {
                           </button>
                         )}
                         {proposal.status?.toUpperCase() === 'COMMERCIAL_PROPOSAL_APPROVED' && proposal.responsibleAnalystId && (
-                          <button 
-                            onClick={() => openContractModal(proposal)}
-                            className="flex items-center gap-1.5 rounded-xl bg-climbe-secondary px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white transition-all hover:scale-105"
-                          >
-                            <ScrollText size={14} />
-                            Gerar Contrato
-                          </button>
+                          <>
+                            <button 
+                              onClick={() => openContractModal(proposal)}
+                              className="flex items-center gap-1.5 rounded-xl bg-climbe-secondary px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white transition-all hover:scale-105"
+                            >
+                              <ScrollText size={14} />
+                              Gerar Contrato
+                            </button>
+                            <button 
+                              onClick={() => {
+                                setChecklistProposalId(proposal.id);
+                                setIsChecklistModalOpen(true);
+                              }}
+                              className="flex items-center gap-1.5 rounded-xl bg-climbe-primary/10 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-climbe-primary transition-all hover:bg-climbe-primary hover:text-climbe-secondary"
+                            >
+                              <FileText size={14} />
+                              Checklist
+                            </button>
+                          </>
                         )}
                         <button className="px-2 text-[10px] font-black uppercase tracking-widest text-climbe-secondary hover:underline">Ver</button>
                       </div>
@@ -420,20 +434,7 @@ export function PropostasPage() {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest">Valor Total (R$)</Label>
-              <div className="relative">
-                <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-climbe-primary" size={16} />
-                <Input
-                  type="number"
-                  required
-                  className="pl-10"
-                  value={contractData.totalValue}
-                  onChange={(e) => setContractData({ ...contractData, totalValue: Number(e.target.value) })}
-                  placeholder="0,00"
-                />
-              </div>
-            </div>
+
 
             <div className="flex gap-3 pt-6">
               <Button type="button" variant="ghost" onClick={() => setIsContractModalOpen(false)} className="flex-1 font-bold">
@@ -450,6 +451,12 @@ export function PropostasPage() {
           </form>
         </div>
       </Modal>
+
+      <ChecklistModal 
+        isOpen={isChecklistModalOpen} 
+        onClose={() => setIsChecklistModalOpen(false)} 
+        proposalId={checklistProposalId} 
+      />
     </div>
   );
 }
