@@ -8,6 +8,7 @@ import { FirstAccessPage } from '@/pages/first-access/first-access';
 import { DashboardPage } from '@/pages/dashboard/dashboard';
 import { PendingApprovalPage } from '@/pages/pending-approval/pending-approval';
 import { EmpresasPage } from '@/pages/empresas/empresas';
+import { EmpresaDetalhePage } from '@/pages/empresas/empresa-detalhe';
 import { UsuariosPage } from '@/pages/usuarios/usuarios';
 import { PropostasPage } from '@/pages/propostas/propostas';
 import { DocumentosPage } from '@/pages/documentos/documentos';
@@ -63,7 +64,11 @@ export const router = createBrowserRouter([
                 element: <EmpresasPage />,
               },
               {
-                element: <RoleRoute allowedRoles={['CEO']} />,
+                path: `${routes.empresas}/:id`,
+                element: <EmpresaDetalhePage />,
+              },
+              {
+                element: <RoleRoute allowedRoles={['ADMIN']} />,
                 children: [
                   {
                     path: routes.usuarios,
