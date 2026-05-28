@@ -2,6 +2,7 @@ import { Building2, Plus, Mail, User, MapPin, Loader2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { enterpriseService, type CreateEnterpriseRequest } from '@/services/enterprise.service';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { EmpresaModal } from '@/features/empresas/components';
 import { Button } from '@/components/ui/button';
 
@@ -25,6 +26,7 @@ const initialEnterpriseForm: CreateEnterpriseRequest = {
 };
 
 export function EmpresasPage() {
+  const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<CreateEnterpriseRequest>(initialEnterpriseForm);
@@ -81,7 +83,8 @@ export function EmpresasPage() {
           {(enterprisesPage?.content || []).map((enterprise: any) => (
             <div
               key={enterprise.id}
-              className="group relative overflow-hidden rounded-[32px] border border-gray-100 bg-white p-8 shadow-sm transition-all hover:shadow-xl"
+              onClick={() => navigate(`/empresas/${enterprise.id}`)}
+              className="group relative cursor-pointer overflow-hidden rounded-[32px] border border-gray-100 bg-white p-8 shadow-sm transition-all hover:shadow-xl"
             >
               <div className="absolute right-0 top-0 -mr-16 -mt-16 h-32 w-32 rounded-full bg-climbe-primary/5 transition-transform duration-500 group-hover:scale-150" />
 
@@ -121,7 +124,7 @@ export function EmpresasPage() {
                   <span className="text-[8px] font-black uppercase tracking-widest text-gray-300">Contratos</span>
                   <span className="font-bold text-climbe-secondary">0 Ativos</span>
                 </div>
-                <button className="text-[10px] font-black uppercase tracking-widest text-climbe-primary hover:underline">
+                <button className="text-[10px] font-black uppercase tracking-widest text-climbe-primary group-hover:underline">
                   Ver Detalhes
                 </button>
               </div>
