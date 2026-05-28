@@ -16,8 +16,7 @@ export function ContratosPage() {
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<CreateContractRequest>({
     proposalId: 0,
-    startDate: format(new Date(), 'yyyy-MM-dd'),
-    totalValue: 0
+    startDate: format(new Date(), 'yyyy-MM-dd')
   });
 
   const { data: contractsPage, isLoading } = useQuery({
@@ -39,8 +38,7 @@ export function ContratosPage() {
       setIsModalOpen(false);
       setFormData({
         proposalId: 0,
-        startDate: format(new Date(), 'yyyy-MM-dd'),
-        totalValue: 0
+        startDate: format(new Date(), 'yyyy-MM-dd')
       });
     }
   });
@@ -206,20 +204,7 @@ export function ContratosPage() {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest">Valor Total (R$)</Label>
-              <div className="relative">
-                <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-climbe-primary" size={16} />
-                <Input 
-                  type="number"
-                  required
-                  className="pl-10"
-                  value={formData.totalValue}
-                  onChange={e => setFormData({...formData, totalValue: Number(e.target.value)})}
-                  placeholder="0,00"
-                />
-              </div>
-            </div>
+
 
             <div className="flex gap-3 pt-6">
               <Button 

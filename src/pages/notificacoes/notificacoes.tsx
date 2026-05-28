@@ -1,6 +1,18 @@
-import { Bell } from 'lucide-react';
+import { Bell, Loader2 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { notificationService, type Notification } from '@/services/notification.service';
+import { useAuthContext } from '@/contexts/AuthContext';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 export function NotificacoesPage() {
+  const { user } = useAuthContext();
+
+  const { data: notifications = [], isLoading } = useQuery({
+    queryKey: ['notifications', user?.id],
+    queryFn: () => notificationService.listByUser(Number(user!.id)),
+    enabled: !!user?.id
+  });
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-2">
@@ -15,22 +27,34 @@ export function NotificacoesPage() {
       </div>
 
       <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="bg-white p-6 rounded-[24px] border border-gray-100 flex items-start gap-4 hover:shadow-lg hover:shadow-climbe-primary/5 transition-all cursor-pointer">
-            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${i === 1 ? 'bg-climbe-primary/10 text-climbe-primary' : 'bg-gray-50 text-gray-400'}`}>
-              <Bell size={20} />
-            </div>
-            <div className="flex-1 space-y-1 py-1">
-              <div className="flex items-center justify-between">
-                <h5 className="font-bold text-climbe-secondary text-sm italic">Nova Proposta Recebida</h5>
-                <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest">2h atrás</span>
-              </div>
-              <p className="text-xs text-gray-500 font-light leading-relaxed">
-                A empresa Parceira {i} enviou uma nova proposta para o projeto de consultoria técnica.
-              </p>
-            </div>
+        {isLoading ? (
+          <div className="flex justify-center py-12">
+            <Loader2 className="animate-spin text-climbe-primary w-8 h-8" />
           </div>
-        ))}
+        ) : notifications.length === 0 ? (
+          <div className="text-center py-12 text-gray-400">
+            <p>Nenhuma notificação no momento.</p>
+          </div>
+        ) : (
+          notifications.map((notif: Notification) => (
+            <div key={notif.id} className={`p-6 rounded-[24px] border flex items-start gap-4 transition-all cursor-pointer ${notif.read ? 'bg-white border-gray-100 hover:shadow-lg' : 'bg-climbe-primary/5 border-climbe-primary/20'}`}>
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${notif.read ? 'bg-gray-50 text-gray-400' : 'bg-climbe-primary/10 text-climbe-primary'}`}>
+                <Bell size={20} />
+              </div>
+              <div className="flex-1 space-y-1 py-1">
+                <div className="flex items-center justify-between">
+                  <h5 className="font-bold text-climbe-secondary text-sm italic">{notif.title || notif.type || 'Sistema'}</h5>
+                  <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest">
+                    {notif.createdAt ? formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true, locale: ptBR }) : ''}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 font-light leading-relaxed">
+                  {notif.message}
+                </p>
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

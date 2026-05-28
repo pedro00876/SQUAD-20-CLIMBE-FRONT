@@ -44,19 +44,19 @@ export function RelatoriosPage() {
                </div>
                
                <div className="space-y-2">
-                 <h4 className="text-lg font-bold text-climbe-secondary italic">{report.name}</h4>
-                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">TIPO: {report.type}</p>
-                 <p className="text-sm text-gray-500 line-clamp-2">{report.content}</p>
+                 <h4 className="text-lg font-bold text-climbe-secondary italic">Relatório Contrato #{report.contractId}</h4>
+                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">URL PDF</p>
+                 <a href={report.pdfUrl} target="_blank" rel="noreferrer" className="text-sm text-blue-500 hover:underline line-clamp-2">Acessar PDF</a>
                </div>
 
                <div className="flex items-center justify-between pt-6 mt-6 border-t border-gray-50">
                   <div className="flex items-center gap-2 text-gray-400">
                     <Calendar size={12} />
                     <span className="text-[10px] font-bold">
-                      {report.createdAt ? format(new Date(report.createdAt), "dd/MM/yyyy", { locale: ptBR }) : '--'}
+                      {report.sentAt ? format(new Date(report.sentAt), "dd/MM/yyyy", { locale: ptBR }) : '--'}
                     </span>
                   </div>
-                  <button className="text-[10px] font-black text-climbe-primary uppercase tracking-widest hover:underline">Ver Detalhes</button>
+                  <a href={report.pdfUrl} target="_blank" rel="noreferrer" className="text-[10px] font-black text-climbe-primary uppercase tracking-widest hover:underline">Ver Detalhes</a>
                </div>
             </div>
           ))}

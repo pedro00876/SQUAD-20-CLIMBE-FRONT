@@ -18,8 +18,8 @@ export const documentService = {
     const res = await api.get<DocumentViewResponse>(`/api/documents/${id}/view`);
     return res.data.url;
   },
-  listOwnerDocuments: async (ownerId: string): Promise<DocumentMetadata[]> => {
-    const res = await api.get<DocumentMetadata[]>(`/api/documents/owner/${ownerId}`);
+  listByEnterprise: async (enterpriseId: string): Promise<DocumentMetadata[]> => {
+    const res = await api.get<DocumentMetadata[]>(`/api/documents/enterprise/${enterpriseId}`);
     return res.data;
   },
 };

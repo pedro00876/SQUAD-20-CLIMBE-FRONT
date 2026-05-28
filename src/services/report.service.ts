@@ -2,11 +2,9 @@ import { api } from './api';
 
 export interface Report {
   id: number;
-  proposalId: number;
-  name: string;
-  type: string;
-  content: string;
-  createdAt: string;
+  contractId: number;
+  pdfUrl: string;
+  sentAt: string;
 }
 
 export const reportService = {
@@ -15,8 +13,8 @@ export const reportService = {
     return response.data;
   },
   
-  getByProposal: async (proposalId: number) => {
-    const response = await api.get(`/api/reports/proposal/${proposalId}`);
+  getByContract: async (contractId: number) => {
+    const response = await api.get(`/api/reports/contract/${contractId}`);
     return response.data;
   }
 };
