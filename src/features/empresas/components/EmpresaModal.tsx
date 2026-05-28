@@ -28,6 +28,7 @@ interface EmpresaModalProps {
   setFormData: Dispatch<SetStateAction<CreateEnterpriseRequest>>;
   onSubmit: (event: FormEvent) => void;
   isSubmitting: boolean;
+  mode?: 'create' | 'edit';
 }
 
 export function EmpresaModal({
@@ -37,6 +38,7 @@ export function EmpresaModal({
   setFormData,
   onSubmit,
   isSubmitting,
+  mode = 'create',
 }: EmpresaModalProps) {
   const updateAddress = (field: keyof NonNullable<CreateEnterpriseRequest['address']>, value: string) => {
     setFormData((current) => ({
@@ -56,9 +58,13 @@ export function EmpresaModal({
     >
       <div className="max-h-[80vh] space-y-6 overflow-y-auto p-2">
         <div>
-          <h2 className="text-2xl font-black italic tracking-tight text-white">Nova Empresa</h2>
+          <h2 className="text-2xl font-black italic tracking-tight text-white">
+            {mode === 'edit' ? 'Editar Empresa' : 'Nova Empresa'}
+          </h2>
           <p className="text-xs text-slate-300">
-            Preencha os dados cadastrais, endereço e representante da empresa cliente.
+            {mode === 'edit'
+              ? 'Atualize os dados cadastrais, endereço e representante da empresa cliente.'
+              : 'Preencha os dados cadastrais, endereço e representante da empresa cliente.'}
           </p>
         </div>
 
@@ -243,7 +249,7 @@ export function EmpresaModal({
               disabled={isSubmitting}
               className="flex-1 rounded-xl bg-climbe-primary font-black italic text-climbe-secondary shadow-lg shadow-climbe-primary/20 hover:bg-climbe-primary/90"
             >
-              {isSubmitting ? 'SALVANDO...' : 'SALVAR EMPRESA'}
+              {isSubmitting ? 'SALVANDO...' : mode === 'edit' ? 'ATUALIZAR EMPRESA' : 'SALVAR EMPRESA'}
             </Button>
           </div>
         </form>

@@ -1,6 +1,6 @@
-import { Building2, Plus, Mail, User, MapPin, Loader2 } from 'lucide-react';
+import { Building2, Plus, Mail, User, MapPin, Loader2, Pencil } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { enterpriseService, type CreateEnterpriseRequest } from '@/services/enterprise.service';
+import { enterpriseService, type CreateEnterpriseRequest, type Enterprise } from '@/services/enterprise.service';
 import { useState } from 'react';
 import { EmpresaModal } from '@/features/empresas/components';
 import { Button } from '@/components/ui/button';
@@ -26,6 +26,7 @@ const initialEnterpriseForm: CreateEnterpriseRequest = {
 
 export function EmpresasPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingEnterprise, setEditingEnterprise] = useState<Enterprise | null>(null);
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<CreateEnterpriseRequest>(initialEnterpriseForm);
 
@@ -43,11 +44,60 @@ export function EmpresasPage() {
     },
   });
 
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: CreateEnterpriseRequest }) => enterpriseService.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['enterprises'] });
+      setIsModalOpen(false);
+      setEditingEnterprise(null);
+      setFormData(initialEnterpriseForm);
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (editingEnterprise) {
+      updateMutation.mutate({ id: editingEnterprise.id, data: formData });
+      return;
+    }
+
     createMutation.mutate(formData);
   };
 
+  const openCreateModal = () => {
+    setEditingEnterprise(null);
+    setFormData(initialEnterpriseForm);
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (enterprise: Enterprise) => {
+    setEditingEnterprise(enterprise);
+    setFormData({
+      legalName: enterprise.legalName || '',
+      tradeName: enterprise.tradeName || '',
+      cnpj: enterprise.cnpj || '',
+      email: enterprise.email || '',
+      phone: enterprise.phone || '',
+      representativeName: enterprise.representativeName || '',
+      representativeCpf: enterprise.representativeCpf || '',
+      representativePhone: enterprise.representativePhone || '',
+      address: {
+        street: enterprise.address?.street || '',
+        number: enterprise.address?.number || '',
+        neighborhood: enterprise.address?.neighborhood || '',
+        city: enterprise.address?.city || '',
+        state: enterprise.address?.state || '',
+        zipCode: enterprise.address?.zipCode || '',
+      },
+    });
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditingEnterprise(null);
+    setFormData(initialEnterpriseForm);
+  };
 
   return (
     <div className="space-y-8 pb-12">
@@ -64,7 +114,7 @@ export function EmpresasPage() {
         </div>
 
         <Button
-          onClick={() => setIsModalOpen(true)}
+          onClick={openCreateModal}
           className="shrink-0 rounded-2xl bg-climbe-primary px-6 py-6 font-black italic text-climbe-secondary shadow-lg shadow-climbe-primary/20 transition-all hover:scale-105"
         >
           <Plus size={20} className="mr-2" />
@@ -78,7 +128,7 @@ export function EmpresasPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {(enterprisesPage?.content || []).map((enterprise: any) => (
+          {(enterprisesPage?.content || []).map((enterprise: Enterprise) => (
             <div
               key={enterprise.id}
               className="group relative overflow-hidden rounded-[32px] border border-gray-100 bg-white p-8 shadow-sm transition-all hover:shadow-xl"
@@ -121,8 +171,13 @@ export function EmpresasPage() {
                   <span className="text-[8px] font-black uppercase tracking-widest text-gray-300">Contratos</span>
                   <span className="font-bold text-climbe-secondary">0 Ativos</span>
                 </div>
-                <button className="text-[10px] font-black uppercase tracking-widest text-climbe-primary hover:underline">
-                  Ver Detalhes
+                <button
+                  type="button"
+                  onClick={() => openEditModal(enterprise)}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-climbe-primary/10 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-climbe-primary transition-all hover:bg-climbe-primary hover:text-climbe-secondary"
+                >
+                  <Pencil size={12} />
+                  Editar
                 </button>
               </div>
             </div>
@@ -132,11 +187,12 @@ export function EmpresasPage() {
 
       <EmpresaModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={closeModal}
         formData={formData}
         setFormData={setFormData}
         onSubmit={handleSubmit}
-        isSubmitting={createMutation.isPending}
+        isSubmitting={createMutation.isPending || updateMutation.isPending}
+        mode={editingEnterprise ? 'edit' : 'create'}
       />
     </div>
   );
