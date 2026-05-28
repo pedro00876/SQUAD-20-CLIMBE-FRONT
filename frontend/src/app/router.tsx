@@ -8,6 +8,7 @@ import { FirstAccessPage } from '@/pages/first-access/first-access';
 import { DashboardPage } from '@/pages/dashboard/dashboard';
 import { PendingApprovalPage } from '@/pages/pending-approval/pending-approval';
 import { EmpresasPage } from '@/pages/empresas/empresas';
+import { EmpresaDetalhePage } from '@/pages/empresas/empresa-detalhe';
 import { UsuariosPage } from '@/pages/usuarios/usuarios';
 import { PropostasPage } from '@/pages/propostas/propostas';
 import { DocumentosPage } from '@/pages/documentos/documentos';
@@ -15,6 +16,7 @@ import { ReunioesPage } from '@/pages/reunioes/reunioes';
 import { RelatoriosPage } from '@/pages/relatorios/relatorios';
 import { NotificacoesPage } from '@/pages/notificacoes/notificacoes';
 import { ContratosPage } from '@/pages/contratos/contratos';
+import { PerfilPage } from '@/pages/perfil/perfil';
 import { routes } from '@/config/routes';
 
 // Layout raiz que injeta o AuthProvider dentro do contexto do router
@@ -62,7 +64,11 @@ export const router = createBrowserRouter([
                 element: <EmpresasPage />,
               },
               {
-                element: <RoleRoute allowedRoles={['CEO']} />,
+                path: `${routes.empresas}/:id`,
+                element: <EmpresaDetalhePage />,
+              },
+              {
+                element: <RoleRoute allowedRoles={['ADMIN']} />,
                 children: [
                   {
                     path: routes.usuarios,
@@ -93,6 +99,10 @@ export const router = createBrowserRouter([
               {
                 path: routes.contratos,
                 element: <ContratosPage />,
+              },
+              {
+                path: routes.perfil,
+                element: <PerfilPage />,
               },
             ],
           },

@@ -14,19 +14,21 @@ import {
 } from 'lucide-react';
 import { routes } from '@/config/routes';
 import { ASSETS } from '@/config/assets';
+import { useAuthContext } from '@/contexts/AuthContext';
+import { hasAnyLogicalRole, LogicalRole } from '@/config/roles';
 
 const LOGO_BRANCA = ASSETS.logos.light;
 
 const menuItems = [
-  { path: routes.dashboard, label: 'Dashboard', icon: LayoutDashboard },
-  { path: routes.empresas, label: 'Empresas', icon: Building2 },
-  { path: routes.usuarios, label: 'Usuários', icon: Users },
-  { path: routes.propostas, label: 'Propostas', icon: FileText },
-  { path: routes.documentos, label: 'Documentos', icon: Files },
-  { path: routes.reunioes, label: 'Reuniões', icon: Calendar },
-  { path: routes.relatorios, label: 'Relatórios', icon: BarChart3 },
-  { path: routes.notificacoes, label: 'Notificações', icon: Bell },
-  { path: routes.contratos, label: 'Contratos', icon: ScrollText },
+  { path: routes.dashboard, label: 'Dashboard', icon: LayoutDashboard, roles: ['ADMIN', 'SENIOR', 'ANALISTA', 'COMPLIANCE', 'APROVADOR', 'EMPRESA'] as LogicalRole[] },
+  { path: routes.empresas, label: 'Empresas', icon: Building2, roles: ['ADMIN', 'SENIOR', 'ANALISTA', 'COMPLIANCE', 'APROVADOR', 'EMPRESA'] as LogicalRole[] },
+  { path: routes.usuarios, label: 'Usuários', icon: Users, roles: ['ADMIN'] as LogicalRole[] },
+  { path: routes.propostas, label: 'Propostas', icon: FileText, roles: ['ADMIN', 'SENIOR', 'APROVADOR', 'ANALISTA'] as LogicalRole[] },
+  { path: routes.documentos, label: 'Documentos', icon: Files, roles: ['ADMIN', 'SENIOR', 'ANALISTA', 'EMPRESA'] as LogicalRole[] },
+  { path: routes.reunioes, label: 'Reuniões', icon: Calendar, roles: ['ADMIN', 'SENIOR', 'ANALISTA'] as LogicalRole[] },
+  { path: routes.relatorios, label: 'Relatórios', icon: BarChart3, roles: ['ADMIN', 'SENIOR', 'ANALISTA'] as LogicalRole[] },
+  { path: routes.notificacoes, label: 'Notificações', icon: Bell, roles: ['ADMIN', 'SENIOR', 'ANALISTA', 'COMPLIANCE', 'APROVADOR', 'EMPRESA'] as LogicalRole[] },
+  { path: routes.contratos, label: 'Contratos', icon: ScrollText, roles: ['ADMIN', 'COMPLIANCE', 'SENIOR', 'APROVADOR'] as LogicalRole[] },
 ];
 
 interface SidebarProps {
@@ -35,6 +37,11 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
+  const { user } = useAuthContext();
+  const userRole = user?.role;
+
+  const filteredMenuItems = menuItems.filter(item => hasAnyLogicalRole(userRole, item.roles));
+
   return (
     <>
       {/* Overlay — apenas mobile */}
@@ -72,7 +79,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             Menu Principal
           </p>
 
-          {menuItems.map((item) => (
+          {filteredMenuItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
@@ -108,3 +115,4 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     </>
   );
 }
+
