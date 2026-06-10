@@ -21,6 +21,17 @@ export function NotificacoesPage() {
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
 
+  const formatNotificationDate = (dateStr?: string) => {
+    if (!dateStr) return 'Algum tempo atrás';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return 'Algum tempo atrás';
+      return formatDistanceToNow(d, { addSuffix: true, locale: ptBR });
+    } catch (e) {
+      return 'Algum tempo atrás';
+    }
+  };
+
   const {
     data: notifications = [],
     isLoading,
@@ -178,9 +189,7 @@ export function NotificacoesPage() {
 
                   <span className="inline-flex items-center gap-1 text-[10px] text-gray-400 font-black uppercase tracking-widest">
                     <Clock size={12} />
-                    {notification.createdAt
-                      ? formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true, locale: ptBR })
-                      : '--'}
+                    {formatNotificationDate(notification.sentAt || notification.createdAt)}
                   </span>
                 </div>
 

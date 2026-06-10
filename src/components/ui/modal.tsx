@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { cn } from '@/utils/cn';
 import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -16,6 +17,13 @@ export function Modal({
   className?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
 }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
   // Prevent scroll when modal is open
   useEffect(() => {
     if (isOpen) {
@@ -28,10 +36,10 @@ export function Modal({
     };
   }, [isOpen]);
 
-  return (
+  const modalContent = (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
           {/* Backdrop Blur Overlay */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -48,7 +56,7 @@ export function Modal({
             exit={{ opacity: 0, scale: 0.95, y: 12 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
             className={cn(
-              'relative w-full rounded-[28px] bg-white p-8 dark:bg-slate-900 shadow-2xl border border-gray-100/10 z-10 max-h-[90vh] overflow-y-auto custom-scrollbar flex flex-col gap-4 text-slate-800 dark:text-white',
+              'relative w-full rounded-[28px] bg-white p-8 dark:bg-slate-900 shadow-2xl border border-gray-100/10 z-[10000] max-h-[90vh] overflow-y-auto custom-scrollbar flex flex-col gap-4 text-slate-800 dark:text-white',
               {
                 'max-w-sm': size === 'sm',
                 'max-w-md': size === 'md',
@@ -74,4 +82,8 @@ export function Modal({
       )}
     </AnimatePresence>
   );
+
+  if (!mounted) return null;
+
+  return createPortal(modalContent, document.body);
 }

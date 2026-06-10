@@ -8,6 +8,7 @@ export interface Notification {
   read: boolean;
   type: string;
   createdAt: string;
+  sentAt?: string;
 }
 
 export const notificationService = {

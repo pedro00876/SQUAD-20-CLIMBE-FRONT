@@ -55,6 +55,17 @@ export function Header({ onMenuClick, isCollapsed, onToggleCollapse }: HeaderPro
     return parts.slice(0, 2).join(' ');
   };
 
+  const formatNotificationDate = (dateStr?: string) => {
+    if (!dateStr) return 'Algum tempo atrás';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return 'Algum tempo atrás';
+      return formatDistanceToNow(d, { addSuffix: true, locale: ptBR });
+    } catch (e) {
+      return 'Algum tempo atrás';
+    }
+  };
+
   return (
     <header className="h-24 bg-white border-b border-gray-100 flex items-center justify-between px-6 lg:px-10 sticky top-0 z-40 shadow-sm gap-4">
       {/* Menu / Collapse Button */}
@@ -105,10 +116,10 @@ export function Header({ onMenuClick, isCollapsed, onToggleCollapse }: HeaderPro
               </div>
               <div className="max-h-96 overflow-y-auto divide-y divide-gray-50">
                 {notifications.length > 0 ? (
-                  notifications.map((notification: Notification) => (
+                   notifications.map((notification: Notification) => (
                     <div key={notification.id} className={`p-5 group transition-colors hover:bg-gray-50/50 ${!notification.read ? 'bg-climbe-primary/5' : ''}`}>
                       <div className="flex justify-between gap-2 mb-1">
-                        <p className="text-xs font-bold text-climbe-secondary leading-tight italic">{notification.title}</p>
+                        <p className="text-xs font-bold text-climbe-secondary leading-tight italic">{notification.title || 'Notificação'}</p>
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           {!notification.read && (
                             <button 
@@ -129,7 +140,7 @@ export function Header({ onMenuClick, isCollapsed, onToggleCollapse }: HeaderPro
                       <p className="text-[11px] text-gray-500 mb-2 leading-relaxed">{notification.message}</p>
                       <div className="flex items-center gap-1.5 text-[9px] text-gray-400 font-medium">
                         <Clock size={10} />
-                        {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true, locale: ptBR })}
+                        {formatNotificationDate(notification.sentAt || notification.createdAt)}
                       </div>
                     </div>
                   ))
@@ -142,9 +153,13 @@ export function Header({ onMenuClick, isCollapsed, onToggleCollapse }: HeaderPro
                   </div>
                 )}
               </div>
-              <button className="w-full p-4 text-[10px] font-black text-climbe-primary uppercase tracking-widest hover:bg-gray-50 transition-colors border-t border-gray-50">
+              <Link
+                to={routes.notificacoes}
+                onClick={() => setIsNotificationsOpen(false)}
+                className="block text-center w-full p-4 text-[10px] font-black text-climbe-primary uppercase tracking-widest hover:bg-gray-50 transition-colors border-t border-gray-50"
+              >
                 Ver todas as notificações
-              </button>
+              </Link>
             </div>
           )}
         </div>

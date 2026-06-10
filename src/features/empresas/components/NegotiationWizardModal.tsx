@@ -65,6 +65,8 @@ const steps: Step[] = [
 ];
 
 export function NegotiationWizardModal({ isOpen, onClose, enterprise }: NegotiationWizardModalProps) {
+  if (!enterprise) return null;
+
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<StepKey>('triage');
 
@@ -94,8 +96,6 @@ export function NegotiationWizardModal({ isOpen, onClose, enterprise }: Negotiat
 
   const contracts = contractsPage?.content || [];
   const associatedContract = latestProposal ? contracts.find((c: any) => c.proposalId === latestProposal.id) : null;
-
-  if (!enterprise) return null;
 
   const isLoading = isLoadingProposals || isLoadingContracts || (!!latestProposal?.id && isLoadingDocs);
 
