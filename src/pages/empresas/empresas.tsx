@@ -2,7 +2,7 @@ import { Building2, Plus, Mail, User, MapPin, Loader2, Pencil } from 'lucide-rea
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { enterpriseService, type CreateEnterpriseRequest, type Enterprise } from '@/services/enterprise.service';
 import { useState } from 'react';
-import { EmpresaModal } from '@/features/empresas/components';
+import { EmpresaModal, NegotiationWizardModal } from '@/features/empresas/components';
 import { Button } from '@/components/ui/button';
 
 const initialEnterpriseForm: CreateEnterpriseRequest = {
@@ -27,6 +27,8 @@ const initialEnterpriseForm: CreateEnterpriseRequest = {
 export function EmpresasPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEnterprise, setEditingEnterprise] = useState<Enterprise | null>(null);
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const [selectedEnterpriseForWizard, setSelectedEnterpriseForWizard] = useState<Enterprise | null>(null);
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<CreateEnterpriseRequest>(initialEnterpriseForm);
 
@@ -93,6 +95,11 @@ export function EmpresasPage() {
     setIsModalOpen(true);
   };
 
+  const openWizardModal = (enterprise: Enterprise) => {
+    setSelectedEnterpriseForWizard(enterprise);
+    setIsWizardOpen(true);
+  };
+
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingEnterprise(null);
@@ -131,7 +138,8 @@ export function EmpresasPage() {
           {(enterprisesPage?.content || []).map((enterprise: Enterprise) => (
             <div
               key={enterprise.id}
-              className="group relative overflow-hidden rounded-[32px] border border-gray-100 bg-white p-8 shadow-sm transition-all hover:shadow-xl"
+              onClick={() => openWizardModal(enterprise)}
+              className="group relative overflow-hidden rounded-[32px] border border-gray-100 bg-white p-8 shadow-sm transition-all hover:shadow-xl cursor-pointer"
             >
               <div className="absolute right-0 top-0 -mr-16 -mt-16 h-32 w-32 rounded-full bg-climbe-primary/5 transition-transform duration-500 group-hover:scale-150" />
 
@@ -173,7 +181,10 @@ export function EmpresasPage() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => openEditModal(enterprise)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openEditModal(enterprise);
+                  }}
                   className="inline-flex items-center gap-1.5 rounded-xl bg-climbe-primary/10 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-climbe-primary transition-all hover:bg-climbe-primary hover:text-climbe-secondary"
                 >
                   <Pencil size={12} />
@@ -193,6 +204,12 @@ export function EmpresasPage() {
         onSubmit={handleSubmit}
         isSubmitting={createMutation.isPending || updateMutation.isPending}
         mode={editingEnterprise ? 'edit' : 'create'}
+      />
+
+      <NegotiationWizardModal
+        isOpen={isWizardOpen}
+        onClose={() => setIsWizardOpen(false)}
+        enterprise={selectedEnterpriseForWizard}
       />
     </div>
   );
