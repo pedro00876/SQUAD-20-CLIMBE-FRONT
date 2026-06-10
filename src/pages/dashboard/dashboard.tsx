@@ -1,7 +1,6 @@
 import { LayoutDashboard, FileText, Briefcase, Users, TrendingUp } from 'lucide-react';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { RevenueChart, StatusPieChart } from '@/components/dashboard/DashboardCharts';
-import { GoogleCalendar } from '@/components/dashboard/GoogleCalendar';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { dashboardService } from '@/services/dashboard.service';
@@ -70,31 +69,26 @@ export function DashboardPage() {
         />
       </div>
 
-      {/* Middle Section: Charts + Calendar */}
+      {/* Middle Section: Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
         {/* Gráfico de Barras */}
-        <div className="lg:col-span-4 bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm flex flex-col min-w-0">
+        <div className="lg:col-span-6 bg-white p-8 rounded-[32px] border border-gray-100/80 shadow-sm flex flex-col min-w-0">
           <div className="mb-8">
             <h3 className="font-bold text-climbe-secondary italic leading-tight">Fluxo de Propostas</h3>
             <p className="text-[10px] text-gray-400 uppercase tracking-widest font-medium">Volume Semestral</p>
           </div>
-          <div className="flex-1 flex items-center">
+          <div className="flex-1 flex items-center justify-center">
             <RevenueChart data={stats?.monthlyRevenue} />
           </div>
         </div>
 
-        {/* Calendário Google (No Meio) */}
-        <div className="lg:col-span-4 h-full">
-          <GoogleCalendar />
-        </div>
-
         {/* Gráfico de Pizza */}
-        <div className="lg:col-span-4 bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm flex flex-col min-w-0">
+        <div className="lg:col-span-6 bg-white p-8 rounded-[32px] border border-gray-100/80 shadow-sm flex flex-col min-w-0">
           <div className="mb-8">
             <h3 className="font-bold text-climbe-secondary italic leading-tight">Distribuição de Status</h3>
             <p className="text-[10px] text-gray-400 uppercase tracking-widest font-medium">Performance de Conversão</p>
           </div>
-          <div className="flex-1 flex items-center">
+          <div className="flex-1 flex items-center justify-center">
             <StatusPieChart data={stats?.proposalStatusDistribution} />
           </div>
           <div className="mt-6 flex justify-around">
