@@ -6,6 +6,7 @@ import { RoleRoute } from '@/components/auth/RoleRoute';
 import { LoginPage } from '@/pages/login/login';
 import { FirstAccessPage } from '@/pages/first-access/first-access';
 import { DashboardPage } from '@/pages/dashboard/dashboard';
+import { AgendaPage } from '@/pages/agenda/agenda';
 import { PendingApprovalPage } from '@/pages/pending-approval/pending-approval';
 import { EmpresasPage } from '@/pages/empresas/empresas';
 import { UsuariosPage } from '@/pages/usuarios/usuarios';
@@ -57,6 +58,10 @@ export const router = createBrowserRouter([
               {
                 path: routes.dashboard,
                 element: <DashboardPage />,
+              },
+              {
+                path: routes.agenda,
+                element: <AgendaPage />,
               },
               {
                 path: routes.empresas,
