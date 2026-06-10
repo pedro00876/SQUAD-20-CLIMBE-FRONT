@@ -12,9 +12,11 @@ import { routes } from '@/config/routes';
 
 interface HeaderProps {
   onMenuClick: () => void;
+  isCollapsed: boolean;
+  onToggleCollapse: () => void;
 }
 
-export function Header({ onMenuClick }: HeaderProps) {
+export function Header({ onMenuClick, isCollapsed, onToggleCollapse }: HeaderProps) {
   const { user, logout } = useAuthContext();
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const queryClient = useQueryClient();
@@ -55,10 +57,17 @@ export function Header({ onMenuClick }: HeaderProps) {
 
   return (
     <header className="h-24 bg-white border-b border-gray-100 flex items-center justify-between px-6 lg:px-10 sticky top-0 z-40 shadow-sm gap-4">
-      {/* Mobile Menu Button */}
+      {/* Menu / Collapse Button */}
       <button 
-        onClick={onMenuClick}
-        className="lg:hidden p-2 text-climbe-secondary hover:bg-gray-50 rounded-xl transition-colors shrink-0"
+        onClick={() => {
+          if (window.innerWidth >= 1024) {
+            onToggleCollapse();
+          } else {
+            onMenuClick();
+          }
+        }}
+        className="p-2 text-climbe-secondary hover:bg-gray-50 rounded-xl transition-colors shrink-0"
+        title={isCollapsed ? "Expandir menu" : "Recolher menu"}
       >
         <Menu size={24} />
       </button>
