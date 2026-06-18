@@ -16,6 +16,7 @@ export interface CreateContractRequest {
   proposalId: number;
   startDate: string;
   endDate?: string;
+  totalValue?: number;
 }
 
 export interface UpdateContractRequest {
