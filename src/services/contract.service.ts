@@ -23,6 +23,7 @@ export interface UpdateContractRequest {
   proposalId?: number;
   startDate?: string;
   endDate?: string;
+  totalValue?: number;
   status?: string;
 }
 
