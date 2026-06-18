@@ -23,15 +23,15 @@ export const userService = {
 
 export const cargoService = {
   listCargos: async (): Promise<Cargo[]> => {
-    const res = await api.get<Cargo[]>('/api/cargos');
+    const res = await api.get<Cargo[]>('/api/roles');
     return res.data;
   },
   createCargo: async (data: CargoRequest): Promise<Cargo> => {
-    const res = await api.post<Cargo>('/api/cargos', data);
+    const res = await api.post<Cargo>('/api/roles', data);
     return res.data;
   },
   getCargoById: async (id: number): Promise<Cargo> => {
-    const res = await api.get<Cargo>(`/api/cargos/${id}`);
+    const res = await api.get<Cargo>(`/api/roles/${id}`);
     return res.data;
   },
 };

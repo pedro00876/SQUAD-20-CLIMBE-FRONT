@@ -17,8 +17,7 @@ export function ContratosPage() {
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<CreateContractRequest>({
     proposalId: 0,
-    startDate: format(new Date(), 'yyyy-MM-dd'),
-    totalValue: 0
+    startDate: format(new Date(), 'yyyy-MM-dd')
   });
 
   const { data: contractsPage, isLoading } = useQuery({
@@ -40,8 +39,7 @@ export function ContratosPage() {
       setIsModalOpen(false);
       setFormData({
         proposalId: 0,
-        startDate: format(new Date(), 'yyyy-MM-dd'),
-        totalValue: 0
+        startDate: format(new Date(), 'yyyy-MM-dd')
       });
     }
   });

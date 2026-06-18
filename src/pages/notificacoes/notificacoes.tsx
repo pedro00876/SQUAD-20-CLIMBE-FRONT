@@ -65,7 +65,6 @@ export function NotificacoesPage() {
     if (!type) return 'Notificacao';
     return notificationTypeLabels[type] || type.replace(/_/g, ' ');
   };
-
   return (
     <div className="space-y-8 pb-12">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">

@@ -90,20 +90,6 @@ export function ReunioesPage() {
     watch,
     formState: { errors },
   } = useForm<MeetingFormData>({
-    resolver: zodResolver(meetingSchema),
-    defaultValues: {
-      enterpriseId: 1,
-      title: '',
-      date: new Date().toISOString().slice(0, 10),
-      time: '14:00:00',
-      endTime: '15:00:00',
-      inPerson: true,
-      location: '',
-      agenda: '',
-      status: 'AGENDADA',
-      participantIds: [],
-    },
-  });
 
   const selectedDate = watch('date');
   const selectedStartTime = watch('time');
