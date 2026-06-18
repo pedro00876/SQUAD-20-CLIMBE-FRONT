@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -446,8 +447,8 @@ export function ReunioesPage() {
         </div>
       </div>
 
-      {isCreateOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-8">
+      {isCreateOpen ? createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 px-4 py-8">
           <div className="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-[32px] bg-climbe-secondary p-8 text-white shadow-2xl">
             <button
               type="button"
@@ -624,7 +625,8 @@ export function ReunioesPage() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       ) : null}
     </div>
   );

@@ -6,17 +6,17 @@ import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { routes } from '@/config/routes';
-import { 
-  Building2, 
-  Clock, 
-  FileText, 
-  ScrollText, 
-  ClipboardCheck, 
-  Play, 
-  Check, 
-  Lock, 
-  AlertCircle, 
-  ChevronRight
+import {
+  Building2,
+  Clock,
+  FileText,
+  ScrollText,
+  ClipboardCheck,
+  Play,
+  Check,
+  Lock,
+  AlertCircle,
+  ChevronRight,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
@@ -57,14 +57,43 @@ interface Step {
 }
 
 const steps: Step[] = [
-  { key: 'triage', label: 'Triagem', description: 'Reunião e qualificação', icon: Clock },
-  { key: 'proposal', label: 'Proposta', description: 'Proposta comercial', icon: FileText },
-  { key: 'contract', label: 'Contrato', description: 'Analista e contrato', icon: ScrollText },
-  { key: 'documents', label: 'Documentação', description: 'Validação de documentos', icon: ClipboardCheck },
-  { key: 'operation', label: 'Operação', description: 'Ferramentas e relatórios', icon: Play },
+  {
+    key: 'triage',
+    label: 'Triagem',
+    description: 'Reunião e qualificação',
+    icon: Clock,
+  },
+  {
+    key: 'proposal',
+    label: 'Proposta',
+    description: 'Proposta comercial',
+    icon: FileText,
+  },
+  {
+    key: 'contract',
+    label: 'Contrato',
+    description: 'Analista e contrato',
+    icon: ScrollText,
+  },
+  {
+    key: 'documents',
+    label: 'Documentação',
+    description: 'Validação de documentos',
+    icon: ClipboardCheck,
+  },
+  {
+    key: 'operation',
+    label: 'Operação',
+    description: 'Ferramentas e relatórios',
+    icon: Play,
+  },
 ];
 
-export function NegotiationWizardModal({ isOpen, onClose, enterprise }: NegotiationWizardModalProps) {
+export function NegotiationWizardModal({
+  isOpen,
+  onClose,
+  enterprise,
+}: NegotiationWizardModalProps) {
   if (!enterprise) return null;
 
   const navigate = useNavigate();
@@ -84,9 +113,13 @@ export function NegotiationWizardModal({ isOpen, onClose, enterprise }: Negotiat
   });
 
   const proposals = proposalsPage?.content || [];
-  const enterpriseProposals = enterprise ? proposals.filter((p: any) => p.enterpriseId === enterprise.id) : [];
+  const enterpriseProposals = enterprise
+    ? proposals.filter((p: any) => p.enterpriseId === enterprise.id)
+    : [];
   // Sort by id descending (newest first)
-  const latestProposal = [...enterpriseProposals].sort((a: any, b: any) => b.id - a.id)[0];
+  const latestProposal = [...enterpriseProposals].sort(
+    (a: any, b: any) => b.id - a.id
+  )[0];
 
   const { data: docRequirements = [], isLoading: isLoadingDocs } = useQuery({
     queryKey: ['document-requirements', latestProposal?.id],
@@ -95,25 +128,40 @@ export function NegotiationWizardModal({ isOpen, onClose, enterprise }: Negotiat
   });
 
   const contracts = contractsPage?.content || [];
-  const associatedContract = latestProposal ? contracts.find((c: any) => c.proposalId === latestProposal.id) : null;
+  const associatedContract = latestProposal
+    ? contracts.find((c: any) => c.proposalId === latestProposal.id)
+    : null;
 
-  const isLoading = isLoadingProposals || isLoadingContracts || (!!latestProposal?.id && isLoadingDocs);
+  const isLoading =
+    isLoadingProposals ||
+    isLoadingContracts ||
+    (!!latestProposal?.id && isLoadingDocs);
 
   // Status mapping logic
-  const getStepStatus = (stepKey: StepKey): 'completed' | 'active' | 'locked' | 'failed' => {
+  const getStepStatus = (
+    stepKey: StepKey
+  ): 'completed' | 'active' | 'locked' | 'failed' => {
     if (!latestProposal) return stepKey === 'triage' ? 'active' : 'locked';
 
     const status = latestProposal.status?.toUpperCase() || '';
 
     switch (stepKey) {
       case 'triage':
-        if (status === 'RECEIVED' || status === 'IN_TRIAGE' || status === 'PENDING_ADJUSTMENTS') {
+        if (
+          status === 'RECEIVED' ||
+          status === 'IN_TRIAGE' ||
+          status === 'PENDING_ADJUSTMENTS'
+        ) {
           return 'active';
         }
         return 'completed';
 
       case 'proposal':
-        if (status === 'RECEIVED' || status === 'IN_TRIAGE' || status === 'PENDING_ADJUSTMENTS') {
+        if (
+          status === 'RECEIVED' ||
+          status === 'IN_TRIAGE' ||
+          status === 'PENDING_ADJUSTMENTS'
+        ) {
           return 'locked';
         }
         if (status === 'ELIGIBLE' || status === 'COMMERCIAL_PROPOSAL') {
@@ -157,7 +205,8 @@ export function NegotiationWizardModal({ isOpen, onClose, enterprise }: Negotiat
         }
         // Active if docs are not fully approved
         const hasDocs = docRequirements.length > 0;
-        const allApproved = hasDocs && docRequirements.every((d: any) => d.status === 'APPROVED');
+        const allApproved =
+          hasDocs && docRequirements.every((d: any) => d.status === 'APPROVED');
         return allApproved ? 'completed' : 'active';
 
       case 'operation':
@@ -174,7 +223,9 @@ export function NegotiationWizardModal({ isOpen, onClose, enterprise }: Negotiat
           return 'locked';
         }
         const hasRequirements = docRequirements.length > 0;
-        const requirementsAllApproved = hasRequirements && docRequirements.every((d: any) => d.status === 'APPROVED');
+        const requirementsAllApproved =
+          hasRequirements &&
+          docRequirements.every((d: any) => d.status === 'APPROVED');
         return requirementsAllApproved ? 'active' : 'locked';
 
       default:
@@ -251,11 +302,18 @@ export function NegotiationWizardModal({ isOpen, onClose, enterprise }: Negotiat
 
   const handleCreateFirstProposal = () => {
     onClose();
-    navigate(routes.propostas, { state: { createForEnterpriseId: enterprise.id } });
+    navigate(routes.propostas, {
+      state: { createForEnterpriseId: enterprise.id },
+    });
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="2xl" className="bg-[#F8FAFC]">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="2xl"
+      className="bg-[#F8FAFC]"
+    >
       <div className="space-y-6 text-slate-800">
         {/* Header */}
         <div className="flex items-start gap-4">
@@ -265,7 +323,9 @@ export function NegotiationWizardModal({ isOpen, onClose, enterprise }: Negotiat
           <div>
             <div className="flex items-center gap-2 text-climbe-primary">
               <Building2 size={14} />
-              <span className="text-[9px] font-black uppercase tracking-[0.2em]">Negociação & Fluxo</span>
+              <span className="text-[9px] font-black uppercase tracking-[0.2em]">
+                Negociação & Fluxo
+              </span>
             </div>
             <h2 className="text-xl font-black italic tracking-tight text-climbe-secondary leading-tight mt-0.5">
               {enterprise.tradeName || enterprise.legalName}
@@ -287,12 +347,18 @@ export function NegotiationWizardModal({ isOpen, onClose, enterprise }: Negotiat
               <FileText size={32} />
             </div>
             <div>
-              <h3 className="font-bold text-climbe-secondary text-sm">Sem Negociação Ativa</h3>
+              <h3 className="font-bold text-climbe-secondary text-sm">
+                Sem Negociação Ativa
+              </h3>
               <p className="text-xs text-gray-400 max-w-sm mt-1 font-light">
-                Esta empresa foi cadastrada no sistema, mas ainda não possui nenhuma proposta comercial vinculada para iniciar o fluxo.
+                Esta empresa foi cadastrada no sistema, mas ainda não possui
+                nenhuma proposta comercial vinculada para iniciar o fluxo.
               </p>
             </div>
-            <Button onClick={handleCreateFirstProposal} className="italic text-xs font-black">
+            <Button
+              onClick={handleCreateFirstProposal}
+              className="italic text-xs font-black"
+            >
               INICIAR FLUXO COMERCIAL
             </Button>
           </div>
@@ -303,7 +369,7 @@ export function NegotiationWizardModal({ isOpen, onClose, enterprise }: Negotiat
             <div className="relative flex justify-between items-center w-full px-2">
               {/* Connecting line backgrounds */}
               <div className="absolute left-10 right-10 top-[22px] h-[3px] bg-gray-200 -z-10" />
-              
+
               {steps.map((step) => {
                 const status = getStepStatus(step.key);
                 const StepIcon = step.icon;
@@ -319,13 +385,14 @@ export function NegotiationWizardModal({ isOpen, onClose, enterprise }: Negotiat
                     <div
                       className={`
                         w-11 h-11 rounded-full flex items-center justify-center border-2 transition-all duration-300
-                        ${status === 'completed' 
-                          ? 'bg-climbe-primary border-climbe-primary text-climbe-secondary shadow-md shadow-climbe-primary/10' 
-                          : status === 'active'
-                          ? 'bg-white border-climbe-primary text-climbe-primary ring-4 ring-climbe-primary/10'
-                          : status === 'failed'
-                          ? 'bg-danger border-danger text-white'
-                          : 'bg-white border-gray-200 text-gray-400'
+                        ${
+                          status === 'completed'
+                            ? 'bg-climbe-primary border-climbe-primary text-climbe-secondary shadow-md shadow-climbe-primary/10'
+                            : status === 'active'
+                              ? 'bg-white border-climbe-primary text-climbe-primary ring-4 ring-climbe-primary/10'
+                              : status === 'failed'
+                                ? 'bg-danger border-danger text-white'
+                                : 'bg-white border-gray-200 text-gray-400'
                         }
                         ${isTabActive ? 'scale-110 shadow-lg' : 'hover:scale-105'}
                       `}
@@ -343,9 +410,10 @@ export function NegotiationWizardModal({ isOpen, onClose, enterprise }: Negotiat
                     <span
                       className={`
                         text-[9px] font-black uppercase tracking-wider mt-2.5 transition-all text-center
-                        ${isTabActive 
-                          ? 'text-climbe-secondary font-black scale-105' 
-                          : 'text-gray-400 group-hover:text-slate-600'
+                        ${
+                          isTabActive
+                            ? 'text-climbe-secondary font-black scale-105'
+                            : 'text-gray-400 group-hover:text-slate-600'
                         }
                       `}
                     >
@@ -371,23 +439,26 @@ export function NegotiationWizardModal({ isOpen, onClose, enterprise }: Negotiat
                   <div className="flex items-center justify-between border-b border-gray-50 pb-3 mb-4">
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] font-black uppercase tracking-widest bg-gray-100 px-3 py-1 rounded-full text-gray-500">
-                        Etapa {steps.findIndex(s => s.key === activeTab) + 1}
+                        Etapa {steps.findIndex((s) => s.key === activeTab) + 1}
                       </span>
                       <h3 className="text-sm font-black italic text-climbe-secondary">
-                        {steps.find(s => s.key === activeTab)?.label}
+                        {steps.find((s) => s.key === activeTab)?.label}
                       </h3>
                     </div>
-                    
-                    <span className={`text-[9px] font-black uppercase tracking-widest border rounded-full px-2.5 py-0.5
-                      ${getStepStatus(activeTab) === 'completed'
-                        ? 'text-success bg-success/5 border-success/15'
-                        : getStepStatus(activeTab) === 'active'
-                        ? 'text-climbe-primary bg-climbe-primary/5 border-climbe-primary/15'
-                        : getStepStatus(activeTab) === 'failed'
-                        ? 'text-danger bg-danger/5 border-danger/15'
-                        : 'text-gray-400 bg-gray-50 border-gray-200/60'
+
+                    <span
+                      className={`text-[9px] font-black uppercase tracking-widest border rounded-full px-2.5 py-0.5
+                      ${
+                        getStepStatus(activeTab) === 'completed'
+                          ? 'text-success bg-success/5 border-success/15'
+                          : getStepStatus(activeTab) === 'active'
+                            ? 'text-climbe-primary bg-climbe-primary/5 border-climbe-primary/15'
+                            : getStepStatus(activeTab) === 'failed'
+                              ? 'text-danger bg-danger/5 border-danger/15'
+                              : 'text-gray-400 bg-gray-50 border-gray-200/60'
                       }
-                    `}>
+                    `}
+                    >
                       {getStepStatus(activeTab) === 'completed' && 'Concluído'}
                       {getStepStatus(activeTab) === 'active' && 'Em Andamento'}
                       {getStepStatus(activeTab) === 'failed' && 'Recusado/Erro'}
@@ -399,17 +470,29 @@ export function NegotiationWizardModal({ isOpen, onClose, enterprise }: Negotiat
                   {activeTab === 'triage' && (
                     <div className="space-y-2 text-xs font-light">
                       <p className="text-gray-500">
-                        O processo inicia com a qualificação da empresa. São recolhidos dados básicos de contato e realizada uma reunião inicial para entender a demanda.
+                        O processo inicia com a qualificação da empresa. São
+                        recolhidos dados básicos de contato e realizada uma
+                        reunião inicial para entender a demanda.
                       </p>
                       <div className="grid grid-cols-2 gap-4 mt-4 bg-gray-50 p-3.5 rounded-2xl border border-gray-100/60">
                         <div>
-                          <span className="block text-[8px] font-black text-gray-400 uppercase tracking-widest">Status da Proposta</span>
-                          <span className="font-bold text-climbe-secondary">{getProposalStatusLabel(latestProposal.status)}</span>
+                          <span className="block text-[8px] font-black text-gray-400 uppercase tracking-widest">
+                            Status da Proposta
+                          </span>
+                          <span className="font-bold text-climbe-secondary">
+                            {getProposalStatusLabel(latestProposal.status)}
+                          </span>
                         </div>
                         <div>
-                          <span className="block text-[8px] font-black text-gray-400 uppercase tracking-widest">Data de Cadastro</span>
+                          <span className="block text-[8px] font-black text-gray-400 uppercase tracking-widest">
+                            Data de Cadastro
+                          </span>
                           <span className="font-medium text-gray-600">
-                            {latestProposal.createdAt ? new Date(latestProposal.createdAt).toLocaleDateString('pt-BR') : '--'}
+                            {latestProposal.createdAt
+                              ? new Date(
+                                  latestProposal.createdAt
+                                ).toLocaleDateString('pt-BR')
+                              : '--'}
                           </span>
                         </div>
                       </div>
@@ -419,27 +502,41 @@ export function NegotiationWizardModal({ isOpen, onClose, enterprise }: Negotiat
                   {activeTab === 'proposal' && (
                     <div className="space-y-2 text-xs font-light">
                       <p className="text-gray-500">
-                        Elaboração e validação da proposta comercial detalhada descrevendo os serviços que serão prestados.
+                        Elaboração e validação da proposta comercial detalhada
+                        descrevendo os serviços que serão prestados.
                       </p>
-                      {latestProposal.status?.toUpperCase() === 'COMMERCIAL_PROPOSAL_REJECTED' && (
+                      {latestProposal.status?.toUpperCase() ===
+                        'COMMERCIAL_PROPOSAL_REJECTED' && (
                         <div className="flex items-start gap-2.5 bg-danger/5 text-danger border border-danger/15 rounded-2xl p-4 mt-2">
                           <AlertCircle size={16} className="shrink-0 mt-0.5" />
                           <div>
-                            <span className="font-black uppercase tracking-wider text-[9px] block">Proposta Recusada pelo Cliente</span>
+                            <span className="font-black uppercase tracking-wider text-[9px] block">
+                              Proposta Recusada pelo Cliente
+                            </span>
                             <span className="font-light block mt-0.5 text-xs text-danger/80">
-                              O cliente solicitou revisão ou recusou a proposta comercial apresentada. Acesse o menu comercial para enviar uma nova proposta ou negociar.
+                              O cliente solicitou revisão ou recusou a proposta
+                              comercial apresentada. Acesse o menu comercial
+                              para enviar uma nova proposta ou negociar.
                             </span>
                           </div>
                         </div>
                       )}
                       <div className="grid grid-cols-2 gap-4 mt-4 bg-gray-50 p-3.5 rounded-2xl border border-gray-100/60">
                         <div>
-                          <span className="block text-[8px] font-black text-gray-400 uppercase tracking-widest">Fase da Proposta</span>
-                          <span className="font-bold text-climbe-secondary">{getProposalStatusLabel(latestProposal.status)}</span>
+                          <span className="block text-[8px] font-black text-gray-400 uppercase tracking-widest">
+                            Fase da Proposta
+                          </span>
+                          <span className="font-bold text-climbe-secondary">
+                            {getProposalStatusLabel(latestProposal.status)}
+                          </span>
                         </div>
                         <div>
-                          <span className="block text-[8px] font-black text-gray-400 uppercase tracking-widest">Elaborador</span>
-                          <span className="font-medium text-gray-600">{latestProposal.userName || 'N/A'}</span>
+                          <span className="block text-[8px] font-black text-gray-400 uppercase tracking-widest">
+                            Elaborador
+                          </span>
+                          <span className="font-medium text-gray-600">
+                            {latestProposal.userName || 'N/A'}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -448,20 +545,28 @@ export function NegotiationWizardModal({ isOpen, onClose, enterprise }: Negotiat
                   {activeTab === 'contract' && (
                     <div className="space-y-2 text-xs font-light">
                       <p className="text-gray-500">
-                        Após aprovação comercial, o compliance elabora o contrato. Também é designado o Analista Sênior que ficará responsável pelo acompanhamento direto da conta.
+                        Após aprovação comercial, o compliance elabora o
+                        contrato. Também é designado o Analista Sênior que
+                        ficará responsável pelo acompanhamento direto da conta.
                       </p>
                       <div className="grid grid-cols-2 gap-4 mt-4 bg-gray-50 p-3.5 rounded-2xl border border-gray-100/60">
                         <div>
-                          <span className="block text-[8px] font-black text-gray-400 uppercase tracking-widest">Analista Responsável</span>
-                          <span className="font-bold text-climbe-secondary">{latestProposal.responsibleAnalystName || 'Pendente'}</span>
+                          <span className="block text-[8px] font-black text-gray-400 uppercase tracking-widest">
+                            Analista Responsável
+                          </span>
+                          <span className="font-bold text-climbe-secondary">
+                            {latestProposal.responsibleAnalystName ||
+                              'Pendente'}
+                          </span>
                         </div>
                         <div>
-                          <span className="block text-[8px] font-black text-gray-400 uppercase tracking-widest">Status do Contrato</span>
+                          <span className="block text-[8px] font-black text-gray-400 uppercase tracking-widest">
+                            Status do Contrato
+                          </span>
                           <span className="font-bold text-climbe-secondary">
-                            {associatedContract 
-                              ? `R$ ${associatedContract.totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} - Ativo` 
-                              : 'Contrato não gerado'
-                            }
+                            {associatedContract
+                              ? `R$ ${associatedContract.totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} - Ativo`
+                              : 'Contrato não gerado'}
                           </span>
                         </div>
                       </div>
@@ -471,21 +576,33 @@ export function NegotiationWizardModal({ isOpen, onClose, enterprise }: Negotiat
                   {activeTab === 'documents' && (
                     <div className="space-y-3 text-xs font-light">
                       <p className="text-gray-500">
-                        A empresa contratada deve enviar toda a documentação legal e financeira exigida pelo analista responsável para homologação.
+                        A empresa contratada deve enviar toda a documentação
+                        legal e financeira exigida pelo analista responsável
+                        para homologação.
                       </p>
-                      
+
                       {getStepStatus('documents') === 'locked' ? (
                         <div className="text-center py-4 text-gray-400">
-                          Aguardando a conclusão do contrato para iniciar a coleta de documentos.
+                          Aguardando a conclusão do contrato para iniciar a
+                          coleta de documentos.
                         </div>
                       ) : docRequirements.length > 0 ? (
                         <div className="space-y-2 mt-2">
-                          <span className="block text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Status do Checklist</span>
+                          <span className="block text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">
+                            Status do Checklist
+                          </span>
                           <div className="grid gap-2 max-h-[150px] overflow-y-auto pr-1">
                             {docRequirements.map((req: any) => (
-                              <div key={req.id} className="flex justify-between items-center p-2 rounded-xl bg-gray-50 border border-gray-100 text-[11px]">
-                                <span className="font-bold text-climbe-secondary">{getDocTypeLabel(req.documentType)}</span>
-                                <span className={`border px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${getDocStatusColor(req.status)}`}>
+                              <div
+                                key={req.id}
+                                className="flex justify-between items-center p-2 rounded-xl bg-gray-50 border border-gray-100 text-[11px]"
+                              >
+                                <span className="font-bold text-climbe-secondary">
+                                  {getDocTypeLabel(req.documentType)}
+                                </span>
+                                <span
+                                  className={`border px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${getDocStatusColor(req.status)}`}
+                                >
                                   {getDocStatusLabel(req.status)}
                                 </span>
                               </div>
@@ -495,7 +612,10 @@ export function NegotiationWizardModal({ isOpen, onClose, enterprise }: Negotiat
                       ) : (
                         <div className="flex items-center gap-2 text-amber-600 bg-amber-50 border border-amber-100 rounded-2xl p-3.5 mt-2">
                           <AlertCircle size={15} />
-                          <span>Checklist documental ainda não foi gerado pelo analista.</span>
+                          <span>
+                            Checklist documental ainda não foi gerado pelo
+                            analista.
+                          </span>
                         </div>
                       )}
                     </div>
@@ -504,14 +624,21 @@ export function NegotiationWizardModal({ isOpen, onClose, enterprise }: Negotiat
                   {activeTab === 'operation' && (
                     <div className="space-y-2 text-xs font-light">
                       <p className="text-gray-500">
-                        Homologação completa. Com todos os documentos validados, as ferramentas da planilha de acompanhamento e pastas são liberadas, dando início oficial à operação e entrega dos relatórios mensais.
+                        Homologação completa. Com todos os documentos validados,
+                        as ferramentas da planilha de acompanhamento e pastas
+                        são liberadas, dando início oficial à operação e entrega
+                        dos relatórios mensais.
                       </p>
                       <div className="flex items-start gap-2 bg-success/5 border border-success/10 rounded-2xl p-4 mt-4 text-success">
                         <Check size={16} className="shrink-0 mt-0.5" />
                         <div>
-                          <strong className="font-black uppercase tracking-wider text-[9px] block">Operação Iniciada</strong>
+                          <strong className="font-black uppercase tracking-wider text-[9px] block">
+                            Operação Iniciada
+                          </strong>
                           <span className="block text-[11px] text-success-foreground mt-0.5">
-                            Todas as ferramentas do contratante estão liberadas. Próximo passo: Geração do primeiro Relatório Mensal pelo Analista.
+                            Todas as ferramentas do contratante estão liberadas.
+                            Próximo passo: Geração do primeiro Relatório Mensal
+                            pelo Analista.
                           </span>
                         </div>
                       </div>
@@ -521,13 +648,17 @@ export function NegotiationWizardModal({ isOpen, onClose, enterprise }: Negotiat
 
                 {/* Footer buttons / Quick Actions */}
                 <div className="flex justify-end gap-3 pt-4 border-t border-gray-50 mt-4">
-                  <Button variant="ghost" onClick={onClose} className="text-xs font-black italic">
+                  <Button
+                    variant="ghost"
+                    onClick={onClose}
+                    className="text-xs font-black italic"
+                  >
                     FECHAR
                   </Button>
-                  
+
                   {/* Shortcut action to simplify navigation for users */}
                   {latestProposal.status && (
-                    <Button 
+                    <Button
                       onClick={() => {
                         onClose();
                         navigate(routes.propostas);
