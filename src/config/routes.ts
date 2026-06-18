@@ -1,6 +1,7 @@
 export const routes = {
   login: '/login',
   dashboard: '/dashboard',
+  agenda: '/agenda',
   empresas: '/empresas',
   usuarios: '/usuarios',
   propostas: '/propostas',

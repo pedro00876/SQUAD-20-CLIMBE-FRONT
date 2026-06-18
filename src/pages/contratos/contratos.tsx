@@ -1,7 +1,7 @@
-import { ScrollText, Plus, Calendar, DollarSign, Loader2, CheckCircle2 } from 'lucide-react';
+import { ScrollText, Plus, Calendar, DollarSign, Loader2, CheckCircle2, Eye, Download, PenLine } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notificationService } from '@/services/notification.service';
-import { contractService, type CreateContractRequest } from '@/services/contract.service';
+import { contractService, type Contract, type CreateContractRequest } from '@/services/contract.service';
 import { proposalService } from '@/services/proposal.service';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -13,11 +13,11 @@ import { Label } from '@/components/ui/label';
 
 export function ContratosPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<CreateContractRequest>({
     proposalId: 0,
-    startDate: format(new Date(), 'yyyy-MM-dd'),
-    totalValue: 0
+    startDate: format(new Date(), 'yyyy-MM-dd')
   });
 
   const { data: contractsPage, isLoading } = useQuery({
@@ -39,9 +39,18 @@ export function ContratosPage() {
       setIsModalOpen(false);
       setFormData({
         proposalId: 0,
-        startDate: format(new Date(), 'yyyy-MM-dd'),
-        totalValue: 0
+        startDate: format(new Date(), 'yyyy-MM-dd')
       });
+    }
+  });
+
+  const signMutation = useMutation({
+    mutationFn: (contractId: number) => contractService.update(contractId, { status: 'DIGITALLY_SIGNED' }),
+    onSuccess: (updatedContract) => {
+      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+      queryClient.invalidateQueries({ queryKey: ['proposals'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      setSelectedContract(updatedContract);
     }
   });
 
@@ -74,6 +83,115 @@ export function ContratosPage() {
         );
       }
     });
+  };
+
+  const getContractStatusLabel = (status?: string) => {
+    switch ((status || '').toUpperCase()) {
+      case 'DIGITALLY_SIGNED':
+        return 'ASSINADO';
+      case 'PENDING_SIGNATURE':
+        return 'AGUARDANDO ASSINATURA';
+      default:
+        return status || 'ATIVO';
+    }
+  };
+
+  const isContractSigned = (contract?: Contract | null) => {
+    return contract?.status?.toUpperCase() === 'DIGITALLY_SIGNED';
+  };
+
+  const getContractHtml = (contract: Contract) => {
+    const companyName = contract.enterpriseName || contract.proposalEnterpriseName || 'Empresa contratante';
+    const startDate = contract.startDate
+      ? format(new Date(contract.startDate), "dd/MM/yyyy", { locale: ptBR })
+      : '--';
+    const endDate = contract.endDate
+      ? format(new Date(contract.endDate), "dd/MM/yyyy", { locale: ptBR })
+      : 'prazo indeterminado';
+    const status = getContractStatusLabel(contract.status);
+
+    return `
+      <!doctype html>
+      <html lang="pt-BR">
+        <head>
+          <meta charset="utf-8" />
+          <title>Contrato ${contract.id}</title>
+          <style>
+            body { font-family: Arial, sans-serif; color: #111827; margin: 48px; line-height: 1.6; }
+            header { border-bottom: 3px solid #79C6C0; margin-bottom: 32px; padding-bottom: 18px; }
+            h1 { font-size: 28px; margin: 0 0 8px; }
+            .meta { color: #6b7280; font-size: 13px; }
+            .box { border: 1px solid #e5e7eb; border-radius: 16px; padding: 20px; margin: 20px 0; }
+            .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+            .label { color: #6b7280; font-size: 11px; text-transform: uppercase; letter-spacing: .12em; font-weight: 700; }
+            .value { font-weight: 700; margin-top: 4px; }
+            .signature { margin-top: 72px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 48px; }
+            .line { border-top: 1px solid #111827; padding-top: 10px; text-align: center; font-size: 13px; }
+            @media print { body { margin: 32px; } button { display: none; } }
+          </style>
+        </head>
+        <body>
+          <header>
+            <h1>Contrato de Prestacao de Servicos</h1>
+            <div class="meta">Contrato #${contract.id} | Proposta #${contract.proposalId} | Status: ${status}</div>
+          </header>
+
+          <section class="box">
+            <div class="grid">
+              <div>
+                <div class="label">Contratante</div>
+                <div class="value">${companyName}</div>
+              </div>
+              <div>
+                <div class="label">Contratada</div>
+                <div class="value">Climbe Investimentos</div>
+              </div>
+              <div>
+                <div class="label">Inicio da vigencia</div>
+                <div class="value">${startDate}</div>
+              </div>
+              <div>
+                <div class="label">Termino</div>
+                <div class="value">${endDate}</div>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <p>
+              Pelo presente instrumento, as partes identificadas acima formalizam a contratacao dos servicos
+              vinculados a proposta comercial aprovada, observando as condicoes negociadas entre contratante
+              e contratada.
+            </p>
+            <p>
+              A assinatura digital registrada neste sistema representa a ciencia e o aceite das partes quanto
+              ao andamento do contrato para a proxima etapa operacional.
+            </p>
+          </section>
+
+          <section class="signature">
+            <div class="line">Climbe Investimentos</div>
+            <div class="line">${companyName}</div>
+          </section>
+        </body>
+      </html>
+    `;
+  };
+
+  const openContractDocument = (contract: Contract, print = false) => {
+    const popup = window.open('', '_blank', 'noopener,noreferrer');
+    if (!popup) return;
+
+    popup.document.open();
+    popup.document.write(getContractHtml(contract));
+    popup.document.close();
+
+    if (print) {
+      popup.onload = () => {
+        popup.focus();
+        popup.print();
+      };
+    }
   };
 
   return (
@@ -118,7 +236,7 @@ export function ContratosPage() {
                <div className="absolute top-0 right-0 p-8">
                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-climbe-primary/10 text-climbe-primary text-[10px] font-black uppercase tracking-widest rounded-full">
                     <CheckCircle2 size={12} />
-                    {contract.status || 'ATIVO'}
+                    {getContractStatusLabel(contract.status)}
                  </span>
                </div>
 
@@ -154,7 +272,7 @@ export function ContratosPage() {
                     </div>
                  </div>
 
-                 <div className="flex items-center justify-between">
+                 <div className="flex items-center justify-between gap-4">
                     <div className="flex -space-x-2">
                        {[1, 2].map(i => (
                          <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-[8px] font-black text-gray-400">
@@ -162,7 +280,22 @@ export function ContratosPage() {
                          </div>
                        ))}
                     </div>
-                    <button className="text-[10px] font-black text-climbe-primary uppercase tracking-widest hover:underline">Baixar PDF</button>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedContract(contract)}
+                        className="text-[10px] font-black text-climbe-secondary uppercase tracking-widest hover:text-climbe-primary transition-colors"
+                      >
+                        Visualizar/Assinar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => openContractDocument(contract, true)}
+                        className="text-[10px] font-black text-climbe-primary uppercase tracking-widest hover:underline"
+                      >
+                        Baixar PDF
+                      </button>
+                    </div>
                  </div>
                </div>
             </div>
@@ -171,21 +304,21 @@ export function ContratosPage() {
       )}
 
       {/* Modal de Novo Contrato */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} className="max-w-lg bg-climbe-secondary text-white">
         <div className="space-y-6">
           <div>
-            <h2 className="text-2xl font-black text-climbe-secondary italic tracking-tight">Formalizar Contrato</h2>
-            <p className="text-xs text-gray-400">Selecione uma proposta aprovada para gerar o contrato.</p>
+            <h2 className="text-2xl font-black italic tracking-tight text-white">Formalizar Contrato</h2>
+            <p className="text-xs text-slate-300">Selecione uma proposta aprovada para gerar o contrato.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest">Proposta Aprovada</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">Proposta Aprovada</Label>
               <select 
                 required
                 value={formData.proposalId}
                 onChange={e => setFormData({...formData, proposalId: Number(e.target.value)})}
-                className="w-full px-4 py-3 bg-gray-50 border-transparent rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-climbe-primary/10 transition-all outline-none border focus:border-climbe-primary/20 appearance-none"
+                className="w-full rounded-xl border border-transparent bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all focus:border-climbe-primary/40 focus:ring-2 focus:ring-climbe-primary/40 appearance-none"
               >
                 <option value="">Selecione uma proposta...</option>
                 {approvedProposals.map((proposal: any) => (
@@ -197,23 +330,24 @@ export function ContratosPage() {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest">Data de Início</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">Data de Início</Label>
               <Input 
                 type="date"
                 required
+                className="bg-white text-slate-900"
                 value={formData.startDate}
                 onChange={e => setFormData({...formData, startDate: e.target.value})}
               />
             </div>
 
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest">Valor Total (R$)</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">Valor Total (R$)</Label>
               <div className="relative">
                 <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-climbe-primary" size={16} />
                 <Input 
                   type="number"
                   required
-                  className="pl-10"
+                  className="bg-white pl-10 text-slate-900"
                   value={formData.totalValue}
                   onChange={e => setFormData({...formData, totalValue: Number(e.target.value)})}
                   placeholder="0,00"
@@ -226,20 +360,114 @@ export function ContratosPage() {
                 type="button" 
                 variant="ghost" 
                 onClick={() => setIsModalOpen(false)}
-                className="flex-1 font-bold"
+                className="flex-1 font-black uppercase tracking-widest text-climbe-primary hover:bg-white/10 hover:text-climbe-primary"
               >
                 Cancelar
               </Button>
               <Button 
                 type="submit" 
                 disabled={createMutation.isPending || !formData.proposalId}
-                className="flex-1 bg-climbe-primary text-climbe-secondary font-black italic rounded-xl shadow-lg shadow-climbe-primary/20"
+                className="flex-1 rounded-xl bg-climbe-primary font-black italic text-climbe-secondary shadow-lg shadow-climbe-primary/20 hover:bg-climbe-primary/90 disabled:bg-white/10 disabled:text-slate-400 disabled:shadow-none"
               >
                 {createMutation.isPending ? 'GERANDO...' : 'FINALIZAR CONTRATO'}
               </Button>
             </div>
           </form>
         </div>
+      </Modal>
+
+      <Modal isOpen={!!selectedContract} onClose={() => setSelectedContract(null)}>
+        {selectedContract && (
+          <div className="space-y-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-climbe-primary">Contrato para assinatura</p>
+                <h2 className="text-2xl font-black text-climbe-secondary italic tracking-tight">
+                  Contrato #{selectedContract.id}
+                </h2>
+                <p className="text-xs text-gray-400">
+                  Visualize a minuta, baixe/imprima o PDF pelo navegador e confirme a assinatura digital.
+                </p>
+              </div>
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-climbe-primary/10 text-climbe-primary text-[10px] font-black uppercase tracking-widest rounded-full shrink-0">
+                <CheckCircle2 size={12} />
+                {getContractStatusLabel(selectedContract.status)}
+              </span>
+            </div>
+
+            <div className="rounded-3xl border border-gray-100 bg-gray-50 p-5 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">Empresa</p>
+                  <p className="text-sm font-bold text-climbe-secondary italic">
+                    {selectedContract.enterpriseName || selectedContract.proposalEnterpriseName || 'Empresa contratante'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">Proposta vinculada</p>
+                  <p className="text-sm font-bold text-climbe-secondary italic">#{selectedContract.proposalId}</p>
+                </div>
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">Inicio</p>
+                  <p className="text-sm font-bold text-climbe-secondary italic">
+                    {selectedContract.startDate ? format(new Date(selectedContract.startDate), "dd/MM/yyyy", { locale: ptBR }) : '--'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">Termino</p>
+                  <p className="text-sm font-bold text-climbe-secondary italic">
+                    {selectedContract.endDate ? format(new Date(selectedContract.endDate), "dd/MM/yyyy", { locale: ptBR }) : 'Prazo indeterminado'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-2xl bg-white p-4 text-xs text-gray-500 leading-relaxed">
+                Esta visualizacao gera uma minuta local com os dados do contrato cadastrado. A assinatura confirma o aceite
+                no sistema e altera o status para <strong>DIGITALLY_SIGNED</strong>, liberando a proposta para a proxima etapa do fluxo.
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => openContractDocument(selectedContract)}
+                className="font-black uppercase tracking-widest text-[10px]"
+              >
+                <Eye size={16} className="mr-2" />
+                Visualizar
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => openContractDocument(selectedContract, true)}
+                className="font-black uppercase tracking-widest text-[10px]"
+              >
+                <Download size={16} className="mr-2" />
+                Baixar PDF
+              </Button>
+              <Button
+                type="button"
+                disabled={signMutation.isPending || isContractSigned(selectedContract)}
+                onClick={() => signMutation.mutate(selectedContract.id)}
+                className="bg-climbe-primary text-climbe-secondary font-black italic rounded-xl shadow-lg shadow-climbe-primary/20"
+              >
+                <PenLine size={16} className="mr-2" />
+                {isContractSigned(selectedContract)
+                  ? 'ASSINADO'
+                  : signMutation.isPending
+                    ? 'ASSINANDO...'
+                    : 'ASSINAR'}
+              </Button>
+            </div>
+
+            {signMutation.isError && (
+              <p className="text-xs font-bold text-red-500">
+                Nao foi possivel assinar o contrato. Verifique a API e tente novamente.
+              </p>
+            )}
+          </div>
+        )}
       </Modal>
     </div>
   );

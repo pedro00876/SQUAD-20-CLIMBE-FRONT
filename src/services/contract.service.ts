@@ -16,7 +16,14 @@ export interface CreateContractRequest {
   proposalId: number;
   startDate: string;
   endDate?: string;
-  totalValue: number;
+}
+
+export interface UpdateContractRequest {
+  proposalId?: number;
+  startDate?: string;
+  endDate?: string;
+  totalValue?: number;
+  status?: string;
 }
 
 export const contractService = {
@@ -24,9 +31,19 @@ export const contractService = {
     const response = await api.get(`/api/contracts?page=${page}&size=${size}`);
     return response.data;
   },
+
+  getById: async (id: number): Promise<Contract> => {
+    const response = await api.get<Contract>(`/api/contracts/${id}`);
+    return response.data;
+  },
   
   create: async (data: CreateContractRequest) => {
     const response = await api.post('/api/contracts', data);
+    return response.data;
+  },
+
+  update: async (id: number, data: UpdateContractRequest): Promise<Contract> => {
+    const response = await api.patch<Contract>(`/api/contracts/${id}`, data);
     return response.data;
   },
   

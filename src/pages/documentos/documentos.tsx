@@ -11,13 +11,11 @@ import { Label } from '@/components/ui/label';
 import { Modal } from '@/components/ui/modal';
 
 const documentTypes = [
-  { value: 'BALANCO', label: 'Balanço da Empresa' },
+  { value: 'BALANCO_PATRIMONIAL', label: 'Balanço da Empresa' },
   { value: 'DRE', label: 'Demonstração de Resultados (DRE)' },
-  { value: 'DOCUMENTOS_GERENCIAIS', label: 'Documentos e planilhas gerenciais' },
+  { value: 'PLANILHA_GERENCIAL', label: 'Documentos e planilhas gerenciais' },
   { value: 'CNPJ', label: 'CNPJ' },
   { value: 'CONTRATO_SOCIAL', label: 'Contrato Social' },
-  { value: 'COMMERCIAL_PROPOSAL', label: 'Proposta Comercial' },
-  { value: 'RELATORIO', label: 'Relatório' },
 ];
 
 export function DocumentosPage() {

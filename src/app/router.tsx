@@ -6,8 +6,10 @@ import { RoleRoute } from '@/components/auth/RoleRoute';
 import { LoginPage } from '@/pages/login/login';
 import { FirstAccessPage } from '@/pages/first-access/first-access';
 import { DashboardPage } from '@/pages/dashboard/dashboard';
+import { AgendaPage } from '@/pages/agenda/agenda';
 import { PendingApprovalPage } from '@/pages/pending-approval/pending-approval';
 import { EmpresasPage } from '@/pages/empresas/empresas';
+import { EmpresaDetalhePage } from '@/pages/empresas/empresa-detalhe';
 import { UsuariosPage } from '@/pages/usuarios/usuarios';
 import { PropostasPage } from '@/pages/propostas/propostas';
 import { DocumentosPage } from '@/pages/documentos/documentos';
@@ -59,11 +61,19 @@ export const router = createBrowserRouter([
                 element: <DashboardPage />,
               },
               {
+                path: routes.agenda,
+                element: <AgendaPage />,
+              },
+              {
                 path: routes.empresas,
                 element: <EmpresasPage />,
               },
               {
-                element: <RoleRoute allowedRoles={['CEO']} />,
+                path: `${routes.empresas}/:id`,
+                element: <EmpresaDetalhePage />,
+              },
+              {
+                element: <RoleRoute allowedRoles={['ADMIN']} />,
                 children: [
                   {
                     path: routes.usuarios,

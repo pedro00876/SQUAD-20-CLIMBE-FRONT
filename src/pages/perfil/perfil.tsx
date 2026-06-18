@@ -1,4 +1,4 @@
-import { User, Mail, Shield, Briefcase, Calendar, MapPin, Phone } from 'lucide-react';
+import { User, Mail, Shield } from 'lucide-react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';

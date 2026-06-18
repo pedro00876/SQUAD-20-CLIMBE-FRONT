@@ -34,6 +34,8 @@ export interface CreateEnterpriseRequest {
   address?: Address;
 }
 
+export type UpdateEnterpriseRequest = Partial<CreateEnterpriseRequest>;
+
 export const enterpriseService = {
   list: async (page = 0, size = 10) => {
     const response = await api.get(`/api/enterprises?page=${page}&size=${size}`);
@@ -47,6 +49,11 @@ export const enterpriseService = {
   
   create: async (data: CreateEnterpriseRequest) => {
     const response = await api.post('/api/enterprises', data);
+    return response.data;
+  },
+
+  update: async (id: number, data: UpdateEnterpriseRequest): Promise<Enterprise> => {
+    const response = await api.patch<Enterprise>(`/api/enterprises/${id}`, data);
     return response.data;
   },
   

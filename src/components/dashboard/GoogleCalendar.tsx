@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, addMonths, subMonths } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isToday, addMonths, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { routes } from '@/config/routes';
 import { meetingService, type MeetingDTO } from '@/features/reunioes/services';
 
 interface Event {
@@ -33,6 +35,7 @@ const toCalendarEvent = (meeting: MeetingDTO): Event => ({
 });
 
 export function GoogleCalendar() {
+  const navigate = useNavigate();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -123,6 +126,11 @@ export function GoogleCalendar() {
     end: endOfMonth(currentMonth),
   });
 
+  const scheduleForDate = (day: Date) => {
+    const date = format(day, 'yyyy-MM-dd');
+    navigate(`${routes.reunioes}?create=1&date=${date}`);
+  };
+
   return (
     <div className="bg-white/80 backdrop-blur-xl rounded-[32px] border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full min-h-[500px]">
       <div className="p-6 border-b border-gray-50 flex items-center justify-between bg-gradient-to-r from-gray-50/50 to-transparent">
@@ -182,15 +190,18 @@ export function GoogleCalendar() {
       </div>
 
       <div className="p-4 grid grid-cols-7 gap-1 flex-1">
-        {days.map((day, idx) => {
+        {days.map((day) => {
           const dayKey = format(day, 'yyyy-MM-dd');
           const dayEvents = eventsByDay.get(dayKey) || [];
           const hasMeetings = dayEvents.length > 0;
           const displayCount = dayEvents.length > 9 ? '9+' : String(dayEvents.length);
           const eventPreview = dayEvents[0]?.summary || 'Reunião';
           return (
-            <motion.div
-              key={idx}
+            <motion.button
+              key={dayKey}
+              type="button"
+              onClick={() => scheduleForDate(day)}
+              aria-label={`Agendar reunião em ${format(day, 'dd/MM/yyyy')}`}
               whileHover={{ scale: 1.05 }}
               className={`
                 aspect-square rounded-xl flex flex-col items-start justify-between relative cursor-pointer transition-all px-2 py-2 text-left
@@ -209,7 +220,7 @@ export function GoogleCalendar() {
                   </p>
                 </div>
               )}
-            </motion.div>
+            </motion.button>
           );
         })}
       </div>
