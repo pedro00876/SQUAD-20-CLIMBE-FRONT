@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { requirementService, type DocumentRequirement } from '@/features/documentos/services/requirement.service';
+import { requirementService } from '@/features/documentos/services/requirement.service';
+import type { DocumentType, DocumentRequirement, DocumentRequirementStatus } from '@/features/documentos/types';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -24,7 +25,7 @@ const documentTypes = [
 
 export function ChecklistModal({ isOpen, onClose, proposalId }: ChecklistModalProps) {
   const queryClient = useQueryClient();
-  const [selectedType, setSelectedType] = useState('CNPJ');
+  const [selectedType, setSelectedType] = useState<DocumentType>('CNPJ');
   const [deadline, setDeadline] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
   const [validatingReqId, setValidatingReqId] = useState<number | null>(null);
@@ -36,7 +37,7 @@ export function ChecklistModal({ isOpen, onClose, proposalId }: ChecklistModalPr
   });
 
   const createMutation = useMutation({
-    mutationFn: () => requirementService.create(proposalId!, { documentType: selectedType, deadline: deadline || undefined }),
+    mutationFn: () => requirementService.create(proposalId!, { documentTypes: [selectedType], deadline: deadline || undefined }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['requirements', proposalId] });
       setDeadline('');
@@ -44,7 +45,7 @@ export function ChecklistModal({ isOpen, onClose, proposalId }: ChecklistModalPr
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, status, reason }: { id: number, status: string, reason?: string }) => 
+    mutationFn: ({ id, status, reason }: { id: number, status: DocumentRequirementStatus, reason?: string }) =>
       requirementService.update(id, { status, rejectionReason: reason }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['requirements', proposalId] });
@@ -87,7 +88,7 @@ export function ChecklistModal({ isOpen, onClose, proposalId }: ChecklistModalPr
             <Label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Documento Exigido</Label>
             <select 
               value={selectedType}
-              onChange={e => setSelectedType(e.target.value)}
+              onChange={e => setSelectedType(e.target.value as DocumentType)}
               className="w-full px-4 py-2 text-sm bg-white border border-gray-200 rounded-xl outline-none focus:border-climbe-primary"
             >
               {documentTypes.map(t => (

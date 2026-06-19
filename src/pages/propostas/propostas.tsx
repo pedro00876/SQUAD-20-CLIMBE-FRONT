@@ -8,7 +8,7 @@ import {
   documentService,
   type DocumentRequirement,
   type DocumentRequirementStatus,
-  type DocumentRequirementType,
+  type DocumentType,
 } from '@/services/document.service';
 import { PropostaModal } from '@/features/propostas/components';
 import { ChecklistModal } from './components/ChecklistModal';
@@ -23,7 +23,7 @@ import { ptBR } from 'date-fns/locale';
 import { notificationService } from '@/services/notification.service';
 import { userService } from '@/features/usuarios/services';
 
-const documentRequirementTypes: { value: DocumentRequirementType; label: string }[] = [
+const documentRequirementTypes: { value: DocumentType; label: string }[] = [
   { value: 'BALANCO_PATRIMONIAL', label: 'Balanço patrimonial' },
   { value: 'DRE', label: 'DRE' },
   { value: 'CONTRATO_SOCIAL', label: 'Contrato social' },
@@ -45,7 +45,7 @@ export function PropostasPage() {
   const [proposalActionError, setProposalActionError] = useState('');
   const [commercialProposalFile, setCommercialProposalFile] = useState<File | null>(null);
   const [documentChecklistDeadline, setDocumentChecklistDeadline] = useState('');
-  const [selectedDocumentTypes, setSelectedDocumentTypes] = useState<DocumentRequirementType[]>(
+  const [selectedDocumentTypes, setSelectedDocumentTypes] = useState<DocumentType[]>(
     documentRequirementTypes.map((type) => type.value),
   );
   const [requirementRejectionReasons, setRequirementRejectionReasons] = useState<Record<number, string>>({});
@@ -85,7 +85,10 @@ export function PropostasPage() {
       setProposalActionError('');
     },
     onError: (error: any) => {
-      setProposalActionError(error?.response?.data?.message || 'Nao foi possivel atualizar o status da proposta.');
+      const data = error?.response?.data;
+      const msg = data?.message || data?.detail || data?.error || (typeof data === 'string' ? data : null) || 'Não foi possível atualizar o status da proposta.';
+      console.error('[statusMutation] 400 body:', data);
+      setProposalActionError(msg);
     },
   });
 
@@ -239,6 +242,11 @@ export function PropostasPage() {
         }
         queryClient.invalidateQueries({ queryKey: ['proposals'] });
         setIsAnalystModalOpen(false);
+      })
+      .catch((error: any) => {
+        const data = error?.response?.data;
+        const msg = data?.message || data?.detail || (typeof data === 'string' ? data : null) || 'Não foi possível atribuir o analista.';
+        setProposalActionError(msg);
       });
   };
 
@@ -289,7 +297,7 @@ export function PropostasPage() {
     setIsDocumentChecklistModalOpen(true);
   };
 
-  const toggleDocumentType = (type: DocumentRequirementType) => {
+  const toggleDocumentType = (type: DocumentType) => {
     setSelectedDocumentTypes((current) =>
       current.includes(type)
         ? current.filter((item) => item !== type)
@@ -481,8 +489,9 @@ export function PropostasPage() {
                       <div className="flex justify-end gap-2">
                         {proposal.status?.toUpperCase() === 'RECEIVED' && (
                           <button
+                            disabled={statusMutation.isPending}
                             onClick={() => handleStatusChange(proposal, 'IN_TRIAGE')}
-                            className="flex items-center gap-1.5 rounded-xl bg-climbe-secondary px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white transition-all hover:scale-105"
+                            className="flex items-center gap-1.5 rounded-xl bg-climbe-secondary px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <Clock size={14} />
                             Iniciar triagem
@@ -491,15 +500,17 @@ export function PropostasPage() {
                         {proposal.status?.toUpperCase() === 'IN_TRIAGE' && (
                           <>
                             <button
+                              disabled={statusMutation.isPending}
                               onClick={() => handleStatusChange(proposal, 'ELIGIBLE')}
-                              className="flex items-center gap-1.5 rounded-xl bg-climbe-primary px-4 py-2 text-[10px] font-black uppercase tracking-widest text-climbe-secondary transition-all hover:scale-105"
+                              className="flex items-center gap-1.5 rounded-xl bg-climbe-primary px-4 py-2 text-[10px] font-black uppercase tracking-widest text-climbe-secondary transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               <CheckCircle2 size={14} />
                               Aprovar triagem
                             </button>
                             <button
+                              disabled={statusMutation.isPending}
                               onClick={() => handleStatusChange(proposal, 'PENDING_ADJUSTMENTS')}
-                              className="flex items-center gap-1.5 rounded-xl bg-red-50 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-red-500 transition-all hover:scale-105"
+                              className="flex items-center gap-1.5 rounded-xl bg-red-50 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-red-500 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               <XCircle size={14} />
                               Ajustes
@@ -508,8 +519,9 @@ export function PropostasPage() {
                         )}
                         {proposal.status?.toUpperCase() === 'PENDING_ADJUSTMENTS' && (
                           <button
+                            disabled={statusMutation.isPending}
                             onClick={() => handleStatusChange(proposal, 'IN_TRIAGE')}
-                            className="flex items-center gap-1.5 rounded-xl bg-climbe-secondary px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white transition-all hover:scale-105"
+                            className="flex items-center gap-1.5 rounded-xl bg-climbe-secondary px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <Clock size={14} />
                             Retomar triagem
@@ -527,18 +539,20 @@ export function PropostasPage() {
                         {proposal.status?.toUpperCase() === 'COMMERCIAL_PROPOSAL' && (
                           <>
                             <button
+                              disabled={statusMutation.isPending}
                               onClick={() => handleStatusChange(proposal, 'COMMERCIAL_PROPOSAL_APPROVED')}
-                              className="p-2 text-climbe-primary hover:bg-climbe-primary/10 rounded-lg transition-all"
+                              className="p-2 text-climbe-primary hover:bg-climbe-primary/10 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                               title="Aprovar proposta comercial"
                             >
                               <CheckCircle2 size={18} />
                             </button>
                             <button
+                              disabled={statusMutation.isPending}
                               onClick={() => {
                                 setSelectedProposal(proposal);
                                 setIsRejectModalOpen(true);
                               }}
-                              className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-all"
+                              className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                               title="Recusar proposta comercial"
                             >
                               <XCircle size={18} />
@@ -1017,7 +1031,7 @@ export function PropostasPage() {
               >
                 <option value="">Selecione um analista...</option>
                 {(usersPage?.content || []).map((u: any) => (
-                  <option key={u.id} value={u.id}>{u.name} ({u.cargo || 'Analista'})</option>
+                  <option key={u.id} value={u.id}>{u.fullName} ({u.role || 'Analista'})</option>
                 ))}
               </select>
             </div>
