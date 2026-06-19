@@ -74,7 +74,7 @@ export function StageDocumentacao({ empresa, userRole, currentStage, onConcluir 
         <div className="space-y-6 p-8 bg-gray-50 rounded-3xl border border-gray-100">
           <div>
             <h3 className="font-bold text-lg text-climbe-secondary mb-2">Solicitar Documentação</h3>
-            <p className="text-sm text-gray-400">Verifique os documentos que serão exigidos para a empresa {empresa.tradeName || empresa.nomeFantasia}</p>
+            <p className="text-sm text-gray-400">Verifique os documentos que serão exigidos para a empresa {empresa.tradeName || empresa.legalName}</p>
           </div>
           
           <div className="space-y-3">
