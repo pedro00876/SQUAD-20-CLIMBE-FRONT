@@ -1,54 +1,33 @@
 import { api } from './api';
+import type { Contract, CreateContractRequest, UpdateContractRequest } from '@/features/contracts/types';
+import type { PaginatedResponse } from '@/types/pagination';
 
-export interface Contract {
-  id: number;
-  proposalId: number;
-  proposalEnterpriseName: string;
-  enterpriseId: number;
-  enterpriseName: string;
-  startDate: string;
-  endDate?: string;
-  totalValue: number;
-  status: string;
-}
-
-export interface CreateContractRequest {
-  proposalId: number;
-  startDate: string;
-  endDate?: string;
-  totalValue?: number;
-}
-
-export interface UpdateContractRequest {
-  proposalId?: number;
-  startDate?: string;
-  endDate?: string;
-  totalValue?: number;
-  status?: string;
-}
+export type { Contract, CreateContractRequest, UpdateContractRequest };
 
 export const contractService = {
-  list: async (page = 0, size = 10) => {
-    const response = await api.get(`/api/contracts?page=${page}&size=${size}`);
-    return response.data;
+  list: async (page = 0, size = 10): Promise<PaginatedResponse<Contract>> => {
+    const res = await api.get<PaginatedResponse<Contract>>('/api/contracts', {
+      params: { page, size },
+    });
+    return res.data;
   },
 
   getById: async (id: number): Promise<Contract> => {
-    const response = await api.get<Contract>(`/api/contracts/${id}`);
-    return response.data;
+    const res = await api.get<Contract>(`/api/contracts/${id}`);
+    return res.data;
   },
-  
-  create: async (data: CreateContractRequest) => {
-    const response = await api.post('/api/contracts', data);
-    return response.data;
+
+  create: async (data: CreateContractRequest): Promise<Contract> => {
+    const res = await api.post<Contract>('/api/contracts', data);
+    return res.data;
   },
 
   update: async (id: number, data: UpdateContractRequest): Promise<Contract> => {
-    const response = await api.patch<Contract>(`/api/contracts/${id}`, data);
-    return response.data;
+    const res = await api.patch<Contract>(`/api/contracts/${id}`, data);
+    return res.data;
   },
-  
-  delete: async (id: number) => {
+
+  delete: async (id: number): Promise<void> => {
     await api.delete(`/api/contracts/${id}`);
-  }
+  },
 };
