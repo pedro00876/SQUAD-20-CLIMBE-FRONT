@@ -3,12 +3,11 @@ import { api } from './api';
 export interface Notification {
   id: number;
   userId: number;
-  title: string;
   message: string;
-  read: boolean;
   type: string;
-  createdAt: string;
-  sentAt?: string;
+  sentAt: string;
+  userName: string;
+  // NÃO EXISTEM: title, read, createdAt
 }
 
 export const notificationService = {
@@ -16,12 +15,13 @@ export const notificationService = {
     const response = await api.get(`/api/notifications/user/${userId}`);
     return response.data;
   },
-  
+
   markAsRead: async (id: number) => {
-    const response = await api.patch(`/api/notifications/${id}`, { read: true });
+    // O backend interpreta o PATCH no path como "marcar como lida" — sem body { read }
+    const response = await api.patch(`/api/notifications/${id}`);
     return response.data;
   },
-  
+
   delete: async (id: number) => {
     await api.delete(`/api/notifications/${id}`);
   },
