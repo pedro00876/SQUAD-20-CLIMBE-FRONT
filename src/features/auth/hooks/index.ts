@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { authService } from '@/features/auth/services';
-import type { LoginRequest, RegisterRequest } from '@/features/auth/types';
+import type { LoginRequest } from '@/features/auth/types';
 
 export function useLogin() {
   const { login } = useAuthContext();
@@ -37,9 +37,11 @@ export function useRequestAccess() {
   };
 }
 
+// `useRegister` migrado para `requestAccess` — POST /api/auth/register não existe no backend.
+// O fluxo de cadastro envia apenas o e-mail para POST /api/auth/request-access.
 export function useRegister() {
   const mutation = useMutation({
-    mutationFn: (payload: RegisterRequest) => authService.register(payload),
+    mutationFn: (payload: { email: string }) => authService.requestAccess(payload.email),
   });
 
   return {

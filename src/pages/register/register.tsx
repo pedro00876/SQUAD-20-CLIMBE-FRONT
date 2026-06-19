@@ -60,13 +60,8 @@ export function RegisterPage() {
   };
 
   const onSubmit = (data: RegisterFormData) => {
-    performRegister({
-      ...data,
-      cpf: unmask(data.cpf),
-      phone: unmask(data.phone),
-      cargoId: 1,
-      roleId: 1,
-    });
+    // POST /api/auth/register não existe — usa requestAccess com apenas o e-mail
+    performRegister({ email: data.email });
   };
 
   return (

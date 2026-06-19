@@ -72,7 +72,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       localStorage.setItem(USER_KEY, JSON.stringify(resolvedUser));
       setUser(resolvedUser);
       const currentStatus = resolvedUser?.status?.toUpperCase();
-      if (currentStatus === 'PENDING' || currentStatus === 'PENDENTE') {
+      if (currentStatus === 'PENDING' || currentStatus === 'PENDENTE' || currentStatus === 'AGUARDANDO_APROVACAO') {
         navigate(routes.pendingApproval);
       } else {
         navigate(routes.dashboard);
@@ -95,7 +95,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const currentStatus = user?.status?.toUpperCase();
-  const isPending = currentStatus === 'PENDING' || currentStatus === 'PENDENTE';
+  const isPending = currentStatus === 'PENDING' || currentStatus === 'PENDENTE' || currentStatus === 'AGUARDANDO_APROVACAO';
 
   return (
     <AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, isPending, login, logout }}>

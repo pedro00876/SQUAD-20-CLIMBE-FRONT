@@ -9,7 +9,7 @@ export interface User {
   fullName?: string;
   email: string;
   role: string;
-  status?: 'ACTIVE' | 'ATIVO' | 'PENDING' | 'PENDENTE' | 'DISABLED';
+  status?: 'ACTIVE' | 'ATIVO' | 'PENDING' | 'PENDENTE' | 'AGUARDANDO_APROVACAO' | 'DISABLED';
   active?: boolean;
 }
 
