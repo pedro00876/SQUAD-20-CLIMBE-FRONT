@@ -10,6 +10,8 @@ import { useSearchParams } from 'react-router-dom';
 import { notificationService } from '@/services/notification.service';
 import { userService } from '@/features/usuarios/services';
 import type { User } from '@/features/usuarios/types';
+import { enterpriseService } from '@/features/empresas/services';
+import type { Enterprise } from '@/features/empresas/types';
 import {
   meetingService,
   type MeetingCreateRequest,
@@ -100,6 +102,7 @@ export function ReunioesPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [availableUsers, setAvailableUsers] = useState<User[]>([]);
+  const [availableEnterprises, setAvailableEnterprises] = useState<Enterprise[]>([]);
   const [meetingsForAvailability, setMeetingsForAvailability] = useState<
     MeetingDTO[]
   >([]);
@@ -116,7 +119,7 @@ export function ReunioesPage() {
   } = useForm<MeetingFormData>({
     resolver: zodResolver(meetingSchema),
     defaultValues: {
-      enterpriseId: 1,
+      enterpriseId: 0,
       title: '',
       date: new Date().toISOString().slice(0, 10),
       time: '14:00:00',
@@ -211,7 +214,10 @@ export function ReunioesPage() {
       setIsLoadingAvailability(true);
       setAvailabilityError(false);
       try {
-        const usersPage = await userService.listUsers(0, 100);
+        const [usersPage, enterprisesPage] = await Promise.all([
+          userService.listUsers(0, 100),
+          enterpriseService.listEnterprises(0, 100),
+        ]);
         const allMeetings: MeetingDTO[] = [];
         let currentPage = 0;
         let totalPages = 1;
@@ -229,6 +235,7 @@ export function ReunioesPage() {
 
         if (!isActive) return;
         setAvailableUsers(usersPage.content || []);
+        setAvailableEnterprises(enterprisesPage.content || []);
         setMeetingsForAvailability(allMeetings);
       } catch (error: any) {
         if (!isActive) return;
@@ -314,7 +321,7 @@ export function ReunioesPage() {
     setIsCreateOpen(false);
     setSubmitError(null);
     reset({
-      enterpriseId: 1,
+      enterpriseId: 0,
       title: '',
       date: new Date().toISOString().slice(0, 10),
       time: '14:00:00',
@@ -597,15 +604,19 @@ export function ReunioesPage() {
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
                       <label className="ml-1 block text-[11px] font-black uppercase tracking-[0.2em] text-slate-200">
-                        Empresa ID
+                        Empresa
                       </label>
-                      <Input
-                        type="number"
-                        min={1}
+                      <select
                         {...register('enterpriseId')}
-                        placeholder="1"
-                        className="bg-white text-slate-900 placeholder:text-slate-400"
-                      />
+                        className="w-full rounded-xl border border-transparent bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all focus:border-climbe-primary/40 focus:ring-2 focus:ring-climbe-primary/40"
+                      >
+                        <option value="">Selecione uma empresa...</option>
+                        {availableEnterprises.map((e) => (
+                          <option key={e.id} value={e.id}>
+                            {e.tradeName || e.legalName}
+                          </option>
+                        ))}
+                      </select>
                       {errors.enterpriseId ? (
                         <p className="ml-1 text-xs text-red-300">
                           {errors.enterpriseId.message}
