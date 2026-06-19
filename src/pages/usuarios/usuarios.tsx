@@ -18,9 +18,7 @@ export function UsuariosPage() {
   };
 
   const getRoleLabel = (user: User) => {
-    if (user.cargo?.nome) return user.cargo.nome;
-    if (typeof user.role === 'string') return user.role;
-    if (user.role?.nome) return user.role.nome;
+    if (user.role) return user.role;
     return 'Sem Cargo';
   };
 
@@ -48,7 +46,7 @@ export function UsuariosPage() {
   const canGoForward = !isSearching && page + 1 < totalPages;
 
   const approveMutation = useMutation({
-    mutationFn: (id: string) => userService.approveUser(id),
+    mutationFn: ({ id, role }: { id: number; role: string }) => userService.approveUser(String(id), role),
     onSuccess: () => {
       toast.success('Usuário aprovado com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['users'] });
@@ -159,7 +157,7 @@ export function UsuariosPage() {
                     <Button 
                       size="sm" 
                       className="h-8 text-[10px] font-black"
-                      onClick={() => approveMutation.mutate(user.id)}
+                      onClick={() => approveMutation.mutate({ id: user.id, role: user.role ?? '' })}
                       disabled={approveMutation.isPending}
                     >
                       APROVAR ACESSO
