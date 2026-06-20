@@ -55,25 +55,27 @@ export function RelatoriosPage() {
     },
   });
 
-  const handlePdfAction = async (report: Report, download = false) => {
+  const handlePdfAction = (report: Report, download = false) => {
     setActionError('');
-    try {
-      const url = await reportService.getViewUrl(report.id);
-
-      if (download) {
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `relatorio-${report.id}.pdf`;
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        link.click();
-        return;
-      }
-
-      window.open(url, '_blank', 'noopener,noreferrer');
-    } catch (error: any) {
-      setActionError(error?.response?.data?.message || 'Não foi possível acessar o PDF deste relatório.');
+    const url = report.pdfUrl;
+    if (!url) {
+      setActionError('Este relatório não possui um PDF vinculado.');
+      return;
     }
+    if (download) {
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `relatorio-${report.id}.pdf`;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.click();
+      return;
+    }
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSelectedFile(event.target.files?.[0] || null);
   };
 
   const handleUploadSubmit = (event: FormEvent) => {
@@ -125,7 +127,7 @@ export function RelatoriosPage() {
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {reportsPage!.content.map((report) => {
             const contract = contractsById.get(report.contractId);
-            const reportDate = report.sentAt || report.createdAt;
+            const reportDate = report.sentAt;
 
             return (
               <div key={report.id} className="group rounded-[32px] border border-gray-100 bg-white p-7 shadow-sm transition-all hover:shadow-xl">
@@ -134,7 +136,7 @@ export function RelatoriosPage() {
                     <FileText size={24} />
                   </div>
                   <span className="rounded-full bg-climbe-primary/10 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-climbe-primary">
-                    {report.status || 'PDF'}
+                    PDF
                   </span>
                 </div>
 
@@ -144,7 +146,8 @@ export function RelatoriosPage() {
                     Contrato #{report.contractId}
                   </p>
                   <p className="truncate text-sm text-gray-500">
-                    {contract?.enterpriseName || contract?.proposalEnterpriseName || 'Contrato vinculado'}
+                    {/* TODO: buscar via proposal/enterprise (GET /api/proposals/{contract.proposalId}) */}
+                    {contract ? `Proposta #${contract.proposalId}` : 'Contrato vinculado'}
                   </p>
                 </div>
 
@@ -199,7 +202,8 @@ export function RelatoriosPage() {
                 <option value="">Selecione um contrato...</option>
                 {contracts.map((contract) => (
                   <option key={contract.id} value={contract.id}>
-                    Contrato #{contract.id} - {contract.enterpriseName || contract.proposalEnterpriseName || 'Empresa'}
+                    {/* TODO: buscar via proposal/enterprise (GET /api/proposals/{contract.proposalId}) */}
+                    Contrato #{contract.id} - Proposta #{contract.proposalId}
                   </option>
                 ))}
               </select>
@@ -211,7 +215,7 @@ export function RelatoriosPage() {
                 required
                 type="file"
                 accept="application/pdf,.pdf"
-                onChange={(event) => setSelectedFile(event.target.files?.[0] || null)}
+                onChange={handleFileChange}
                 className="bg-white text-slate-900 file:mr-4 file:rounded-lg file:border-0 file:bg-climbe-primary file:px-3 file:py-1 file:text-xs file:font-black file:text-climbe-secondary"
               />
             </div>

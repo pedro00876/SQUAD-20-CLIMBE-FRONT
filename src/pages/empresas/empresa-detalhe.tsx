@@ -77,7 +77,7 @@ export function EmpresaDetalhePage() {
             <span className="text-[10px] font-black uppercase tracking-[0.2em]">Detalhes da Homologação</span>
           </div>
           <h1 className="text-4xl font-black italic tracking-tighter text-climbe-secondary mt-1">
-            {empresa.nomeFantasia || empresa.razaoSocial || empresa.tradeName || empresa.legalName}
+            {empresa.tradeName || empresa.legalName}
           </h1>
           <p className="text-sm font-medium text-gray-400 mt-1">CNPJ: {empresa.cnpj}</p>
         </div>
@@ -208,7 +208,7 @@ export function EmpresaDetalhePage() {
               </div>
               <h3 className="text-2xl font-black italic text-green-700">Homologação Concluída com Sucesso</h3>
               <p className="text-green-600/80 mt-2 max-w-md mx-auto">
-                A empresa {empresa.tradeName || empresa.nomeFantasia} agora está 100% homologada e ativa na nossa base de fornecedores parceiros.
+                A empresa {empresa.tradeName || empresa.legalName} agora está 100% homologada e ativa na nossa base de fornecedores parceiros.
               </p>
             </div>
           )}

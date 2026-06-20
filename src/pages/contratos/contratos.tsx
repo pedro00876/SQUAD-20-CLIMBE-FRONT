@@ -2,7 +2,6 @@ import {
   ScrollText,
   Plus,
   Calendar,
-  DollarSign,
   Loader2,
   CheckCircle2,
   Eye,
@@ -11,11 +10,8 @@ import {
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notificationService } from '@/services/notification.service';
-import {
-  contractService,
-  type Contract,
-  type CreateContractRequest,
-} from '@/services/contract.service';
+import { contractService } from '@/services/contract.service';
+import type { Contract, CreateContractRequest } from '@/features/contracts/types';
 import { proposalService } from '@/services/proposal.service';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -34,7 +30,6 @@ export function ContratosPage() {
   const [formData, setFormData] = useState<CreateContractRequest>({
     proposalId: 0,
     startDate: format(new Date(), 'yyyy-MM-dd'),
-    totalValue: 0,
   });
 
   const { data: contractsPage, isLoading } = useQuery({
@@ -57,7 +52,6 @@ export function ContratosPage() {
       setFormData({
         proposalId: 0,
         startDate: format(new Date(), 'yyyy-MM-dd'),
-        totalValue: 0,
       });
     },
   });
@@ -122,17 +116,15 @@ export function ContratosPage() {
   };
 
   const getContractHtml = (contract: Contract) => {
-    const companyName =
-      contract.enterpriseName ||
-      contract.proposalEnterpriseName ||
-      'Empresa contratante';
+    // TODO: buscar via proposal/enterprise (GET /api/proposals/{contract.proposalId})
+    const companyName = 'Empresa contratante';
     const startDate = contract.startDate
       ? format(new Date(contract.startDate), 'dd/MM/yyyy', { locale: ptBR })
       : '--';
     const endDate = contract.endDate
       ? format(new Date(contract.endDate), 'dd/MM/yyyy', { locale: ptBR })
       : 'prazo indeterminado';
-    const status = getContractStatusLabel(contract.status);
+    const status = getContractStatusLabel(contract.status ?? undefined);
 
     return `
       <!doctype html>
@@ -265,7 +257,7 @@ export function ContratosPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {contractsPage.content.map((contract: any) => (
+          {contractsPage!.content.map((contract: any) => (
             <div
               key={contract.id}
               className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm hover:shadow-xl transition-all group overflow-hidden relative"
@@ -284,7 +276,8 @@ export function ContratosPage() {
                   </div>
                   <div>
                     <h4 className="text-lg font-bold text-climbe-secondary italic">
-                      {contract.enterpriseName || 'Empresa'}
+                      {/* TODO: buscar via proposal/enterprise (GET /api/proposals/{contract.proposalId}) */}
+                      Proposta #{contract.proposalId}
                     </h4>
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
                       CONTRATO #{contract.id}
@@ -310,16 +303,15 @@ export function ContratosPage() {
                   </div>
                   <div className="p-4 bg-gray-50 rounded-2xl space-y-1">
                     <div className="flex items-center gap-2 text-gray-400">
-                      <DollarSign size={12} />
+                      <Calendar size={12} />
                       <span className="text-[8px] font-black uppercase tracking-widest">
-                        Valor Total
+                        Término
                       </span>
                     </div>
                     <p className="text-xs font-bold text-climbe-primary italic">
-                      {new Intl.NumberFormat('pt-BR', {
-                        style: 'currency',
-                        currency: 'BRL',
-                      }).format(contract.totalValue || 0)}
+                      {contract.endDate
+                        ? format(new Date(contract.endDate), 'dd/MM/yyyy', { locale: ptBR })
+                        : 'Indeterminado'}
                     </p>
                   </div>
                 </div>
@@ -414,30 +406,7 @@ export function ContratosPage() {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">
-                Valor Total (R$)
-              </Label>
-              <div className="relative">
-                <DollarSign
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-climbe-primary"
-                  size={16}
-                />
-                <Input
-                  type="number"
-                  required
-                  className="bg-white pl-10 text-slate-900"
-                  value={formData.totalValue}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      totalValue: Number(e.target.value),
-                    })
-                  }
-                  placeholder="0,00"
-                />
-              </div>
-            </div>
+            {/* totalValue removido — campo não existe no ContractDTO do backend */}
 
             <div className="flex gap-3 pt-6">
               <Button
@@ -481,7 +450,7 @@ export function ContratosPage() {
               </div>
               <span className="inline-flex items-center gap-1 px-3 py-1 bg-climbe-primary/10 text-climbe-primary text-[10px] font-black uppercase tracking-widest rounded-full shrink-0">
                 <CheckCircle2 size={12} />
-                {getContractStatusLabel(selectedContract.status)}
+                {getContractStatusLabel(selectedContract.status ?? undefined)}
               </span>
             </div>
 
@@ -492,9 +461,8 @@ export function ContratosPage() {
                     Empresa
                   </p>
                   <p className="text-sm font-bold text-climbe-secondary italic">
-                    {selectedContract.enterpriseName ||
-                      selectedContract.proposalEnterpriseName ||
-                      'Empresa contratante'}
+                    {/* TODO: buscar via proposal/enterprise (GET /api/proposals/{selectedContract.proposalId}) */}
+                    Proposta #{selectedContract.proposalId}
                   </p>
                 </div>
                 <div>

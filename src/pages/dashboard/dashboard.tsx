@@ -53,18 +53,19 @@ export function DashboardPage() {
           icon={Briefcase} 
           trend="up"
         />
-        <StatCard 
-          title="Clientes" 
-          value={String(stats?.totalClients || 0)} 
-          subValue="+4 desde a semana passada" 
-          icon={Users} 
+        {/* TODO: endpoint não existe no backend — totalClients/totalRevenue indisponíveis */}
+        <StatCard
+          title="Empresas"
+          value={String(stats?.totalEnterprises || 0)}
+          subValue=""
+          icon={Users}
           trend="neutral"
         />
-        <StatCard 
-          title="Receita" 
-          value={stats?.totalRevenue || 'R$ 0'} 
-          subValue="+22% vs anterior" 
-          icon={TrendingUp} 
+        <StatCard
+          title="Receita"
+          value="R$ 0"
+          subValue="+22% vs anterior"
+          icon={TrendingUp}
           trend="up"
         />
       </div>
@@ -78,7 +79,8 @@ export function DashboardPage() {
             <p className="text-[10px] text-gray-400 uppercase tracking-widest font-medium">Volume Semestral</p>
           </div>
           <div className="flex-1 flex items-center justify-center">
-            <RevenueChart data={stats?.monthlyRevenue} />
+            {/* TODO: endpoint não existe no backend — monthlyRevenue indisponível */}
+            <RevenueChart data={undefined} />
           </div>
         </div>
 
@@ -89,7 +91,8 @@ export function DashboardPage() {
             <p className="text-[10px] text-gray-400 uppercase tracking-widest font-medium">Performance de Conversão</p>
           </div>
           <div className="flex-1 flex items-center justify-center">
-            <StatusPieChart data={stats?.proposalStatusDistribution} />
+            {/* TODO: endpoint não existe no backend — proposalStatusDistribution indisponível */}
+            <StatusPieChart data={undefined} />
           </div>
           <div className="mt-6 flex justify-around">
              <div className="flex flex-col items-center">
@@ -117,22 +120,8 @@ export function DashboardPage() {
           </button>
         </div>
         <div className="p-8 space-y-6">
-          {(stats?.recentActivities || []).map((activity, i) => (
-            <div key={i} className="flex items-center justify-between py-4 border-b border-gray-50 last:border-0 group cursor-pointer hover:bg-gray-50/50 -mx-4 px-4 rounded-2xl transition-all">
-              <div className="flex items-center gap-4">
-                <div className={`w-10 h-10 rounded-xl ${activity.color} flex items-center justify-center font-black italic text-xs`}>
-                  {activity.name.charAt(0)}
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm font-bold text-climbe-secondary italic truncate">{activity.name}</p>
-                  <p className="text-[10px] text-gray-400">{activity.time}</p>
-                </div>
-              </div>
-              <div className={`text-[8px] font-black px-3 py-1 rounded-full border border-gray-100 uppercase tracking-widest ${activity.status === 'CONCLUÍDO' ? 'bg-climbe-primary text-climbe-secondary' : 'bg-gray-50 text-gray-400'}`}>
-                {activity.status}
-              </div>
-            </div>
-          ))}
+          {/* TODO: endpoint não existe no backend — recentActivities indisponível */}
+          <p className="text-sm text-gray-400 text-center py-8">Nenhuma atividade recente disponível.</p>
         </div>
       </div>
     </div>

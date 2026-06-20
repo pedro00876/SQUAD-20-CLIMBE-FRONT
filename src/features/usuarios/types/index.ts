@@ -2,35 +2,47 @@ import { PaginatedResponse } from '@/types/pagination';
 export type { PaginatedResponse };
 
 export interface User {
-  id: string;
+  id: number;
   fullName: string;
   email: string;
-  cpf: string;
-  phone: string;
+  cpf: string | null;
+  phone: string | null;
   status?: string;
-  active?: boolean;
-  role?: string | Cargo;
-  cargo?: Cargo;
+  role: string | null;
 }
 
 export interface UserPatchRequest {
   fullName?: string;
+  cpf?: string;
   email?: string;
   phone?: string;
   status?: string;
   role?: string;
-  cargoId?: number;
-  active?: boolean;
+}
+
+export interface CreateUserRequest {
+  fullName: string;
+  cpf: string;
+  email: string;
+  phone?: string;
+  status?: string;
+  role?: string;
+}
+
+export interface UserApproveRequest {
+  role: string;
+}
+
+export interface UserProfileCompletionRequest {
+  cpf: string;
+  phone: string;
 }
 
 export interface Cargo {
   id: number;
-  nome: string;
-  descricao: string;
+  name: string;
 }
 
 export interface CargoRequest {
-  nome: string;
-  descricao: string;
+  name: string;
 }
-

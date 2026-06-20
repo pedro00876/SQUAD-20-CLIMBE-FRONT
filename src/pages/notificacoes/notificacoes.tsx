@@ -1,4 +1,4 @@
-import { Bell, Check, CheckCircle2, Clock, Loader2, Trash2 } from 'lucide-react';
+import { Bell, CheckCircle2, Clock, Loader2, Trash2 } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -52,11 +52,13 @@ export function NotificacoesPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
   });
 
-  const unreadNotifications = notifications.filter((notification: Notification) => !notification.read);
+  // `read` não existe no NotificationDTO — considera todas como não lidas para fins de UI
+  const unreadNotifications = notifications as Notification[];
   const visibleNotifications = filter === 'unread' ? unreadNotifications : notifications;
 
   const markAllAsRead = () => {
-    unreadNotifications.forEach((notification: Notification) => {
+    // `read` não existe no backend — marca todas as notificações listadas
+    notifications.forEach((notification: Notification) => {
       markAsReadMutation.mutate(notification.id);
     });
   };
@@ -97,13 +99,13 @@ export function NotificacoesPage() {
                 filter === 'unread' ? 'bg-climbe-secondary text-white' : 'text-gray-400 hover:text-climbe-secondary'
               }`}
             >
-              Não lidas ({unreadNotifications.length})
+              Não lidas
             </button>
           </div>
 
           <Button
             type="button"
-            disabled={unreadNotifications.length === 0 || markAsReadMutation.isPending}
+            disabled={notifications.length === 0 || markAsReadMutation.isPending}
             onClick={markAllAsRead}
             className="rounded-2xl bg-climbe-primary px-5 font-black italic text-climbe-secondary shadow-lg shadow-climbe-primary/20 disabled:bg-gray-100 disabled:text-gray-400 disabled:shadow-none"
           >
@@ -120,12 +122,13 @@ export function NotificacoesPage() {
         </div>
         <div className="rounded-[28px] bg-white p-6 border border-gray-100 shadow-sm">
           <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Não lidas</p>
-          <strong className="mt-2 block text-3xl font-black italic text-climbe-primary">{unreadNotifications.length}</strong>
+          <strong className="mt-2 block text-3xl font-black italic text-climbe-primary">{notifications.length}</strong>
         </div>
         <div className="rounded-[28px] bg-white p-6 border border-gray-100 shadow-sm">
           <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Lidas</p>
           <strong className="mt-2 block text-3xl font-black italic text-climbe-secondary">
-            {notifications.length - unreadNotifications.length}
+            {/* campo `read` não existe no backend — exibe 0 */}
+            0
           </strong>
         </div>
       </div>
@@ -156,16 +159,10 @@ export function NotificacoesPage() {
           {visibleNotifications.map((notification: Notification) => (
             <div
               key={notification.id}
-              className={`rounded-[24px] border p-6 flex items-start gap-4 transition-all ${
-                notification.read
-                  ? 'bg-white border-gray-100 hover:shadow-lg hover:shadow-climbe-primary/5'
-                  : 'bg-climbe-primary/5 border-climbe-primary/20 shadow-sm'
-              }`}
+              className="rounded-[24px] border p-6 flex items-start gap-4 transition-all bg-climbe-primary/5 border-climbe-primary/20 shadow-sm"
             >
-              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
-                notification.read ? 'bg-gray-50 text-gray-400' : 'bg-climbe-primary/10 text-climbe-primary'
-              }`}>
-                {notification.read ? <Check size={20} /> : <Bell size={20} />}
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 bg-climbe-primary/10 text-climbe-primary">
+                <Bell size={20} />
               </div>
 
               <div className="flex-1 space-y-3 py-1">
@@ -173,13 +170,9 @@ export function NotificacoesPage() {
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
                       <h5 className="font-bold text-climbe-secondary text-sm italic">
-                        {notification.title || getTypeLabel(notification.type)}
+                        {/* `title` não existe no backend — usa label do tipo */}
+                        {getTypeLabel(notification.type)}
                       </h5>
-                      {!notification.read && (
-                        <span className="rounded-full bg-climbe-primary px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-climbe-secondary">
-                          Nova
-                        </span>
-                      )}
                     </div>
                     <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-gray-400">
                       {getTypeLabel(notification.type)}
@@ -188,7 +181,7 @@ export function NotificacoesPage() {
 
                   <span className="inline-flex items-center gap-1 text-[10px] text-gray-400 font-black uppercase tracking-widest">
                     <Clock size={12} />
-                    {formatNotificationDate(notification.sentAt || notification.createdAt)}
+                    {formatNotificationDate(notification.sentAt)}
                   </span>
                 </div>
 
@@ -197,16 +190,14 @@ export function NotificacoesPage() {
                 </p>
 
                 <div className="flex flex-wrap gap-2 pt-1">
-                  {!notification.read && (
-                    <button
-                      type="button"
-                      onClick={() => markAsReadMutation.mutate(notification.id)}
-                      disabled={markAsReadMutation.isPending}
-                      className="rounded-xl bg-climbe-primary px-4 py-2 text-[10px] font-black uppercase tracking-widest text-climbe-secondary transition hover:scale-105 disabled:opacity-50"
-                    >
-                      Marcar como lida
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => markAsReadMutation.mutate(notification.id)}
+                    disabled={markAsReadMutation.isPending}
+                    className="rounded-xl bg-climbe-primary px-4 py-2 text-[10px] font-black uppercase tracking-widest text-climbe-secondary transition hover:scale-105 disabled:opacity-50"
+                  >
+                    Marcar como lida
+                  </button>
                   <button
                     type="button"
                     onClick={() => deleteNotificationMutation.mutate(notification.id)}

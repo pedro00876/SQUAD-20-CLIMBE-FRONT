@@ -38,7 +38,8 @@ export function Header({ onMenuClick, isCollapsed, onToggleCollapse }: HeaderPro
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] })
   });
 
-  const unreadCount = notifications.filter((n: Notification) => !n.read).length;
+  // `read` não existe no NotificationDTO — considera todas como não lidas
+  const unreadCount = notifications.length;
 
   const getInitials = (name: string) => {
     return name
@@ -117,19 +118,20 @@ export function Header({ onMenuClick, isCollapsed, onToggleCollapse }: HeaderPro
               <div className="max-h-96 overflow-y-auto divide-y divide-gray-50">
                 {notifications.length > 0 ? (
                    notifications.map((notification: Notification) => (
-                    <div key={notification.id} className={`p-5 group transition-colors hover:bg-gray-50/50 ${!notification.read ? 'bg-climbe-primary/5' : ''}`}>
+                    <div key={notification.id} className="p-5 group transition-colors hover:bg-gray-50/50 bg-climbe-primary/5">
                       <div className="flex justify-between gap-2 mb-1">
-                        <p className="text-xs font-bold text-climbe-secondary leading-tight italic">{notification.title || 'Notificação'}</p>
+                        {/* `title` não existe no backend — usa mensagem truncada */}
+                        <p className="text-xs font-bold text-climbe-secondary leading-tight italic">
+                          {notification.message.length > 40 ? `${notification.message.slice(0, 40)}…` : notification.message}
+                        </p>
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          {!notification.read && (
-                            <button 
-                              onClick={() => markAsReadMutation.mutate(notification.id)}
-                              className="text-climbe-primary p-1 hover:bg-white rounded-md shadow-sm"
-                            >
-                              <Check size={12} />
-                            </button>
-                          )}
-                          <button 
+                          <button
+                            onClick={() => markAsReadMutation.mutate(notification.id)}
+                            className="text-climbe-primary p-1 hover:bg-white rounded-md shadow-sm"
+                          >
+                            <Check size={12} />
+                          </button>
+                          <button
                             onClick={() => deleteNotificationMutation.mutate(notification.id)}
                             className="text-red-400 p-1 hover:bg-white rounded-md shadow-sm"
                           >
@@ -140,7 +142,7 @@ export function Header({ onMenuClick, isCollapsed, onToggleCollapse }: HeaderPro
                       <p className="text-[11px] text-gray-500 mb-2 leading-relaxed">{notification.message}</p>
                       <div className="flex items-center gap-1.5 text-[9px] text-gray-400 font-medium">
                         <Clock size={10} />
-                        {formatNotificationDate(notification.sentAt || notification.createdAt)}
+                        {formatNotificationDate(notification.sentAt)}
                       </div>
                     </div>
                   ))

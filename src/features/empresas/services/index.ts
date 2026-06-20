@@ -1,5 +1,9 @@
 import { api } from '@/services/api';
-import type { Enterprise, EnterpriseDTO, BrasilAPI_CNPJ } from '../types';
+import type {
+  Enterprise,
+  CreateEnterpriseRequest,
+  UpdateEnterpriseRequest,
+} from '../types';
 import { PaginatedResponse } from '@/types/pagination';
 
 export const enterpriseService = {
@@ -9,12 +13,33 @@ export const enterpriseService = {
     });
     return res.data;
   },
-  createEnterprise: async (data: EnterpriseDTO): Promise<Enterprise> => {
+
+  getEnterprise: async (id: number): Promise<Enterprise> => {
+    const res = await api.get<Enterprise>(`/api/enterprises/${id}`);
+    return res.data;
+  },
+
+  getEnterpriseByEmail: async (email: string): Promise<Enterprise> => {
+    const res = await api.get<Enterprise>(`/api/enterprises/email/${email}`);
+    return res.data;
+  },
+
+  getEnterpriseByCnpj: async (cnpj: string): Promise<Enterprise> => {
+    const res = await api.get<Enterprise>(`/api/enterprises/cnpj/${cnpj}`);
+    return res.data;
+  },
+
+  createEnterprise: async (data: CreateEnterpriseRequest): Promise<Enterprise> => {
     const res = await api.post<Enterprise>('/api/enterprises', data);
     return res.data;
   },
-  consultCNPJ: async (cnpj: string): Promise<BrasilAPI_CNPJ> => {
-    const res = await api.get<BrasilAPI_CNPJ>(`/api/enterprises/cnpj/${cnpj}`);
+
+  updateEnterprise: async (id: number, data: UpdateEnterpriseRequest): Promise<Enterprise> => {
+    const res = await api.patch<Enterprise>(`/api/enterprises/${id}`, data);
     return res.data;
+  },
+
+  deleteEnterprise: async (id: number): Promise<void> => {
+    await api.delete(`/api/enterprises/${id}`);
   },
 };

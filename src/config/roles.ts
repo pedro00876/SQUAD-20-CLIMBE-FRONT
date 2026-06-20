@@ -17,21 +17,43 @@ export type LogicalRole = 'ADMIN' | 'SENIOR' | 'ANALISTA' | 'COMPLIANCE' | 'APRO
 export const mapBackendRoleToLogicalRoles = (backendRole?: string): LogicalRole[] => {
   const role = backendRole?.toUpperCase() || '';
 
-  if (role === 'CEO' || role === 'ADMINISTRADOR' || role === 'ADMIN') {
-    return ['ADMIN', 'APROVADOR', 'SENIOR', 'COMPLIANCE', 'ANALISTA']; // Pode fazer tudo
-  }
-  
-  if (role === 'GERENTE') {
-    return ['SENIOR', 'APROVADOR', 'COMPLIANCE'];
-  }
-  
-  if (role === 'COLABORADOR') {
-    return ['ANALISTA'];
+  if (role === 'CEO') {
+    return ['ADMIN', 'APROVADOR', 'SENIOR', 'COMPLIANCE', 'ANALISTA'];
   }
 
-  // Fallback padrão se não bater com nenhum (ou se for empresa cliente)
-  if (role === 'EMPRESA') {
-    return ['EMPRESA'];
+  if (
+    role === 'CMO' ||
+    role === 'CFO' ||
+    role === 'CSO' ||
+    role === 'MEMBRO_CONSELHO' ||
+    role === 'ANALISTA_CHEFE'
+  ) {
+    return ['SENIOR', 'APROVADOR'];
+  }
+
+  if (role === 'COMPLIANCE') {
+    return ['COMPLIANCE', 'SENIOR'];
+  }
+
+  if (role === 'CONTADOR') {
+    return ['SENIOR'];
+  }
+
+  if (
+    role === 'ANALISTA_SENIOR' ||
+    role === 'ANALISTA_VI_SENIOR' ||
+    role === 'ANALISTA_VI_PLENO'
+  ) {
+    return ['ANALISTA', 'SENIOR'];
+  }
+
+  if (
+    role === 'ANALISTA' ||
+    role === 'ANALISTA_VI_JUNIOR' ||
+    role === 'ANALISTA_VI_TRAINEE' ||
+    role === 'ANALISTA_BPO_FINANCEIRO'
+  ) {
+    return ['ANALISTA'];
   }
 
   return [];

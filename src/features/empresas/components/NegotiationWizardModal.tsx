@@ -565,7 +565,7 @@ export function NegotiationWizardModal({
                           </span>
                           <span className="font-bold text-climbe-secondary">
                             {associatedContract
-                              ? `R$ ${associatedContract.totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} - Ativo`
+                              ? `Contrato #${associatedContract.id} - ${associatedContract.status ?? 'Ativo'}` /* TODO: buscar totalValue via proposal/enterprise */
                               : 'Contrato não gerado'}
                           </span>
                         </div>

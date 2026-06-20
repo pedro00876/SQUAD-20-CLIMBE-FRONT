@@ -1,12 +1,12 @@
 export interface Service {
   id: number;
-  nome: string;
-  preco: number;
-  descricao: string;
+  name: string;
 }
 
-export interface ServiceRequest {
-  nome: string;
-  preco: number;
-  descricao: string;
+export interface CreateServiceRequest {
+  name: string;
+}
+
+export interface UpdateServiceRequest {
+  name?: string;
 }

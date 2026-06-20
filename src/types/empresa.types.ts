@@ -1,6 +1,7 @@
+// Alias local — preferir importar Enterprise de @/features/empresas/types
 export interface Empresa {
-  id: string;
+  id: number;
   cnpj: string;
-  razaoSocial: string;
-  nomeFantasia: string;
+  legalName: string;
+  tradeName: string | null;
 }
