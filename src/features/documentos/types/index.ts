@@ -18,6 +18,7 @@ export interface Document {
   validated?: boolean;
   analystId?: number;
   analystName?: string;
+  createdAt?: string;
 }
 
 export interface CreateDocumentRequest {
