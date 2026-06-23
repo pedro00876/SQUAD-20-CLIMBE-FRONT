@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { Layout } from '@/components/layout/page-wrapper';
 import { PrivateRoute } from '@/components/auth/PrivateRoute';
@@ -13,12 +13,17 @@ import { EmpresaDetalhePage } from '@/pages/empresas/empresa-detalhe';
 import { UsuariosPage } from '@/pages/usuarios/usuarios';
 import { PropostasPage } from '@/pages/propostas/propostas';
 import { DocumentosPage } from '@/pages/documentos/documentos';
-import { ReunioesPage } from '@/pages/reunioes/reunioes';
 import { RelatoriosPage } from '@/pages/relatorios/relatorios';
 import { NotificacoesPage } from '@/pages/notificacoes/notificacoes';
 import { ContratosPage } from '@/pages/contratos/contratos';
 import { PerfilPage } from '@/pages/perfil/perfil';
 import { routes } from '@/config/routes';
+
+// Redirects /reunioes (and any query params) to /agenda, preserving search string.
+function ReunioesRedirect() {
+  const location = useLocation();
+  return <Navigate to={`${routes.agenda}${location.search}`} replace />;
+}
 
 // Layout raiz que injeta o AuthProvider dentro do contexto do router
 function RootLayout() {
@@ -73,7 +78,7 @@ export const router = createBrowserRouter([
                 element: <EmpresaDetalhePage />,
               },
               {
-                element: <RoleRoute allowedRoles={['ADMIN']} />,
+                element: <RoleRoute allowedRoles={['ADMIN', 'CPO']} />,
                 children: [
                   {
                     path: routes.usuarios,
@@ -90,8 +95,9 @@ export const router = createBrowserRouter([
                 element: <DocumentosPage />,
               },
               {
+                // Legacy /reunioes → unified Agenda & Reuniões (/agenda), query params preserved
                 path: routes.reunioes,
-                element: <ReunioesPage />,
+                element: <ReunioesRedirect />,
               },
               {
                 path: routes.relatorios,

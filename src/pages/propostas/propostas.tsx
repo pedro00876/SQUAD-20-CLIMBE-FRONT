@@ -1,4 +1,4 @@
-import { FileText, Plus, User, Loader2, CheckCircle2, XCircle, Clock, ScrollText, DollarSign, Upload, Trash2, ClipboardCheck } from 'lucide-react';
+import { FileText, Plus, Loader2, CheckCircle2, XCircle, Clock, ScrollText, Upload, Trash2, ClipboardCheck, MoreHorizontal, User } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { proposalService } from '@/services/proposal.service';
 import { enterpriseService } from '@/services/enterprise.service';
@@ -10,13 +10,15 @@ import {
   type DocumentRequirementStatus,
   type DocumentType,
 } from '@/services/document.service';
-import { PropostaModal } from '@/features/propostas/components';
 import { ChecklistModal } from './components/ChecklistModal';
-import { useState } from 'react';
+import { ProposalCreateWizard } from '@/features/propostas/components/ProposalCreateWizard';
+import { ProposalTriagemDrawer } from '@/features/propostas/components/ProposalTriagemDrawer';
+import { useState, useRef, useEffect } from 'react';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { FilterChips, type FilterChip } from '@/components/ui/FilterChips';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -31,13 +33,72 @@ const documentRequirementTypes: { value: DocumentType; label: string }[] = [
   { value: 'PLANILHA_GERENCIAL', label: 'Planilha gerencial' },
 ];
 
+type StatusFilter = 'TODOS' | 'EM_TRIAGEM' | 'APROVADAS' | 'REPROVADAS' | 'CONTRATO';
+
+const STATUS_FILTER_SETS: Record<StatusFilter, string[]> = {
+  TODOS:      [],
+  EM_TRIAGEM: ['RECEIVED', 'IN_TRIAGE', 'PENDING_ADJUSTMENTS'],
+  APROVADAS:  ['ELIGIBLE', 'COMMERCIAL_PROPOSAL', 'COMMERCIAL_PROPOSAL_APPROVED', 'READY_FOR_NEXT_STAGE'],
+  REPROVADAS: ['COMMERCIAL_PROPOSAL_REJECTED'],
+  CONTRATO:   ['COMMERCIAL_PROPOSAL_APPROVED', 'READY_FOR_NEXT_STAGE'],
+};
+
+// Simple inline dropdown for secondary row actions
+function ActionMenu({ children }: { children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-climbe-secondary transition-colors"
+        title="Mais ações"
+      >
+        <MoreHorizontal size={16} />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full mt-1 z-50 w-44 rounded-2xl bg-white border border-gray-100 shadow-xl py-1.5"
+          onClick={() => setOpen(false)}>
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ActionMenuItem({ onClick, icon: Icon, label, danger }: { onClick: () => void; icon: React.ComponentType<any>; label: string; danger?: boolean }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-bold transition-colors ${
+        danger ? 'text-red-500 hover:bg-red-50' : 'text-climbe-secondary hover:bg-gray-50'
+      }`}
+    >
+      <Icon size={13} />
+      {label}
+    </button>
+  );
+}
+
 export function PropostasPage() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const [isTriagemDrawerOpen, setIsTriagemDrawerOpen] = useState(false);
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isCommercialProposalModalOpen, setIsCommercialProposalModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDocumentChecklistModalOpen, setIsDocumentChecklistModalOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('TODOS');
   const [selectedProposal, setSelectedProposal] = useState<any>(null);
   const { user } = useAuthContext();
   const queryClient = useQueryClient();
@@ -72,7 +133,7 @@ export function PropostasPage() {
     mutationFn: proposalService.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['proposals'] });
-      setIsModalOpen(false);
+      setIsWizardOpen(false);
       setSelectedEnterpriseId('');
     },
   });
@@ -200,11 +261,15 @@ export function PropostasPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedEnterpriseId || !user?.id) return;
-
     createMutation.mutate({
       enterpriseId: Number(selectedEnterpriseId),
       userId: Number(user.id),
     });
+  };
+
+  const handleWizardSubmit = ({ enterpriseId }: { enterpriseId: number; analystId?: number; meetingDate?: string }) => {
+    if (!user?.id) return;
+    createMutation.mutate({ enterpriseId, userId: Number(user.id) });
   };
 
   const handleReject = () => {
@@ -396,6 +461,20 @@ export function PropostasPage() {
     }
   };
 
+  const allProposals: any[] = proposalsPage?.content || [];
+
+  const filterChips: FilterChip<StatusFilter>[] = [
+    { value: 'TODOS',      label: 'Todos',          count: allProposals.length },
+    { value: 'EM_TRIAGEM', label: 'Em Triagem',      count: allProposals.filter(p => STATUS_FILTER_SETS.EM_TRIAGEM.includes(p.status?.toUpperCase())).length },
+    { value: 'APROVADAS',  label: 'Aprovadas',       count: allProposals.filter(p => STATUS_FILTER_SETS.APROVADAS.includes(p.status?.toUpperCase())).length },
+    { value: 'REPROVADAS', label: 'Reprovadas',      count: allProposals.filter(p => STATUS_FILTER_SETS.REPROVADAS.includes(p.status?.toUpperCase())).length },
+    { value: 'CONTRATO',   label: 'Contrato Gerado', count: allProposals.filter(p => STATUS_FILTER_SETS.CONTRATO.includes(p.status?.toUpperCase())).length },
+  ];
+
+  const filteredProposals = statusFilter === 'TODOS'
+    ? allProposals
+    : allProposals.filter(p => STATUS_FILTER_SETS[statusFilter].includes(p.status?.toUpperCase()));
+
   return (
     <div className="space-y-8 pb-12">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
@@ -411,7 +490,7 @@ export function PropostasPage() {
         </div>
 
         <Button
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => setIsWizardOpen(true)}
           className="shrink-0 rounded-2xl bg-climbe-primary px-6 py-6 font-black italic text-climbe-secondary shadow-lg shadow-climbe-primary/20 transition-all hover:scale-105"
         >
           <Plus size={20} className="mr-2" />
@@ -425,18 +504,24 @@ export function PropostasPage() {
         </p>
       )}
 
+      <FilterChips chips={filterChips} active={statusFilter} onChange={setStatusFilter} />
+
       {isLoadingProposals ? (
         <div className="flex h-[50vh] items-center justify-center">
           <Loader2 className="h-12 w-12 animate-spin text-climbe-primary" />
         </div>
-      ) : (proposalsPage?.content || []).length === 0 ? (
+      ) : filteredProposals.length === 0 ? (
         <div className="flex flex-col items-center justify-center space-y-4 rounded-[40px] border border-gray-100 bg-white p-20 text-center shadow-sm">
           <div className="flex h-24 w-24 items-center justify-center rounded-[32px] bg-gray-50 text-gray-200">
             <FileText size={48} />
           </div>
-          <h3 className="text-2xl font-bold italic text-climbe-secondary">Nenhuma proposta ativa</h3>
+          <h3 className="text-2xl font-bold italic text-climbe-secondary">
+            {statusFilter === 'TODOS' ? 'Nenhuma proposta ativa' : 'Nenhuma proposta neste filtro'}
+          </h3>
           <p className="max-w-xs text-sm text-gray-400">
-            Clique no botão acima para criar sua primeira proposta comercial e iniciar o fluxo.
+            {statusFilter === 'TODOS'
+              ? 'Clique em "Criar Nova Proposta" para iniciar o fluxo.'
+              : 'Selecione outro filtro ou crie uma nova proposta.'}
           </p>
         </div>
       ) : (
@@ -446,198 +531,190 @@ export function PropostasPage() {
               <thead>
                 <tr className="border-b border-gray-50 bg-gray-50/50">
                   <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Empresa / Cliente</th>
-                  <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Criado por</th>
                   <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Analista</th>
                   <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Data</th>
                   <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Status</th>
-                  <th className="px-8 py-6 text-right text-[10px] font-black uppercase tracking-widest text-gray-400">Ações</th>
+                  <th className="px-8 py-6 text-right text-[10px] font-black uppercase tracking-widest text-gray-400">Ação</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {proposalsPage.content.map((proposal: any) => (
-                  <tr key={proposal.id} className="group transition-colors hover:bg-gray-50/30">
-                    <td className="px-8 py-6">
-                      <div className="flex items-center gap-4">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-climbe-secondary text-xs font-black italic text-white">
-                          {proposal.enterpriseName?.charAt(0)}
+                {filteredProposals.map((proposal: any) => {
+                  const status = proposal.status?.toUpperCase();
+                  return (
+                    <tr key={proposal.id} className="group transition-colors hover:bg-gray-50/30">
+                      <td className="px-8 py-6">
+                        <div className="flex items-center gap-4">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-climbe-secondary text-xs font-black italic text-white shrink-0">
+                            {proposal.enterpriseName?.charAt(0)}
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold italic text-climbe-secondary">{proposal.enterpriseName}</p>
+                            <p className="text-[10px] text-gray-400">#{proposal.id} · por {proposal.userName}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm font-bold italic text-climbe-secondary">{proposal.enterpriseName}</p>
-                          <p className="text-[10px] text-gray-400">ID: #{proposal.id}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-8 py-6">
-                      <div className="flex items-center gap-2">
-                        <User size={14} className="text-climbe-primary" />
-                        <span className="text-xs font-medium text-gray-600">{proposal.userName}</span>
-                      </div>
-                    </td>
-                    <td className="px-8 py-6 text-xs text-gray-400 font-medium">
-                      {proposal.responsibleAnalystName || 'Pendente'}
-                    </td>
-                    <td className="px-8 py-6 text-xs font-medium text-gray-400">
-                      {proposal.createdAt ? format(new Date(proposal.createdAt), 'dd/MM/yyyy', { locale: ptBR }) : '--'}
-                    </td>
-                    <td className="px-8 py-6">
-                      <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-widest ${getStatusStyle(proposal.status)}`}>
-                        {getStatusIcon(proposal.status)}
-                        {getStatusLabel(proposal.status)}
-                      </span>
-                    </td>
-                    <td className="px-8 py-6 text-right">
-                      <div className="flex justify-end gap-2">
-                        {proposal.status?.toUpperCase() === 'RECEIVED' && (
-                          <button
-                            disabled={statusMutation.isPending}
-                            onClick={() => handleStatusChange(proposal, 'IN_TRIAGE')}
-                            className="flex items-center gap-1.5 rounded-xl bg-climbe-secondary px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            <Clock size={14} />
-                            Iniciar triagem
-                          </button>
-                        )}
-                        {proposal.status?.toUpperCase() === 'IN_TRIAGE' && (
-                          <>
+                      </td>
+                      <td className="px-8 py-6 text-xs text-gray-400 font-medium">
+                        {proposal.responsibleAnalystName || <span className="text-amber-500">Pendente</span>}
+                      </td>
+                      <td className="px-8 py-6 text-xs font-medium text-gray-400">
+                        {proposal.createdAt ? format(new Date(proposal.createdAt), 'dd/MM/yyyy', { locale: ptBR }) : '--'}
+                      </td>
+                      <td className="px-8 py-6">
+                        <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-widest ${getStatusStyle(proposal.status)}`}>
+                          {getStatusIcon(proposal.status)}
+                          {getStatusLabel(proposal.status)}
+                        </span>
+                      </td>
+                      <td className="px-8 py-6">
+                        <div className="flex items-center justify-end gap-2">
+                          {/* Primary action — one per status */}
+                          {status === 'RECEIVED' && (
                             <button
                               disabled={statusMutation.isPending}
-                              onClick={() => handleStatusChange(proposal, 'ELIGIBLE')}
-                              className="flex items-center gap-1.5 rounded-xl bg-climbe-primary px-4 py-2 text-[10px] font-black uppercase tracking-widest text-climbe-secondary transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                              onClick={() => handleStatusChange(proposal, 'IN_TRIAGE')}
+                              className="flex items-center gap-1.5 rounded-xl bg-climbe-secondary px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white transition-all hover:scale-105 disabled:opacity-50"
                             >
-                              <CheckCircle2 size={14} />
-                              Aprovar triagem
+                              <Clock size={13} />
+                              Iniciar triagem
                             </button>
+                          )}
+                          {(status === 'IN_TRIAGE' || status === 'PENDING_ADJUSTMENTS') && (
                             <button
-                              disabled={statusMutation.isPending}
-                              onClick={() => handleStatusChange(proposal, 'PENDING_ADJUSTMENTS')}
-                              className="flex items-center gap-1.5 rounded-xl bg-red-50 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-red-500 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                              onClick={() => { setSelectedProposal(proposal); setIsTriagemDrawerOpen(true); }}
+                              className="flex items-center gap-1.5 rounded-xl bg-climbe-primary px-4 py-2 text-[10px] font-black uppercase tracking-widest text-climbe-secondary transition-all hover:scale-105"
                             >
-                              <XCircle size={14} />
-                              Ajustes
+                              <CheckCircle2 size={13} />
+                              {status === 'IN_TRIAGE' ? 'Triar proposta' : 'Retomar triagem'}
                             </button>
-                          </>
-                        )}
-                        {proposal.status?.toUpperCase() === 'PENDING_ADJUSTMENTS' && (
-                          <button
-                            disabled={statusMutation.isPending}
-                            onClick={() => handleStatusChange(proposal, 'IN_TRIAGE')}
-                            className="flex items-center gap-1.5 rounded-xl bg-climbe-secondary px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            <Clock size={14} />
-                            Retomar triagem
-                          </button>
-                        )}
-                        {(proposal.status?.toUpperCase() === 'ELIGIBLE' || proposal.status?.toUpperCase() === 'COMMERCIAL_PROPOSAL_REJECTED') && (
-                          <button
-                            onClick={() => openCommercialProposalModal(proposal)}
-                            className="flex items-center gap-1.5 rounded-xl bg-climbe-primary px-4 py-2 text-[10px] font-black uppercase tracking-widest text-climbe-secondary transition-all hover:scale-105"
-                          >
-                            <Upload size={14} />
-                            Enviar proposta
-                          </button>
-                        )}
-                        {proposal.status?.toUpperCase() === 'COMMERCIAL_PROPOSAL' && (
-                          <>
+                          )}
+                          {(status === 'ELIGIBLE' || status === 'COMMERCIAL_PROPOSAL_REJECTED') && (
                             <button
-                              disabled={statusMutation.isPending}
-                              onClick={() => handleStatusChange(proposal, 'COMMERCIAL_PROPOSAL_APPROVED')}
-                              className="p-2 text-climbe-primary hover:bg-climbe-primary/10 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                              title="Aprovar proposta comercial"
+                              onClick={() => openCommercialProposalModal(proposal)}
+                              className="flex items-center gap-1.5 rounded-xl bg-climbe-primary px-4 py-2 text-[10px] font-black uppercase tracking-widest text-climbe-secondary transition-all hover:scale-105"
                             >
-                              <CheckCircle2 size={18} />
+                              <Upload size={13} />
+                              Enviar proposta
                             </button>
+                          )}
+                          {status === 'COMMERCIAL_PROPOSAL' && (
+                            <div className="flex items-center gap-1">
+                              <button
+                                disabled={statusMutation.isPending}
+                                onClick={() => handleStatusChange(proposal, 'COMMERCIAL_PROPOSAL_APPROVED')}
+                                className="p-2 text-climbe-primary hover:bg-climbe-primary/10 rounded-lg transition-all disabled:opacity-50"
+                                title="Aprovar proposta"
+                              >
+                                <CheckCircle2 size={17} />
+                              </button>
+                              <button
+                                disabled={statusMutation.isPending}
+                                onClick={() => { setSelectedProposal(proposal); setIsRejectModalOpen(true); }}
+                                className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-all disabled:opacity-50"
+                                title="Reprovar proposta"
+                              >
+                                <XCircle size={17} />
+                              </button>
+                            </div>
+                          )}
+                          {status === 'COMMERCIAL_PROPOSAL_APPROVED' && !proposal.responsibleAnalystId && (
                             <button
-                              disabled={statusMutation.isPending}
-                              onClick={() => {
-                                setSelectedProposal(proposal);
-                                setIsRejectModalOpen(true);
-                              }}
-                              className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                              title="Recusar proposta comercial"
+                              onClick={() => { setSelectedProposal(proposal); setIsAnalystModalOpen(true); }}
+                              className="flex items-center gap-1.5 px-4 py-2 bg-climbe-primary text-climbe-secondary text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-105 transition-all"
                             >
-                              <XCircle size={18} />
+                              <User size={13} />
+                              Selecionar Analista
                             </button>
-                          </>
-                        )}
-                        {proposal.status?.toUpperCase() === 'COMMERCIAL_PROPOSAL_APPROVED' && !proposal.responsibleAnalystId && (
-                          <button 
-                            onClick={() => {
-                              setSelectedProposal(proposal);
-                              setIsAnalystModalOpen(true);
-                            }}
-                            className="flex items-center gap-1.5 px-4 py-2 bg-climbe-primary text-climbe-secondary text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-105 transition-all italic"
-                          >
-                            <User size={14} />
-                            Selecionar Analista
-                          </button>
-                        )}
-                        {proposal.status?.toUpperCase() === 'COMMERCIAL_PROPOSAL_APPROVED' && proposal.responsibleAnalystId && (
-                          <>
-                            <button 
+                          )}
+                          {status === 'COMMERCIAL_PROPOSAL_APPROVED' && proposal.responsibleAnalystId && (
+                            <button
                               onClick={() => openContractModal(proposal)}
                               className="flex items-center gap-1.5 rounded-xl bg-climbe-secondary px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white transition-all hover:scale-105"
                             >
-                              <ScrollText size={14} />
+                              <ScrollText size={13} />
                               Gerar Contrato
                             </button>
-                            <button 
-                              onClick={() => {
-                                setChecklistProposalId(proposal.id);
-                                setIsChecklistModalOpen(true);
-                              }}
-                              className="flex items-center gap-1.5 rounded-xl bg-climbe-primary/10 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-climbe-primary transition-all hover:bg-climbe-primary hover:text-climbe-secondary"
-                            >
-                              <FileText size={14} />
-                              Checklist
-                            </button>
-                          </>
-                        )}
-                        <button
-                          onClick={() => openDocumentChecklistModal(proposal)}
-                          className="flex items-center gap-1.5 rounded-xl bg-gray-50 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-climbe-secondary transition-all hover:bg-climbe-primary/10 hover:text-climbe-primary"
-                        >
-                          <ClipboardCheck size={14} />
-                          Documentos
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedProposal(proposal);
-                            setIsDetailsModalOpen(true);
-                          }}
-                          className="px-2 text-[10px] font-black uppercase tracking-widest text-climbe-secondary hover:underline"
-                        >
-                          Ver
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedProposal(proposal);
-                            setProposalActionError('');
-                            setIsDeleteModalOpen(true);
-                          }}
-                          className="p-2 text-gray-400 hover:bg-red-50 hover:text-red-500 rounded-lg transition-all"
-                          title="Excluir proposta"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                          )}
+
+                          {/* Secondary actions in ⋯ dropdown */}
+                          <ActionMenu>
+                            {status === 'COMMERCIAL_PROPOSAL_APPROVED' && proposal.responsibleAnalystId && (
+                              <ActionMenuItem
+                                icon={FileText}
+                                label="Checklist"
+                                onClick={() => { setChecklistProposalId(proposal.id); setIsChecklistModalOpen(true); }}
+                              />
+                            )}
+                            <ActionMenuItem
+                              icon={ClipboardCheck}
+                              label="Documentos"
+                              onClick={() => openDocumentChecklistModal(proposal)}
+                            />
+                            <ActionMenuItem
+                              icon={FileText}
+                              label="Ver detalhes"
+                              onClick={() => { setSelectedProposal(proposal); setIsDetailsModalOpen(true); }}
+                            />
+                            <ActionMenuItem
+                              icon={Trash2}
+                              label="Excluir"
+                              danger
+                              onClick={() => { setSelectedProposal(proposal); setProposalActionError(''); setIsDeleteModalOpen(true); }}
+                            />
+                          </ActionMenu>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         </div>
       )}
 
-      <PropostaModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        selectedEnterpriseId={selectedEnterpriseId}
-        onSelectedEnterpriseIdChange={setSelectedEnterpriseId}
-        onSubmit={handleSubmit}
-        isSubmitting={createMutation.isPending}
+      <ProposalCreateWizard
+        isOpen={isWizardOpen}
+        onClose={() => setIsWizardOpen(false)}
         enterprises={enterprisesPage?.content || []}
-        responsibleName={user?.name}
+        users={(usersPage?.content || []).map((u: any) => ({ id: u.id, fullName: u.fullName, role: u.role, email: u.email }))}
+        currentUserId={user?.id ? Number(user.id) : undefined}
+        currentUserName={(user as any)?.fullName || (user as any)?.name}
+        isSubmitting={createMutation.isPending}
+        onSubmit={handleWizardSubmit}
+      />
+
+      <ProposalTriagemDrawer
+        isOpen={isTriagemDrawerOpen}
+        onClose={() => { setIsTriagemDrawerOpen(false); setSelectedProposal(null); }}
+        proposal={selectedProposal}
+        isLoading={statusMutation.isPending}
+        onApprove={() => {
+          if (!selectedProposal) return;
+          statusMutation.mutate({ id: selectedProposal.id, status: 'ELIGIBLE' }, {
+            onSuccess: () => setIsTriagemDrawerOpen(false),
+          });
+        }}
+        onRequestAdjustments={() => {
+          if (!selectedProposal) return;
+          const isInTriage = selectedProposal.status?.toUpperCase() === 'IN_TRIAGE';
+          statusMutation.mutate(
+            { id: selectedProposal.id, status: isInTriage ? 'PENDING_ADJUSTMENTS' : 'IN_TRIAGE' },
+            { onSuccess: () => setIsTriagemDrawerOpen(false) },
+          );
+        }}
+        onReject={(reason) => {
+          if (!selectedProposal) return;
+          statusMutation.mutate({ id: selectedProposal.id, status: 'COMMERCIAL_PROPOSAL_REJECTED' }, {
+            onSuccess: () => {
+              notificationService.sendEmail(
+                selectedProposal.enterpriseEmail || 'contato@empresa.com',
+                `Proposta reprovada — ${selectedProposal.enterpriseName}`,
+                `Sua proposta foi reprovada: ${reason}`,
+              );
+              setIsTriagemDrawerOpen(false);
+            },
+          });
+        }}
       />
 
       <Modal

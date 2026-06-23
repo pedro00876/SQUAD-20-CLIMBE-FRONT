@@ -1,10 +1,13 @@
-import { Building2, Plus, Mail, User, MapPin, Loader2, Pencil } from 'lucide-react';
+import { Building2, Plus, Mail, User, MapPin, Loader2, ArrowRight, AlertTriangle, Pencil } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { enterpriseService, type CreateEnterpriseRequest, type Enterprise } from '@/services/enterprise.service';
-import { useState } from 'react';
+import { proposalService } from '@/services/proposal.service';
+import { useState, useMemo } from 'react';
 import { EmpresaModal } from '@/features/empresas/components';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { StageBadge } from '@/components/ui/StageBadge';
+import { deriveStage } from '@/features/pipeline/utils/deriveStage';
 
 const initialEnterpriseForm: CreateEnterpriseRequest = {
   legalName: '',
@@ -25,6 +28,13 @@ const initialEnterpriseForm: CreateEnterpriseRequest = {
   },
 };
 
+// Derive simplified stage from proposal status only (no contract/docs needed at list level)
+function getEnterpriseStageInfo(proposal: { status?: string } | null) {
+  const { stage, rejected } = deriveStage(proposal, null, [], [], []);
+  const isAlert = rejected || proposal?.status?.toUpperCase() === 'COMMERCIAL_PROPOSAL_REJECTED';
+  return { stage, rejected, isAlert };
+}
+
 export function EmpresasPage() {
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -36,6 +46,26 @@ export function EmpresasPage() {
     queryKey: ['enterprises'],
     queryFn: () => enterpriseService.list(0, 100),
   });
+
+  // Fetch all proposals to derive stage per empresa without N+1
+  const { data: proposalsPage } = useQuery({
+    queryKey: ['proposals-all-for-list'],
+    queryFn: () => proposalService.list(0, 500),
+  });
+
+  // Map enterpriseId → latest proposal (by id desc)
+  const proposalByEnterprise = useMemo(() => {
+    const proposals: { enterpriseId: number; status?: string }[] =
+      proposalsPage?.content ?? [];
+    const map = new Map<number, { status?: string }>();
+    for (const p of proposals) {
+      const existing = map.get(p.enterpriseId);
+      if (!existing || (p as any).id > (existing as any).id) {
+        map.set(p.enterpriseId, p);
+      }
+    }
+    return map;
+  }, [proposalsPage]);
 
   const createMutation = useMutation({
     mutationFn: enterpriseService.create,
@@ -62,7 +92,6 @@ export function EmpresasPage() {
       updateMutation.mutate({ id: editingEnterprise.id, data: formData });
       return;
     }
-
     createMutation.mutate(formData);
   };
 
@@ -72,7 +101,8 @@ export function EmpresasPage() {
     setIsModalOpen(true);
   };
 
-  const openEditModal = (enterprise: Enterprise) => {
+  const openEditModal = (enterprise: Enterprise, e: React.MouseEvent) => {
+    e.stopPropagation();
     setEditingEnterprise(enterprise);
     setFormData({
       legalName: enterprise.legalName || '',
@@ -101,6 +131,8 @@ export function EmpresasPage() {
     setFormData(initialEnterpriseForm);
   };
 
+  const enterprises: Enterprise[] = enterprisesPage?.content || [];
+
   return (
     <div className="space-y-8 pb-12">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
@@ -111,7 +143,7 @@ export function EmpresasPage() {
           </div>
           <h1 className="text-4xl font-black italic tracking-tighter text-climbe-secondary">Empresas</h1>
           <p className="max-w-2xl font-light text-gray-400">
-            Visualize e gerencie todas as empresas parceiras e clientes cadastrados no sistema.
+            Acompanhe o progresso de cada empresa no fluxo de onboarding.
           </p>
         </div>
 
@@ -128,66 +160,103 @@ export function EmpresasPage() {
         <div className="flex h-[50vh] items-center justify-center">
           <Loader2 className="h-12 w-12 animate-spin text-climbe-primary" />
         </div>
+      ) : enterprises.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-24 text-center">
+          <Building2 size={48} className="mb-4 text-gray-200" />
+          <h3 className="text-lg font-bold text-gray-400">Nenhuma empresa cadastrada</h3>
+          <p className="mt-1 text-sm text-gray-300">Cadastre a primeira empresa para iniciar o fluxo.</p>
+          <Button
+            onClick={openCreateModal}
+            className="mt-6 rounded-2xl bg-climbe-primary px-6 py-3 font-black italic text-climbe-secondary"
+          >
+            <Plus size={16} className="mr-2" />
+            Cadastrar empresa
+          </Button>
+        </div>
       ) : (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {(enterprisesPage?.content || []).map((enterprise: Enterprise) => (
-            <div
-              key={enterprise.id}
-              onClick={() => navigate(`/empresas/${enterprise.id}`)}
-              className="group relative cursor-pointer overflow-hidden rounded-[32px] border border-gray-100 bg-white p-8 shadow-sm transition-all hover:shadow-xl"
-            >
-              <div className="absolute right-0 top-0 -mr-16 -mt-16 h-32 w-32 rounded-full bg-climbe-primary/5 transition-transform duration-500 group-hover:scale-150" />
+          {enterprises.map((enterprise) => {
+            const proposal = proposalByEnterprise.get(enterprise.id) ?? null;
+            const { stage, rejected, isAlert } = getEnterpriseStageInfo(proposal);
 
-              <div className="relative z-10 mb-8 flex items-center gap-4">
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-climbe-secondary text-xl font-black italic text-white shadow-lg">
-                  {enterprise.tradeName?.charAt(0) || enterprise.legalName.charAt(0)}
+            return (
+              <div
+                key={enterprise.id}
+                onClick={() => navigate(`/empresas/${enterprise.id}`)}
+                className={`group relative cursor-pointer overflow-hidden rounded-[32px] border bg-white p-8 shadow-sm transition-all hover:shadow-xl ${
+                  isAlert
+                    ? 'border-red-200 ring-1 ring-red-100'
+                    : 'border-gray-100 hover:border-climbe-primary/20'
+                }`}
+              >
+                <div className="absolute right-0 top-0 -mr-16 -mt-16 h-32 w-32 rounded-full bg-climbe-primary/5 transition-transform duration-500 group-hover:scale-150" />
+
+                {/* Alert indicator */}
+                {isAlert && (
+                  <div className="absolute right-4 top-4 flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-red-500 border border-red-200">
+                    <AlertTriangle size={10} />
+                    Atenção
+                  </div>
+                )}
+
+                <div className="relative z-10 mb-6 flex items-center gap-4">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-climbe-secondary text-xl font-black italic text-white shadow-lg">
+                    {enterprise.tradeName?.charAt(0) || enterprise.legalName.charAt(0)}
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="max-w-[180px] truncate text-lg font-bold italic leading-tight text-climbe-secondary">
+                      {enterprise.tradeName || enterprise.legalName}
+                    </h4>
+                    <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-climbe-primary">
+                      CNPJ: {enterprise.cnpj}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="max-w-[180px] truncate text-lg font-bold italic leading-tight text-climbe-secondary">
-                    {enterprise.tradeName || enterprise.legalName}
-                  </h4>
-                  <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-climbe-primary">
-                    CNPJ: {enterprise.cnpj}
-                  </p>
+
+                {/* Stage badge */}
+                <div className="relative z-10 mb-5">
+                  <StageBadge stage={stage} rejected={rejected} size="sm" />
+                </div>
+
+                <div className="relative z-10 space-y-3">
+                  <div className="flex items-center gap-3 text-gray-400">
+                    <Mail size={14} className="text-climbe-primary shrink-0" />
+                    <span className="truncate text-xs font-medium">{enterprise.email}</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-gray-400">
+                    <User size={14} className="text-climbe-primary shrink-0" />
+                    <span className="text-xs font-medium">{enterprise.representativeName || 'N/A'}</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-gray-400">
+                    <MapPin size={14} className="text-climbe-primary shrink-0" />
+                    <span className="text-xs font-medium">
+                      {enterprise.address?.city || 'Local não informado'} - {enterprise.address?.state || '--'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="relative z-10 mt-6 flex items-center justify-between border-t border-gray-50 pt-5">
+                  <button
+                    type="button"
+                    onClick={(e) => openEditModal(enterprise, e)}
+                    className="inline-flex items-center gap-1 text-[10px] font-bold text-gray-400 hover:text-climbe-primary transition-colors"
+                    title="Editar dados da empresa"
+                  >
+                    <Pencil size={11} />
+                    Editar dados
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); navigate(`/empresas/${enterprise.id}`); }}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-climbe-primary/10 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-climbe-primary transition-all hover:bg-climbe-primary hover:text-climbe-secondary"
+                  >
+                    Ver Fluxo
+                    <ArrowRight size={12} />
+                  </button>
                 </div>
               </div>
-
-              <div className="relative z-10 space-y-4">
-                <div className="flex items-center gap-3 text-gray-400">
-                  <Mail size={14} className="text-climbe-primary" />
-                  <span className="truncate text-xs font-medium">{enterprise.email}</span>
-                </div>
-                <div className="flex items-center gap-3 text-gray-400">
-                  <User size={14} className="text-climbe-primary" />
-                  <span className="text-xs font-medium">{enterprise.representativeName || 'N/A'}</span>
-                </div>
-                <div className="flex items-center gap-3 text-gray-400">
-                  <MapPin size={14} className="text-climbe-primary" />
-                  <span className="text-xs font-medium">
-                    {enterprise.address?.city || 'Local nao informado'} - {enterprise.address?.state || '--'}
-                  </span>
-                </div>
-              </div>
-
-              <div className="relative z-10 mt-8 flex items-center justify-between border-t border-gray-50 pt-6">
-                <div className="flex flex-col">
-                  <span className="text-[8px] font-black uppercase tracking-widest text-gray-300">Contratos</span>
-                  <span className="font-bold text-climbe-secondary">0 Ativos</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openEditModal(enterprise);
-                  }}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-climbe-primary/10 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-climbe-primary transition-all hover:bg-climbe-primary hover:text-climbe-secondary"
-                >
-                  <Pencil size={12} />
-                  Editar
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -200,7 +269,6 @@ export function EmpresasPage() {
         isSubmitting={createMutation.isPending || updateMutation.isPending}
         mode={editingEnterprise ? 'edit' : 'create'}
       />
-
     </div>
   );
 }

@@ -36,6 +36,11 @@ export const reportService = {
     return response.data;
   },
 
+  create: async (data: CreateReportRequest & { pdfUrl?: string; sentAt?: string }): Promise<Report> => {
+    const response = await api.post<Report>('/api/reports', data);
+    return response.data;
+  },
+
   // TODO(back): endpoint POST /api/reports/upload (multipart) pendente de implementação
   upload: async (data: CreateReportRequest, file: File): Promise<Report> => {
     const formData = new FormData();

@@ -1,23 +1,10 @@
 import { NavLink } from 'react-router-dom';
-import {
-  LayoutDashboard,
-  Building2,
-  Users,
-  FileText,
-  Files,
-  Calendar,
-  CalendarDays,
-  BarChart3,
-  Bell,
-  ChevronRight,
-  ChevronLeft,
-  ScrollText,
-  X
-} from 'lucide-react';
+import { ChevronRight, ChevronLeft, X } from 'lucide-react';
 import { routes } from '@/config/routes';
 import { ASSETS } from '@/config/assets';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { hasAnyLogicalRole, LogicalRole } from '@/config/roles';
+import { hasAnyLogicalRole } from '@/config/roles';
+import { NAV_ITEMS } from '@/config/navigation';
 
 const LOGO_BRANCA = ASSETS.logos.light;
 
@@ -32,20 +19,7 @@ export function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }: Side
   const { user } = useAuthContext();
   const userRole = user?.role;
 
-  const menuItems = [
-    { path: routes.dashboard, label: 'Dashboard', icon: LayoutDashboard, roles: ['ADMIN', 'SENIOR', 'ANALISTA', 'COMPLIANCE', 'APROVADOR', 'EMPRESA'] as LogicalRole[] },
-    { path: routes.agenda, label: 'Agenda', icon: CalendarDays, roles: ['ADMIN', 'SENIOR', 'ANALISTA'] as LogicalRole[] },
-    { path: routes.empresas, label: 'Empresas', icon: Building2, roles: ['ADMIN', 'SENIOR', 'ANALISTA', 'COMPLIANCE', 'APROVADOR', 'EMPRESA'] as LogicalRole[] },
-    { path: routes.usuarios, label: 'Usuários', icon: Users, roles: ['ADMIN'] as LogicalRole[] },
-    { path: routes.propostas, label: 'Propostas', icon: FileText, roles: ['ADMIN', 'SENIOR', 'APROVADOR', 'ANALISTA'] as LogicalRole[] },
-    { path: routes.documentos, label: 'Documentos', icon: Files, roles: ['ADMIN', 'SENIOR', 'ANALISTA', 'EMPRESA'] as LogicalRole[] },
-    { path: routes.reunioes, label: 'Reuniões', icon: Calendar, roles: ['ADMIN', 'SENIOR', 'ANALISTA'] as LogicalRole[] },
-    { path: routes.relatorios, label: 'Relatórios', icon: BarChart3, roles: ['ADMIN', 'SENIOR', 'ANALISTA'] as LogicalRole[] },
-    { path: routes.notificacoes, label: 'Notificações', icon: Bell, roles: ['ADMIN', 'SENIOR', 'ANALISTA', 'COMPLIANCE', 'APROVADOR', 'EMPRESA'] as LogicalRole[] },
-    { path: routes.contratos, label: 'Contratos', icon: ScrollText, roles: ['ADMIN', 'COMPLIANCE', 'SENIOR', 'APROVADOR'] as LogicalRole[] },
-  ];
-
-  const filteredMenuItems = menuItems.filter(item => hasAnyLogicalRole(userRole, item.roles));
+  const filteredMenuItems = NAV_ITEMS.filter(item => hasAnyLogicalRole(userRole, item.roles));
 
   return (
     <>
@@ -138,9 +112,18 @@ export function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }: Side
           ))}
         </nav>
 
-
+        {/* Documentos link — context note at bottom for roles that had it */}
+        {hasAnyLogicalRole(userRole, ['ADMIN', 'SENIOR', 'ANALISTA', 'EMPRESA']) && !isCollapsed && (
+          <div className="px-4 pb-4">
+            <NavLink
+              to={routes.documentos}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-gray-500 hover:text-gray-300 hover:bg-climbe-support/15 transition-colors text-xs"
+            >
+              <span className="opacity-60">Documentos avulsos</span>
+            </NavLink>
+          </div>
+        )}
       </aside>
     </>
   );
 }
-

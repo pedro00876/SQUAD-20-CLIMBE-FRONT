@@ -1,10 +1,13 @@
+import { useState } from 'react';
 import type { Dispatch, FormEvent, SetStateAction } from 'react';
+import { Loader2, Search } from 'lucide-react';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { CreateEnterpriseRequest } from '@/services/enterprise.service';
-import { maskCPF, maskPhone } from '@/utils/masks';
+import { cepService, CepNotFoundError } from '@/services/cep.service';
+import { maskCPF, maskPhone, maskCEP, unmask } from '@/utils/masks';
 
 const maskCNPJ = (value: string) =>
   value
@@ -14,12 +17,6 @@ const maskCNPJ = (value: string) =>
     .replace(/\.(\d{3})(\d)/, '.$1/$2')
     .replace(/(\d{4})(\d)/, '$1-$2')
     .replace(/(-\d{2})\d+?$/, '$1');
-
-const maskCEP = (value: string) =>
-  value
-    .replace(/\D/g, '')
-    .replace(/(\d{5})(\d)/, '$1-$2')
-    .replace(/(-\d{3})\d+?$/, '$1');
 
 interface EmpresaModalProps {
   isOpen: boolean;
@@ -40,6 +37,9 @@ export function EmpresaModal({
   isSubmitting,
   mode = 'create',
 }: EmpresaModalProps) {
+  const [cepLoading, setCepLoading] = useState(false);
+  const [cepError, setCepError] = useState('');
+
   const updateAddress = (field: keyof NonNullable<CreateEnterpriseRequest['address']>, value: string) => {
     setFormData((current) => ({
       ...current,
@@ -48,6 +48,55 @@ export function EmpresaModal({
         [field]: value,
       },
     }));
+  };
+
+  const fillAddressFromCep = async (rawCep: string) => {
+    const digits = unmask(rawCep);
+    if (digits.length !== 8) return;
+
+    setCepLoading(true);
+    setCepError('');
+
+    try {
+      const address = await cepService.lookup(digits);
+      setFormData((current) => ({
+        ...current,
+        address: {
+          ...current.address,
+          zipCode: address.zipCode,
+          street: address.street,
+          neighborhood: address.neighborhood,
+          city: address.city,
+          state: address.state,
+          number: current.address?.number ?? '',
+        },
+      }));
+    } catch (err) {
+      if (err instanceof CepNotFoundError) {
+        setCepError('CEP não encontrado. Verifique o número digitado.');
+      } else {
+        setCepError(err instanceof Error ? err.message : 'Erro ao buscar CEP.');
+      }
+    } finally {
+      setCepLoading(false);
+    }
+  };
+
+  const handleCepChange = (value: string) => {
+    const masked = maskCEP(value);
+    updateAddress('zipCode', masked);
+    setCepError('');
+
+    if (unmask(masked).length === 8) {
+      void fillAddressFromCep(masked);
+    }
+  };
+
+  const handleCepBlur = () => {
+    const zipCode = formData.address?.zipCode ?? '';
+    if (unmask(zipCode).length === 8 && !cepLoading) {
+      void fillAddressFromCep(zipCode);
+    }
   };
 
   return (
@@ -127,7 +176,51 @@ export function EmpresaModal({
 
           <div className="border-t border-white/20 pt-4">
             <h3 className="mb-4 text-xs font-black uppercase tracking-widest text-climbe-primary">Endereço</h3>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+
+            {/* CEP first — auto-fill on lookup */}
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">
+                CEP
+              </Label>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Input
+                    value={formData.address?.zipCode || ''}
+                    onChange={(e) => handleCepChange(e.target.value)}
+                    onBlur={handleCepBlur}
+                    placeholder="00000-000"
+                    maxLength={9}
+                    className="bg-white pr-10 text-slate-900 placeholder:text-slate-400"
+                  />
+                  {cepLoading && (
+                    <Loader2
+                      size={16}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-climbe-primary"
+                    />
+                  )}
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={cepLoading || unmask(formData.address?.zipCode ?? '').length !== 8}
+                  onClick={() => void fillAddressFromCep(formData.address?.zipCode ?? '')}
+                  className="shrink-0 border-white/20 bg-white/10 text-white hover:bg-white/20 hover:text-white"
+                  title="Buscar endereço pelo CEP"
+                >
+                  <Search size={16} />
+                </Button>
+              </div>
+              {cepError && (
+                <p className="text-[11px] font-medium text-red-300">{cepError}</p>
+              )}
+              {!cepError && !cepLoading && (
+                <p className="text-[10px] text-slate-400">
+                  Digite o CEP para preencher logradouro, bairro, cidade e UF automaticamente.
+                </p>
+              )}
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
               <div className="space-y-2 md:col-span-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">Logradouro</Label>
                 <Input
@@ -161,18 +254,6 @@ export function EmpresaModal({
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">CEP</Label>
-                <Input
-                  value={formData.address?.zipCode || ''}
-                  onChange={(e) => updateAddress('zipCode', maskCEP(e.target.value))}
-                  placeholder="00000-000"
-                  className="bg-white text-slate-900 placeholder:text-slate-400"
-                />
-              </div>
-            </div>
-
-            <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
-              <div className="space-y-2 md:col-span-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">Cidade</Label>
                 <Input
                   value={formData.address?.city || ''}
@@ -181,13 +262,16 @@ export function EmpresaModal({
                   className="bg-white text-slate-900 placeholder:text-slate-400"
                 />
               </div>
+            </div>
 
+            <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">UF</Label>
                 <Input
                   value={formData.address?.state || ''}
                   onChange={(e) => updateAddress('state', e.target.value.toUpperCase().slice(0, 2))}
                   placeholder="SE"
+                  maxLength={2}
                   className="bg-white text-slate-900 placeholder:text-slate-400"
                 />
               </div>

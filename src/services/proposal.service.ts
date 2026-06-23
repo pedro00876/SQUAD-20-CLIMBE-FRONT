@@ -22,6 +22,16 @@ export const proposalService = {
     const response = await api.get(`/api/proposals?page=${page}&size=${size}`);
     return response.data;
   },
+
+  listByEnterprise: async (enterpriseId: number): Promise<Proposal[]> => {
+    const response = await api.get<Proposal[]>(`/api/proposals/enterprise/${enterpriseId}`);
+    return response.data;
+  },
+
+  listByUser: async (userId: number): Promise<Proposal[]> => {
+    const response = await api.get<Proposal[]>(`/api/proposals/user/${userId}`);
+    return response.data;
+  },
   
   getById: async (id: number) => {
     const response = await api.get(`/api/proposals/${id}`);

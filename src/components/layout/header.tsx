@@ -2,13 +2,15 @@ import { Search, Bell, LogOut, ChevronDown, Menu, Check, Trash2, Clock } from 'l
 import { useAuthContext } from '@/contexts/AuthContext';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { notificationService, type Notification } from '@/services/notification.service';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Link } from 'react-router-dom';
 import { routes } from '@/config/routes';
+import { AnimatePresence } from 'framer-motion';
+import { GlobalSearchModal } from '@/components/ui/GlobalSearch';
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -19,7 +21,20 @@ interface HeaderProps {
 export function Header({ onMenuClick, isCollapsed, onToggleCollapse }: HeaderProps) {
   const { user, logout } = useAuthContext();
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const queryClient = useQueryClient();
+
+  // Ctrl+K / ⌘+K shortcut
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsSearchOpen(o => !o);
+      }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, []);
 
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifications', user?.id],
@@ -85,14 +100,19 @@ export function Header({ onMenuClick, isCollapsed, onToggleCollapse }: HeaderPro
       </button>
 
       {/* Search Area */}
-      <div className="hidden sm:flex flex-1 max-w-md relative group">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-climbe-primary transition-colors" size={18} />
-        <input 
-          type="text" 
-          placeholder="Pesquisar propostas..."
-          className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-transparent rounded-2xl text-sm font-light focus:bg-white focus:ring-2 focus:ring-climbe-primary/10 transition-all outline-none border focus:border-climbe-primary/20 whitespace-nowrap overflow-hidden text-ellipsis"
-        />
-      </div>
+      <button
+        onClick={() => setIsSearchOpen(true)}
+        className="hidden sm:flex flex-1 max-w-md items-center gap-3 px-4 py-3 bg-gray-50 rounded-2xl text-sm text-gray-400 hover:bg-gray-100 transition-colors group border border-transparent hover:border-gray-200"
+      >
+        <Search size={16} className="shrink-0 text-gray-400 group-hover:text-climbe-primary transition-colors" />
+        <span className="flex-1 text-left font-light">Buscar empresa, proposta ou contrato...</span>
+        <span className="text-[10px] font-bold bg-gray-200 text-gray-400 px-1.5 py-0.5 rounded-md">Ctrl K</span>
+      </button>
+
+      {/* GlobalSearch modal */}
+      <AnimatePresence>
+        {isSearchOpen && <GlobalSearchModal onClose={() => setIsSearchOpen(false)} />}
+      </AnimatePresence>
 
       {/* Actions & Profile */}
       <div className="flex items-center gap-8">

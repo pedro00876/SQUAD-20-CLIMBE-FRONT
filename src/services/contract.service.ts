@@ -12,6 +12,11 @@ export const contractService = {
     return res.data;
   },
 
+  listByProposal: async (proposalId: number): Promise<Contract[]> => {
+    const res = await api.get<Contract[]>(`/api/contracts/proposal/${proposalId}`);
+    return res.data;
+  },
+
   getById: async (id: number): Promise<Contract> => {
     const res = await api.get<Contract>(`/api/contracts/${id}`);
     return res.data;
@@ -29,5 +34,14 @@ export const contractService = {
 
   delete: async (id: number): Promise<void> => {
     await api.delete(`/api/contracts/${id}`);
+  },
+
+  /** Aloca equipe e dispara criação do ambiente no Google Drive/Sheets */
+  allocateTeam: async (id: number, userIds: number[], roleInTeam: string): Promise<void> => {
+    await api.post(
+      `/api/contracts/${id}/team`,
+      null,
+      { params: { userIds: userIds.join(','), roleInTeam } },
+    );
   },
 };
