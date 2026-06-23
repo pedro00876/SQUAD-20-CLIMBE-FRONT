@@ -77,6 +77,7 @@ function proposalStatusBadgeStatus(proposalStatus: string): string {
     COMMERCIAL_PROPOSAL_APPROVED: 'APPROVED',
     COMMERCIAL_PROPOSAL_REJECTED: 'REJECTED',
     READY_FOR_NEXT_STAGE: 'IN_PROGRESS',
+    COMPLETED: 'APPROVED',
   };
   return map[proposalStatus?.toUpperCase()] ?? 'PENDING';
 }
@@ -89,8 +90,9 @@ const PROPOSAL_STATUS_LABELS: Record<string, string> = {
   COMMERCIAL_PROPOSAL: 'Proposta Comercial',
   COMMERCIAL_PROPOSAL_APPROVED: 'Proposta Aprovada',
   COMMERCIAL_PROPOSAL_REJECTED: 'Proposta Reprovada',
-  READY_FOR_NEXT_STAGE: 'Avançando',
-};
+    READY_FOR_NEXT_STAGE: 'Avançando',
+    COMPLETED: 'Concluída',
+  };
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -396,6 +398,7 @@ export function EmpresaDetalhePage() {
               <StageAgendamento
                 empresa={empresa}
                 proposal={latestProposal}
+                meetings={meetings as any[]}
                 userRole={userRole}
                 canEdit={!selectedStage && canPerformStageAction(userRole, 'APROVACAO_FINAL')}
                 onConcluir={refetchAll}

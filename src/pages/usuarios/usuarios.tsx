@@ -34,7 +34,11 @@ function isUserPending(user: User) {
 
 function isUserActive(user: User) {
   const status = user.status?.toUpperCase();
-  return (user as any).active === true || status === 'ATIVO' || status === 'ACTIVE';
+  return user.active === true || status === 'ATIVO' || status === 'ACTIVE';
+}
+
+function needsApproval(user: User) {
+  return !isUserActive(user);
 }
 
 // Inline approval row for pending users
@@ -157,14 +161,14 @@ export function UsuariosPage() {
     const matchesStatus =
       statusFilter === 'TODOS' ||
       (statusFilter === 'ATIVOS' && isUserActive(user)) ||
-      (statusFilter === 'PENDENTES' && isUserPending(user));
+      (statusFilter === 'PENDENTES' && needsApproval(user));
     return matchesSearch && matchesStatus;
   });
 
   const filterChips: FilterChip<StatusFilter>[] = [
     { value: 'TODOS',     label: 'Todos',    count: allUsers.length },
     { value: 'ATIVOS',    label: 'Ativos',   count: allUsers.filter(isUserActive).length },
-    { value: 'PENDENTES', label: 'Pendentes',count: allUsers.filter(isUserPending).length + pendingUsers.length },
+    { value: 'PENDENTES', label: 'Pendentes', count: allUsers.filter(needsApproval).length },
   ];
 
   if (isLoading) {
@@ -207,7 +211,9 @@ export function UsuariosPage() {
               Aguardando Aprovação ({pendingUsers.length})
             </span>
           </div>
-          {pendingUsers.map(user => (
+          {pendingUsers
+        .filter((user) => !allUsers.some((u) => u.id === user.id))
+        .map((user) => (
             <PendingUserRow
               key={user.id}
               user={user}
@@ -234,14 +240,27 @@ export function UsuariosPage() {
         <div className="p-6">
           <div className="space-y-2">
             {filtered.map((user: User) => {
-              const pending = isUserPending(user);
+              const approvable = needsApproval(user);
+
+              if (approvable) {
+                return (
+                  <PendingUserRow
+                    key={user.id}
+                    user={user}
+                    onApprove={(id, role) => approveMutation.mutate({ id, role })}
+                    onReject={(id) => rejectMutation.mutate(id)}
+                    isLoading={approveMutation.isPending || rejectMutation.isPending}
+                  />
+                );
+              }
+
               return (
                 <div
                   key={user.id}
                   className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 hover:bg-gray-50 rounded-2xl transition-colors border border-transparent hover:border-gray-100"
                 >
                   <div className="flex items-center gap-4">
-                    <div className={`w-11 h-11 rounded-full flex items-center justify-center font-black text-sm shrink-0 ${pending ? 'bg-amber-100 text-amber-700' : 'bg-climbe-primary/10 text-climbe-secondary'}`}>
+                    <div className="w-11 h-11 rounded-full flex items-center justify-center font-black text-sm shrink-0 bg-climbe-primary/10 text-climbe-secondary">
                       {user.fullName.substring(0, 2).toUpperCase()}
                     </div>
                     <div>
@@ -254,32 +273,10 @@ export function UsuariosPage() {
                   </div>
 
                   <div className="flex items-center gap-3 shrink-0">
-                    {isUserActive(user) ? (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-600 border border-green-200 rounded-full text-[10px] font-black uppercase tracking-wider">
-                        <CheckCircle size={11} />
-                        Ativo
-                      </span>
-                    ) : pending ? (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-600 border border-amber-200 rounded-full text-[10px] font-black uppercase tracking-wider">
-                        <Clock size={11} />
-                        Pendente
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 text-gray-400 border border-gray-200 rounded-full text-[10px] font-black uppercase tracking-wider">
-                        Inativo
-                      </span>
-                    )}
-
-                    {pending && (
-                      <Button
-                        size="sm"
-                        className="h-8 text-[10px] font-black"
-                        onClick={() => approveMutation.mutate({ id: user.id, role: user.role ?? '' })}
-                        disabled={approveMutation.isPending}
-                      >
-                        Aprovar
-                      </Button>
-                    )}
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-600 border border-green-200 rounded-full text-[10px] font-black uppercase tracking-wider">
+                      <CheckCircle size={11} />
+                      Ativo
+                    </span>
                   </div>
                 </div>
               );

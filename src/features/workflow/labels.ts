@@ -9,6 +9,7 @@ export const PROPOSAL_STATUS_LABELS: Record<ProposalStatus, string> = {
   COMMERCIAL_PROPOSAL_APPROVED: 'Proposta aprovada',
   COMMERCIAL_PROPOSAL_REJECTED: 'Proposta reprovada',
   READY_FOR_NEXT_STAGE: 'Próxima etapa',
+  COMPLETED: 'Concluída',
 };
 
 export function getProposalStatusLabel(status?: string | null): string {

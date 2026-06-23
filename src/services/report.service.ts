@@ -58,4 +58,9 @@ export const reportService = {
   delete: async (id: number): Promise<void> => {
     await api.delete(`/api/reports/${id}`);
   },
+
+  getViewUrl: async (id: number): Promise<string> => {
+    const response = await api.get<string>(`/api/reports/${id}/view`);
+    return response.data;
+  },
 };

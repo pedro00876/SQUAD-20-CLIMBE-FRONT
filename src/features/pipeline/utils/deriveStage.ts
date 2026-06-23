@@ -15,6 +15,15 @@ export function hasPrimeiraDataMeeting(meetings: { title?: string }[]): boolean 
   return meetings.some((m) => (m.title ?? '').toLowerCase().includes('primeira data'));
 }
 
+export function hasFinalPresentationMeeting(meetings: { title?: string }[]): boolean {
+  return meetings.some((m) => (m.title ?? '').toLowerCase().includes('apresentação final'));
+}
+
+export function isTerminalProposalStatus(status?: string | null): boolean {
+  const s = (status ?? '').toUpperCase();
+  return s === 'COMPLETED' || s === 'HOMOLOGATED' || s === 'CONCLUIDO';
+}
+
 /**
  * Derives the current pipeline stage from proposal + contract + doc state.
  */
@@ -28,6 +37,10 @@ export function deriveStage(
   if (!proposal) return { stage: 'CADASTRO', rejected: false };
 
   const status = (proposal.status ?? '').toUpperCase();
+
+  if (isTerminalProposalStatus(status)) {
+    return { stage: 'CONCLUIDO', rejected: false };
+  }
 
   if (['RECEIVED', 'IN_TRIAGE', 'PENDING_ADJUSTMENTS'].includes(status)) {
     return { stage: 'REUNIAO', rejected: false };

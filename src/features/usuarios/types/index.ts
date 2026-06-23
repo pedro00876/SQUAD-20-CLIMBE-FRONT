@@ -9,6 +9,7 @@ export interface User {
   phone: string | null;
   status?: string;
   role: string | null;
+  active?: boolean;
 }
 
 export interface UserPatchRequest {

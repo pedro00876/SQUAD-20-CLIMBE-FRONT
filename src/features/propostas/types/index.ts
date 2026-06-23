@@ -8,7 +8,8 @@ export type ProposalStatus =
   | 'COMMERCIAL_PROPOSAL'
   | 'COMMERCIAL_PROPOSAL_APPROVED'
   | 'COMMERCIAL_PROPOSAL_REJECTED'
-  | 'READY_FOR_NEXT_STAGE';
+  | 'READY_FOR_NEXT_STAGE'
+  | 'COMPLETED';
 
 export interface Proposal {
   id: number;

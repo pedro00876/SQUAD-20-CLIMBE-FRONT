@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Calendar, Clock, Video, CheckCircle2, XCircle, Award, Loader2, Sparkles, User, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,33 +6,47 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { meetingService } from '@/features/reunioes/services';
+import { proposalService } from '@/services/proposal.service';
 import { notificationService } from '@/services/notification.service';
 import { canPerformStageAction } from '@/config/roles';
+import { isTerminalProposalStatus, hasFinalPresentationMeeting } from '@/features/pipeline/utils/deriveStage';
 import { useNavigate } from 'react-router-dom';
 
 interface StageAgendamentoProps {
   empresa: any;
   proposal: any;
+  meetings?: { title?: string; date?: string; time?: string; location?: string }[];
   userRole: string;
   canEdit: boolean;
   onConcluir: () => void;
 }
 
-export function StageAgendamento({ empresa, proposal, userRole, canEdit, onConcluir }: StageAgendamentoProps) {
+export function StageAgendamento({
+  empresa,
+  proposal,
+  meetings = [],
+  userRole,
+  canEdit,
+  onConcluir,
+}: StageAgendamentoProps) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [dataReuniao, setDataReuniao] = useState('');
-  const [horaReuniao, setHoraReuniao] = useState('');
-  const [linkVideo, setLinkVideo] = useState('');
-  const [reuniaoAgendada, setReuniaoAgendada] = useState(false);
+
+  const existingFinalMeeting = useMemo(
+    () => meetings.find((m) => (m.title ?? '').toLowerCase().includes('apresentação final')),
+    [meetings],
+  );
+
+  const [dataReuniao, setDataReuniao] = useState(existingFinalMeeting?.date?.slice(0, 10) ?? '');
+  const [horaReuniao, setHoraReuniao] = useState(existingFinalMeeting?.time ?? '');
+  const [linkVideo, setLinkVideo] = useState(existingFinalMeeting?.location ?? '');
+  const [reuniaoAgendada, setReuniaoAgendada] = useState(hasFinalPresentationMeeting(meetings));
   const [error, setError] = useState('');
   const [showApproveConfirm, setShowApproveConfirm] = useState(false);
   const [showRejectConfirm, setShowRejectConfirm] = useState(false);
-  const [concluded, setConcluded] = useState(false);
 
+  const isCompleted = isTerminalProposalStatus(proposal?.status);
   const isCPOorP5 = canPerformStageAction(userRole, 'APROVACAO_FINAL');
-
-  // ── Schedule final meeting ─────────────────────────────────────────────────
 
   const agendarMutation = useMutation({
     mutationFn: async () => {
@@ -55,32 +69,39 @@ export function StageAgendamento({ empresa, proposal, userRole, canEdit, onConcl
         );
       }
     },
-    onSuccess: () => setReuniaoAgendada(true),
+    onSuccess: () => {
+      setReuniaoAgendada(true);
+      queryClient.invalidateQueries({ queryKey: ['meetings-enterprise', empresa.id] });
+      onConcluir();
+    },
     onError: (err: any) => setError(err?.response?.data?.message || 'Erro ao agendar reunião.'),
   });
 
-  // ── Final approval ─────────────────────────────────────────────────────────
-
   const aprovaMutation = useMutation({
     mutationFn: async () => {
-      await notificationService.sendEmail(
-        empresa.email,
-        `Processo concluído — ${empresa.tradeName || empresa.legalName}`,
-        `O processo de análise foi concluído com sucesso. Bem-vindo(a) à Climbe!`,
-      );
+      if (!proposal?.id) throw new Error('Proposta não encontrada.');
+      await proposalService.updateStatus(proposal.id, 'COMPLETED');
+      if (empresa.email) {
+        await notificationService.sendEmail(
+          empresa.email,
+          `Processo concluído — ${empresa.tradeName || empresa.legalName}`,
+          `O processo de análise foi concluído com sucesso. Bem-vindo(a) à Climbe!`,
+        );
+      }
     },
     onSuccess: () => {
       setShowApproveConfirm(false);
-      setConcluded(true);
       queryClient.invalidateQueries({ queryKey: ['proposals-enterprise', empresa.id] });
+      queryClient.invalidateQueries({ queryKey: ['proposals-all-for-list'] });
+      queryClient.invalidateQueries({ queryKey: ['proposals'] });
+      queryClient.invalidateQueries({ queryKey: ['enterprises'] });
+      onConcluir();
     },
     onError: (err: any) => {
       setError(err?.response?.data?.message || 'Erro ao concluir processo.');
       setShowApproveConfirm(false);
     },
   });
-
-  // ── Not approved → return to next month doc verification ──────────────────
 
   const reprovarMutation = useMutation({
     mutationFn: async () => {
@@ -104,8 +125,7 @@ export function StageAgendamento({ empresa, proposal, userRole, canEdit, onConcl
 
   const isBusy = agendarMutation.isPending || aprovaMutation.isPending || reprovarMutation.isPending;
 
-  // ── Inline CONCLUIDO screen ────────────────────────────────────────────────
-  if (concluded) {
+  if (isCompleted) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center space-y-6">
         <div className="relative">
@@ -144,11 +164,9 @@ export function StageAgendamento({ empresa, proposal, userRole, canEdit, onConcl
         <p className="font-medium mt-0.5">
           Etapa Final: Agende a reunião de apresentação com o contratante e registre a decisão de aprovação.
           Se aprovado (CPO / P5), o processo é encerrado com sucesso.
-          Se não aprovado, retorna para verificação documental do próximo mês.
         </p>
       </div>
 
-      {/* Process summary */}
       <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100 space-y-3">
         <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Resumo do Processo</span>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -170,7 +188,6 @@ export function StageAgendamento({ empresa, proposal, userRole, canEdit, onConcl
         </div>
       </div>
 
-      {/* Schedule meeting form */}
       {!reuniaoAgendada ? (
         <div className="space-y-6">
           <h3 className="font-bold italic text-climbe-secondary text-lg">Agendar Reunião de Apresentação</h3>
@@ -184,7 +201,7 @@ export function StageAgendamento({ empresa, proposal, userRole, canEdit, onConcl
                 type="date"
                 required
                 value={dataReuniao}
-                onChange={e => setDataReuniao(e.target.value)}
+                onChange={(e) => setDataReuniao(e.target.value)}
                 disabled={!canEdit || isBusy}
               />
             </div>
@@ -195,7 +212,7 @@ export function StageAgendamento({ empresa, proposal, userRole, canEdit, onConcl
               <Input
                 type="time"
                 value={horaReuniao}
-                onChange={e => setHoraReuniao(e.target.value)}
+                onChange={(e) => setHoraReuniao(e.target.value)}
                 disabled={!canEdit || isBusy}
               />
             </div>
@@ -209,7 +226,7 @@ export function StageAgendamento({ empresa, proposal, userRole, canEdit, onConcl
               type="url"
               placeholder="https://meet.google.com/xxx-xxxx-xxx"
               value={linkVideo}
-              onChange={e => setLinkVideo(e.target.value)}
+              onChange={(e) => setLinkVideo(e.target.value)}
               disabled={!canEdit || isBusy}
             />
           </div>
@@ -237,19 +254,18 @@ export function StageAgendamento({ empresa, proposal, userRole, canEdit, onConcl
         </div>
       ) : (
         <div className="space-y-6">
-          {/* Meeting scheduled confirmation */}
           <div className="flex flex-col items-center justify-center py-8 text-center bg-climbe-primary/10 rounded-3xl border border-climbe-primary/20">
             <div className="w-16 h-16 bg-climbe-primary rounded-full flex items-center justify-center mb-4 shadow-sm">
               <Award className="w-8 h-8 text-climbe-secondary" />
             </div>
             <h3 className="text-xl font-black italic text-climbe-secondary">Reunião Agendada</h3>
             <p className="text-climbe-secondary/80 mt-1 max-w-md mx-auto text-sm">
-              Reunião marcada para {new Date(dataReuniao + 'T00:00:00').toLocaleDateString('pt-BR')}
-              {horaReuniao && ` às ${horaReuniao}`}. Convite enviado aos participantes.
+              {dataReuniao
+                ? `Reunião marcada para ${new Date(dataReuniao + 'T00:00:00').toLocaleDateString('pt-BR')}${horaReuniao ? ` às ${horaReuniao}` : ''}.`
+                : 'Reunião de apresentação final registrada.'}
             </p>
           </div>
 
-          {/* Final decision */}
           {canEdit && (
             <div className="space-y-4">
               <h3 className="font-bold italic text-climbe-secondary text-lg">Decisão Final</h3>
@@ -286,13 +302,12 @@ export function StageAgendamento({ empresa, proposal, userRole, canEdit, onConcl
         </div>
       )}
 
-      {/* Approve confirm dialog */}
       <ConfirmDialog
         isOpen={showApproveConfirm}
         onClose={() => setShowApproveConfirm(false)}
         onConfirm={() => { setError(''); aprovaMutation.mutate(); }}
         title="Encerrar Processo com Aprovação Final?"
-        description="Esta ação concluirá o processo de homologação. A empresa será notificada e o processo será marcado como concluído."
+        description="Esta ação concluirá o processo de homologação. A proposta será marcada como concluída e a empresa será notificada."
         confirmLabel="Sim, aprovar e encerrar"
         cancelLabel="Cancelar"
         variant="warning"
@@ -317,7 +332,6 @@ export function StageAgendamento({ empresa, proposal, userRole, canEdit, onConcl
         </div>
       </ConfirmDialog>
 
-      {/* Reject confirm dialog */}
       <ConfirmDialog
         isOpen={showRejectConfirm}
         onClose={() => setShowRejectConfirm(false)}

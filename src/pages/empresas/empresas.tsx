@@ -7,7 +7,7 @@ import { EmpresaModal } from '@/features/empresas/components';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { StageBadge } from '@/components/ui/StageBadge';
-import { deriveStage } from '@/features/pipeline/utils/deriveStage';
+import { getEnterpriseListStage } from '@/features/pipeline/utils/getEnterpriseListStage';
 
 const initialEnterpriseForm: CreateEnterpriseRequest = {
   legalName: '',
@@ -28,9 +28,8 @@ const initialEnterpriseForm: CreateEnterpriseRequest = {
   },
 };
 
-// Derive simplified stage from proposal status only (no contract/docs needed at list level)
 function getEnterpriseStageInfo(proposal: { status?: string } | null) {
-  const { stage, rejected } = deriveStage(proposal, null, [], [], []);
+  const { stage, rejected } = getEnterpriseListStage(proposal);
   const isAlert = rejected || proposal?.status?.toUpperCase() === 'COMMERCIAL_PROPOSAL_REJECTED';
   return { stage, rejected, isAlert };
 }

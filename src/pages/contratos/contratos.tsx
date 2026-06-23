@@ -158,6 +158,8 @@ export function ContratosPage() {
   const [searchParams] = useSearchParams();
   const highlightProposalId = Number(searchParams.get('proposalId') || 0) || null;
   const [signSuccessMessage, setSignSuccessMessage] = useState('');
+  const [viewError, setViewError] = useState('');
+  const [viewLoadingId, setViewLoadingId] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedContract, setSelectedContract] =
     useState<EnrichedContract | null>(null);
@@ -306,97 +308,25 @@ export function ContratosPage() {
     return contract?.status?.toUpperCase() === 'DIGITALLY_SIGNED';
   };
 
-  const getContractHtml = (contract: EnrichedContract) => {
-    const companyName = contract.enterpriseName;
-    const startDate = contract.startDate
-      ? format(new Date(contract.startDate), 'dd/MM/yyyy', { locale: ptBR })
-      : '--';
-    const endDate = contract.endDate
-      ? format(new Date(contract.endDate), 'dd/MM/yyyy', { locale: ptBR })
-      : 'prazo indeterminado';
-    const status = getContractStatusLabel(contract.status ?? undefined);
-
-    return `
-      <!doctype html>
-      <html lang="pt-BR">
-        <head>
-          <meta charset="utf-8" />
-          <title>Contrato ${contract.id}</title>
-          <style>
-            body { font-family: Arial, sans-serif; color: #111827; margin: 48px; line-height: 1.6; }
-            header { border-bottom: 3px solid #79C6C0; margin-bottom: 32px; padding-bottom: 18px; }
-            h1 { font-size: 28px; margin: 0 0 8px; }
-            .meta { color: #6b7280; font-size: 13px; }
-            .box { border: 1px solid #e5e7eb; border-radius: 16px; padding: 20px; margin: 20px 0; }
-            .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-            .label { color: #6b7280; font-size: 11px; text-transform: uppercase; letter-spacing: .12em; font-weight: 700; }
-            .value { font-weight: 700; margin-top: 4px; }
-            .signature { margin-top: 72px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 48px; }
-            .line { border-top: 1px solid #111827; padding-top: 10px; text-align: center; font-size: 13px; }
-            @media print { body { margin: 32px; } button { display: none; } }
-          </style>
-        </head>
-        <body>
-          <header>
-            <h1>Contrato de Prestacao de Servicos</h1>
-            <div class="meta">Contrato #${contract.id} | Proposta #${contract.proposalId} | Status: ${status}</div>
-          </header>
-
-          <section class="box">
-            <div class="grid">
-              <div>
-                <div class="label">Contratante</div>
-                <div class="value">${companyName}</div>
-              </div>
-              <div>
-                <div class="label">Contratada</div>
-                <div class="value">Climbe Investimentos</div>
-              </div>
-              <div>
-                <div class="label">Inicio da vigencia</div>
-                <div class="value">${startDate}</div>
-              </div>
-              <div>
-                <div class="label">Termino</div>
-                <div class="value">${endDate}</div>
-              </div>
-            </div>
-          </section>
-
-          <section>
-            <p>
-              Pelo presente instrumento, as partes identificadas acima formalizam a contratacao dos servicos
-              vinculados a proposta comercial aprovada, observando as condicoes negociadas entre contratante
-              e contratada.
-            </p>
-            <p>
-              A assinatura digital registrada neste sistema representa a ciencia e o aceite das partes quanto
-              ao andamento do contrato para a proxima etapa operacional.
-            </p>
-          </section>
-
-          <section class="signature">
-            <div class="line">Climbe Investimentos</div>
-            <div class="line">${companyName}</div>
-          </section>
-        </body>
-      </html>
-    `;
-  };
-
-  const openContractDocument = (contract: EnrichedContract, print = false) => {
-    const popup = window.open('', '_blank', 'noopener,noreferrer');
-    if (!popup) return;
-
-    popup.document.open();
-    popup.document.write(getContractHtml(contract));
-    popup.document.close();
-
-    if (print) {
-      popup.onload = () => {
-        popup.focus();
-        popup.print();
-      };
+  const handleViewContract = async (contract: EnrichedContract, download = false) => {
+    setViewError('');
+    setViewLoadingId(contract.id);
+    try {
+      const url = await contractService.getViewUrl(contract.id);
+      if (download) {
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `contrato-${contract.id}.pdf`;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.click();
+      } else {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
+    } catch (err: any) {
+      setViewError(err?.response?.data?.message || 'Não foi possível abrir o contrato. Verifique se o PDF está disponível no sistema.');
+    } finally {
+      setViewLoadingId(null);
     }
   };
 
@@ -470,7 +400,7 @@ export function ContratosPage() {
           </button>
           <button
             type="button"
-            onClick={() => openContractDocument(contract, true)}
+            onClick={() => handleViewContract(contract, true)}
             className="text-[10px] font-black text-climbe-primary uppercase tracking-widest hover:underline"
           >
             Baixar PDF
@@ -841,27 +771,30 @@ export function ContratosPage() {
               </div>
 
               <div className="rounded-2xl border border-border/70 bg-card p-4 text-xs text-muted-foreground leading-relaxed">
-                Esta visualizacao gera uma minuta local com os dados do contrato
-                cadastrado. A assinatura confirma o aceite no sistema e altera o
-                status para <strong>DIGITALLY_SIGNED</strong>, liberando a
-                proposta para a proxima etapa do fluxo.
+                O PDF do contrato é carregado do armazenamento via API. A assinatura confirma o aceite no sistema e altera o
+                status para <strong>DIGITALLY_SIGNED</strong>, liberando a proposta para a próxima etapa do fluxo.
               </div>
+              {viewError && (
+                <p className="text-xs font-bold text-red-500">{viewError}</p>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => openContractDocument(selectedContract)}
+                disabled={viewLoadingId === selectedContract.id}
+                onClick={() => handleViewContract(selectedContract)}
                 className="font-black uppercase tracking-widest text-[10px]"
               >
                 <Eye size={16} className="mr-2" />
-                Visualizar
+                {viewLoadingId === selectedContract.id ? 'ABRINDO...' : 'Visualizar'}
               </Button>
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => openContractDocument(selectedContract, true)}
+                disabled={viewLoadingId === selectedContract.id}
+                onClick={() => handleViewContract(selectedContract, true)}
                 className="font-black uppercase tracking-widest text-[10px]"
               >
                 <Download size={16} className="mr-2" />
