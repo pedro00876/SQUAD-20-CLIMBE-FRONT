@@ -28,3 +28,14 @@ export interface UpdateContractRequest {
   endDate?: string;    // YYYY-MM-DD
   status?: ContractStatus;
 }
+
+export interface EnrichedContract extends Contract {
+  enterpriseId: number;
+  enterpriseName: string;
+}
+
+export interface ContractCompanyGroup {
+  enterpriseId: number;
+  enterpriseName: string;
+  contracts: EnrichedContract[];
+}

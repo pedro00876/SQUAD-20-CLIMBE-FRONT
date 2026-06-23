@@ -7,40 +7,232 @@ import {
   Eye,
   Download,
   PenLine,
+  Building2,
+  Search,
+  Folder,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notificationService } from '@/services/notification.service';
 import { contractService } from '@/services/contract.service';
-import type { Contract, CreateContractRequest } from '@/features/contracts/types';
-import { proposalService } from '@/services/proposal.service';
+import type {
+  Contract,
+  CreateContractRequest,
+  EnrichedContract,
+  ContractCompanyGroup,
+} from '@/features/contracts/types';
+import { proposalService, type Proposal } from '@/services/proposal.service';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
+type ExplorerView = 'root' | 'folder';
+
+const UNKNOWN_ENTERPRISE_NAME = 'Empresa não identificada';
+
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+  return debouncedValue;
+}
+
+async function fetchAllContracts(): Promise<Contract[]> {
+  const probe = await contractService.list(0, 1);
+  const total = probe.totalElements;
+  if (total === 0) return [];
+
+  const pageSize = Math.min(total, 500);
+  const first = await contractService.list(0, pageSize);
+  let all = [...first.content];
+
+  if (total > pageSize) {
+    let page = 1;
+    while (all.length < total) {
+      const next = await contractService.list(page, pageSize);
+      all = [...all, ...next.content];
+      page += 1;
+      if (next.content.length === 0) break;
+    }
+  }
+
+  return all;
+}
+
+function getContractStatusLabel(status?: string) {
+  switch ((status || '').toUpperCase()) {
+    case 'DIGITALLY_SIGNED':
+      return 'ASSINADO';
+    case 'PENDING_SIGNATURE':
+      return 'AGUARDANDO ASSINATURA';
+    default:
+      return status || 'ATIVO';
+  }
+}
+
+function enrichContract(
+  contract: Contract,
+  proposalById: Map<number, Proposal>,
+): EnrichedContract {
+  const proposal = proposalById.get(contract.proposalId);
+  return {
+    ...contract,
+    enterpriseId: proposal?.enterpriseId ?? 0,
+    enterpriseName: proposal?.enterpriseName ?? UNKNOWN_ENTERPRISE_NAME,
+  };
+}
+
+function sortContracts(contracts: EnrichedContract[]): EnrichedContract[] {
+  return [...contracts].sort((a, b) => {
+    const dateA = a.startDate ? new Date(a.startDate).getTime() : 0;
+    const dateB = b.startDate ? new Date(b.startDate).getTime() : 0;
+    if (dateB !== dateA) return dateB - dateA;
+    return b.id - a.id;
+  });
+}
+
+function getGroupKey(group: ContractCompanyGroup): number {
+  return group.enterpriseId || -(group.contracts[0]?.proposalId ?? 0);
+}
+
+function groupContractsByCompany(
+  contracts: EnrichedContract[],
+): ContractCompanyGroup[] {
+  const groups = new Map<number, ContractCompanyGroup>();
+
+  for (const contract of contracts) {
+    const key = contract.enterpriseId || -contract.proposalId;
+    const existing = groups.get(key);
+    if (existing) {
+      existing.contracts.push(contract);
+    } else {
+      groups.set(key, {
+        enterpriseId: contract.enterpriseId,
+        enterpriseName: contract.enterpriseName,
+        contracts: [contract],
+      });
+    }
+  }
+
+  return [...groups.values()]
+    .map((group) => ({
+      ...group,
+      contracts: sortContracts(group.contracts),
+    }))
+    .sort((a, b) =>
+      a.enterpriseName.localeCompare(b.enterpriseName, 'pt-BR', {
+        sensitivity: 'base',
+      }),
+    );
+}
+
+function matchesSearch(contract: EnrichedContract, term: string): boolean {
+  if (!term) return true;
+  const q = term.toLowerCase();
+  return (
+    contract.enterpriseName.toLowerCase().includes(q) ||
+    String(contract.id).includes(q) ||
+    String(contract.proposalId).includes(q) ||
+    getContractStatusLabel(contract.status ?? undefined)
+      .toLowerCase()
+      .includes(q)
+  );
+}
+
+function matchesGroup(group: ContractCompanyGroup, term: string): boolean {
+  if (!term) return true;
+  const q = term.toLowerCase();
+  if (group.enterpriseName.toLowerCase().includes(q)) return true;
+  return group.contracts.some((contract) => matchesSearch(contract, term));
+}
+
 export function ContratosPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedContract, setSelectedContract] = useState<Contract | null>(
-    null
-  );
+  const [selectedContract, setSelectedContract] =
+    useState<EnrichedContract | null>(null);
+  const [search, setSearch] = useState('');
+  const [view, setView] = useState<ExplorerView>('root');
+  const [selectedGroupKey, setSelectedGroupKey] = useState<number | null>(null);
+  const debouncedSearch = useDebounce(search, 300);
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<CreateContractRequest>({
     proposalId: 0,
     startDate: format(new Date(), 'yyyy-MM-dd'),
   });
 
-  const { data: contractsPage, isLoading } = useQuery({
-    queryKey: ['contracts'],
-    queryFn: () => contractService.list(0, 100),
+  const { data: allContracts = [], isLoading: isLoadingContracts } = useQuery({
+    queryKey: ['contracts', 'all-for-grouping'],
+    queryFn: fetchAllContracts,
   });
 
   const { data: proposalsPage } = useQuery({
-    queryKey: ['proposals'],
-    queryFn: () => proposalService.list(0, 100),
+    queryKey: ['proposals', 'all-for-contracts'],
+    queryFn: () => proposalService.list(0, 500),
   });
+
+  const proposalById = useMemo(() => {
+    const map = new Map<number, Proposal>();
+    for (const proposal of proposalsPage?.content ?? []) {
+      map.set(proposal.id, proposal);
+    }
+    return map;
+  }, [proposalsPage]);
+
+  const enrichedContracts = useMemo(
+    () => allContracts.map((contract) => enrichContract(contract, proposalById)),
+    [allContracts, proposalById],
+  );
+
+  const allGroups = useMemo(
+    () => groupContractsByCompany(enrichedContracts),
+    [enrichedContracts],
+  );
+
+  const filteredGroups = useMemo(() => {
+    const term = debouncedSearch.trim();
+    if (!term) return allGroups;
+    return allGroups.filter((group) => matchesGroup(group, term));
+  }, [allGroups, debouncedSearch]);
+
+  const selectedGroup = useMemo(
+    () =>
+      selectedGroupKey === null
+        ? null
+        : allGroups.find((group) => getGroupKey(group) === selectedGroupKey) ??
+          null,
+    [allGroups, selectedGroupKey],
+  );
+
+  const folderContracts = useMemo(() => {
+    if (!selectedGroup) return [];
+    const term = debouncedSearch.trim();
+    if (!term) return selectedGroup.contracts;
+    return selectedGroup.contracts.filter((contract) =>
+      matchesSearch(contract, term),
+    );
+  }, [selectedGroup, debouncedSearch]);
+
+  const totalFilteredContracts = useMemo(
+    () => filteredGroups.reduce((sum, group) => sum + group.contracts.length, 0),
+    [filteredGroups],
+  );
+
+  const goToRoot = () => {
+    setView('root');
+    setSelectedGroupKey(null);
+  };
+
+  const openFolder = (group: ContractCompanyGroup) => {
+    setSelectedGroupKey(getGroupKey(group));
+    setView('folder');
+  };
 
   const createMutation = useMutation({
     mutationFn: contractService.create,
@@ -63,13 +255,13 @@ export function ContratosPage() {
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
       queryClient.invalidateQueries({ queryKey: ['proposals'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
-      setSelectedContract(updatedContract);
+      const enriched = enrichContract(updatedContract, proposalById);
+      setSelectedContract(enriched);
     },
   });
 
-  // Somente propostas aprovadas que não têm contrato ainda (simplificado: todas as aprovadas)
   const approvedProposals = (proposalsPage?.content || []).filter(
-    (p: any) => p.status === 'COMMERCIAL_PROPOSAL_APPROVED'
+    (p) => p.status === 'COMMERCIAL_PROPOSAL_APPROVED',
   );
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -77,47 +269,34 @@ export function ContratosPage() {
     if (!formData.proposalId) return;
 
     const proposal = approvedProposals.find(
-      (p: any) => p.id === formData.proposalId
+      (p) => p.id === formData.proposalId,
     );
 
     createMutation.mutate(formData, {
       onSuccess: () => {
-        // Notificar Compliance
         notificationService.notifyCompliance({
           razaoSocial: proposal?.enterpriseName,
-          cnpj: proposal?.cnpj,
+          cnpj: (proposal as Proposal & { cnpj?: string })?.cnpj,
           analista: proposal?.responsibleAnalystName,
           dataInicio: formData.startDate,
         });
 
-        // Enviar e-mail para a empresa
         notificationService.sendEmail(
-          proposal?.enterpriseEmail || 'contato@empresa.com',
+          (proposal as Proposal & { enterpriseEmail?: string })?.enterpriseEmail ||
+            'contato@empresa.com',
           `Contrato disponível para assinatura — ${proposal?.enterpriseName}`,
-          `Seu contrato foi gerado e está disponível para assinatura. Acesse o sistema para visualizar e assinar o documento.`
+          `Seu contrato foi gerado e está disponível para assinatura. Acesse o sistema para visualizar e assinar o documento.`,
         );
       },
     });
-  };
-
-  const getContractStatusLabel = (status?: string) => {
-    switch ((status || '').toUpperCase()) {
-      case 'DIGITALLY_SIGNED':
-        return 'ASSINADO';
-      case 'PENDING_SIGNATURE':
-        return 'AGUARDANDO ASSINATURA';
-      default:
-        return status || 'ATIVO';
-    }
   };
 
   const isContractSigned = (contract?: Contract | null) => {
     return contract?.status?.toUpperCase() === 'DIGITALLY_SIGNED';
   };
 
-  const getContractHtml = (contract: Contract) => {
-    // TODO: buscar via proposal/enterprise (GET /api/proposals/{contract.proposalId})
-    const companyName = 'Empresa contratante';
+  const getContractHtml = (contract: EnrichedContract) => {
+    const companyName = contract.enterpriseName;
     const startDate = contract.startDate
       ? format(new Date(contract.startDate), 'dd/MM/yyyy', { locale: ptBR })
       : '--';
@@ -194,7 +373,7 @@ export function ContratosPage() {
     `;
   };
 
-  const openContractDocument = (contract: Contract, print = false) => {
+  const openContractDocument = (contract: EnrichedContract, print = false) => {
     const popup = window.open('', '_blank', 'noopener,noreferrer');
     if (!popup) return;
 
@@ -209,6 +388,91 @@ export function ContratosPage() {
       };
     }
   };
+
+  const renderContractCard = (contract: EnrichedContract) => (
+    <div
+      key={contract.id}
+      className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm hover:shadow-xl transition-all group overflow-hidden relative"
+    >
+      <div className="absolute top-0 right-0 p-8">
+        <span className="inline-flex items-center gap-1 px-3 py-1 bg-climbe-primary/10 text-climbe-primary text-[10px] font-black uppercase tracking-widest rounded-full">
+          <CheckCircle2 size={12} />
+          {getContractStatusLabel(contract.status ?? undefined)}
+        </span>
+      </div>
+
+      <div className="flex flex-col gap-6">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-climbe-primary flex items-center justify-center text-climbe-secondary">
+            <ScrollText size={24} />
+          </div>
+          <div>
+            <h4 className="text-lg font-bold text-climbe-secondary italic">
+              Contrato #{contract.id}
+            </h4>
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+              PROPOSTA #{contract.proposalId}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="p-4 bg-gray-50 rounded-2xl space-y-1">
+            <div className="flex items-center gap-2 text-gray-400">
+              <Calendar size={12} />
+              <span className="text-[8px] font-black uppercase tracking-widest">
+                Início
+              </span>
+            </div>
+            <p className="text-xs font-bold text-climbe-secondary italic">
+              {contract.startDate
+                ? format(new Date(contract.startDate), 'dd/MM/yyyy', {
+                    locale: ptBR,
+                  })
+                : '--'}
+            </p>
+          </div>
+          <div className="p-4 bg-gray-50 rounded-2xl space-y-1">
+            <div className="flex items-center gap-2 text-gray-400">
+              <Calendar size={12} />
+              <span className="text-[8px] font-black uppercase tracking-widest">
+                Término
+              </span>
+            </div>
+            <p className="text-xs font-bold text-climbe-primary italic">
+              {contract.endDate
+                ? format(new Date(contract.endDate), 'dd/MM/yyyy', {
+                    locale: ptBR,
+                  })
+                : 'Indeterminado'}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-3">
+          <button
+            type="button"
+            onClick={() => setSelectedContract(contract)}
+            className="text-[10px] font-black text-climbe-secondary uppercase tracking-widest hover:text-climbe-primary transition-colors"
+          >
+            Visualizar/Assinar
+          </button>
+          <button
+            type="button"
+            onClick={() => openContractDocument(contract, true)}
+            className="text-[10px] font-black text-climbe-primary uppercase tracking-widest hover:underline"
+          >
+            Baixar PDF
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const isLoading = isLoadingContracts;
+  const hasContracts = enrichedContracts.length > 0;
+  const hasFilteredFolders = filteredGroups.length > 0;
+  const isRootView = view === 'root';
 
   return (
     <div className="space-y-8 pb-12">
@@ -242,7 +506,7 @@ export function ContratosPage() {
         <div className="flex items-center justify-center h-[50vh]">
           <Loader2 className="w-12 h-12 text-climbe-primary animate-spin" />
         </div>
-      ) : (contractsPage?.content || []).length === 0 ? (
+      ) : !hasContracts ? (
         <div className="bg-white p-20 rounded-[40px] border border-gray-100 shadow-sm flex flex-col items-center justify-center text-center space-y-4">
           <div className="w-24 h-24 rounded-[32px] bg-gray-50 flex items-center justify-center text-gray-200">
             <ScrollText size={48} />
@@ -256,101 +520,150 @@ export function ContratosPage() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {contractsPage!.content.map((contract: any) => (
-            <div
-              key={contract.id}
-              className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm hover:shadow-xl transition-all group overflow-hidden relative"
-            >
-              <div className="absolute top-0 right-0 p-8">
-                <span className="inline-flex items-center gap-1 px-3 py-1 bg-climbe-primary/10 text-climbe-primary text-[10px] font-black uppercase tracking-widest rounded-full">
-                  <CheckCircle2 size={12} />
-                  {getContractStatusLabel(contract.status)}
+        <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm p-8 md:p-10 space-y-8">
+          {isRootView ? (
+            <>
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div className="relative flex-1 max-w-xl">
+                  <Search
+                    size={16}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
+                  <Input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Buscar por empresa, contrato ou proposta..."
+                    className="pl-11 rounded-2xl border-gray-100 bg-gray-50"
+                  />
+                </div>
+                <span className="rounded-full bg-climbe-primary/10 px-4 py-2 text-xs font-black uppercase tracking-[0.2em] text-climbe-primary shrink-0">
+                  {filteredGroups.length}{' '}
+                  {filteredGroups.length === 1 ? 'empresa' : 'empresas'} ·{' '}
+                  {totalFilteredContracts}{' '}
+                  {totalFilteredContracts === 1 ? 'contrato' : 'contratos'}
                 </span>
               </div>
 
-              <div className="flex flex-col gap-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-climbe-primary flex items-center justify-center text-climbe-secondary">
-                    <ScrollText size={24} />
-                  </div>
-                  <div>
-                    <h4 className="text-lg font-bold text-climbe-secondary italic">
-                      {/* TODO: buscar via proposal/enterprise (GET /api/proposals/{contract.proposalId}) */}
-                      Proposta #{contract.proposalId}
-                    </h4>
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                      CONTRATO #{contract.id}
-                    </p>
-                  </div>
+              {!hasFilteredFolders ? (
+                <div className="py-16 text-center space-y-3">
+                  <p className="text-lg font-bold text-climbe-secondary italic">
+                    Nenhuma empresa ou contrato encontrado
+                  </p>
+                  <p className="text-sm text-gray-400">
+                    Tente buscar por outro nome de empresa, número de contrato
+                    ou proposta.
+                  </p>
                 </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-4 bg-gray-50 rounded-2xl space-y-1">
-                    <div className="flex items-center gap-2 text-gray-400">
-                      <Calendar size={12} />
-                      <span className="text-[8px] font-black uppercase tracking-widest">
-                        Início
-                      </span>
-                    </div>
-                    <p className="text-xs font-bold text-climbe-secondary italic">
-                      {contract.startDate
-                        ? format(new Date(contract.startDate), 'dd/MM/yyyy', {
-                            locale: ptBR,
-                          })
-                        : '--'}
-                    </p>
-                  </div>
-                  <div className="p-4 bg-gray-50 rounded-2xl space-y-1">
-                    <div className="flex items-center gap-2 text-gray-400">
-                      <Calendar size={12} />
-                      <span className="text-[8px] font-black uppercase tracking-widest">
-                        Término
-                      </span>
-                    </div>
-                    <p className="text-xs font-bold text-climbe-primary italic">
-                      {contract.endDate
-                        ? format(new Date(contract.endDate), 'dd/MM/yyyy', { locale: ptBR })
-                        : 'Indeterminado'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex -space-x-2">
-                    {[1, 2].map((i) => (
-                      <div
-                        key={i}
-                        className="w-8 h-8 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-[8px] font-black text-gray-400"
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {filteredGroups.map((group) => {
+                    const contractCount = group.contracts.length;
+                    return (
+                      <button
+                        key={getGroupKey(group)}
+                        type="button"
+                        onClick={() => openFolder(group)}
+                        className="flex flex-col items-center gap-4 rounded-[32px] border border-gray-100 bg-gray-50 p-8 text-center transition-all hover:-translate-y-1 hover:border-climbe-primary/30 hover:bg-climbe-primary/5 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-climbe-primary/40"
                       >
-                        {i === 1 ? 'AD' : 'CL'}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedContract(contract)}
-                      className="text-[10px] font-black text-climbe-secondary uppercase tracking-widest hover:text-climbe-primary transition-colors"
-                    >
-                      Visualizar/Assinar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => openContractDocument(contract, true)}
-                      className="text-[10px] font-black text-climbe-primary uppercase tracking-widest hover:underline"
-                    >
-                      Baixar PDF
-                    </button>
-                  </div>
+                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-climbe-primary/10 text-climbe-primary">
+                          <Folder size={32} />
+                        </div>
+                        <div className="space-y-1 min-w-0 w-full">
+                          <p className="text-sm font-black italic text-climbe-secondary truncate">
+                            {group.enterpriseName}
+                          </p>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                            {contractCount}{' '}
+                            {contractCount === 1 ? 'contrato' : 'contratos'}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <nav
+                  aria-label="Navegação de pastas"
+                  className="flex flex-wrap items-center gap-2 text-sm"
+                >
+                  <button
+                    type="button"
+                    onClick={goToRoot}
+                    className="font-black italic text-climbe-primary hover:underline"
+                  >
+                    Contratos
+                  </button>
+                  <ChevronRight size={14} className="text-gray-300" />
+                  <span className="font-black italic text-climbe-secondary truncate max-w-[240px] sm:max-w-none">
+                    {selectedGroup?.enterpriseName ?? 'Pasta'}
+                  </span>
+                </nav>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={goToRoot}
+                  className="gap-2 shrink-0"
+                >
+                  <ChevronLeft size={16} />
+                  Voltar
+                </Button>
+              </div>
+
+              <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-climbe-primary/10 text-climbe-primary">
+                  <Building2 size={18} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black italic text-climbe-secondary">
+                    {selectedGroup?.enterpriseName}
+                  </h3>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                    {selectedGroup?.contracts.length ?? 0}{' '}
+                    {(selectedGroup?.contracts.length ?? 0) === 1
+                      ? 'contrato'
+                      : 'contratos'}
+                  </p>
                 </div>
               </div>
-            </div>
-          ))}
+
+              <div className="relative max-w-xl">
+                <Search
+                  size={16}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                />
+                <Input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Buscar contratos nesta pasta..."
+                  className="pl-11 rounded-2xl border-gray-100 bg-gray-50"
+                />
+              </div>
+
+              {folderContracts.length === 0 ? (
+                <div className="py-16 text-center space-y-4">
+                  <p className="text-lg font-bold text-climbe-secondary italic">
+                    Nenhum contrato nesta pasta corresponde à busca
+                  </p>
+                  <Button type="button" variant="outline" onClick={goToRoot}>
+                    Voltar para Contratos
+                  </Button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {folderContracts.map(renderContractCard)}
+                </div>
+              )}
+            </>
+          )}
         </div>
       )}
 
-      {/* Modal de Novo Contrato */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -383,7 +696,7 @@ export function ContratosPage() {
                 className="w-full rounded-xl border border-transparent bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all focus:border-climbe-primary/40 focus:ring-2 focus:ring-climbe-primary/40 appearance-none"
               >
                 <option value="">Selecione uma proposta...</option>
-                {approvedProposals.map((proposal: any) => (
+                {approvedProposals.map((proposal) => (
                   <option key={proposal.id} value={proposal.id}>
                     #{proposal.id} - {proposal.enterpriseName}
                   </option>
@@ -405,8 +718,6 @@ export function ContratosPage() {
                 }
               />
             </div>
-
-            {/* totalValue removido — campo não existe no ContractDTO do backend */}
 
             <div className="flex gap-3 pt-6">
               <Button
@@ -461,8 +772,7 @@ export function ContratosPage() {
                     Empresa
                   </p>
                   <p className="text-sm font-bold text-climbe-secondary italic">
-                    {/* TODO: buscar via proposal/enterprise (GET /api/proposals/{selectedContract.proposalId}) */}
-                    Proposta #{selectedContract.proposalId}
+                    {selectedContract.enterpriseName}
                   </p>
                 </div>
                 <div>
@@ -482,7 +792,7 @@ export function ContratosPage() {
                       ? format(
                           new Date(selectedContract.startDate),
                           'dd/MM/yyyy',
-                          { locale: ptBR }
+                          { locale: ptBR },
                         )
                       : '--'}
                   </p>
@@ -496,7 +806,7 @@ export function ContratosPage() {
                       ? format(
                           new Date(selectedContract.endDate),
                           'dd/MM/yyyy',
-                          { locale: ptBR }
+                          { locale: ptBR },
                         )
                       : 'Prazo indeterminado'}
                   </p>
