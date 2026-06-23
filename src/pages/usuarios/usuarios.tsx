@@ -2,19 +2,21 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Users, CheckCircle, Clock, ShieldAlert } from 'lucide-react';
 import { userService } from '@/features/usuarios/services';
-import type { User } from '@/features/usuarios/types';
+import type { User, CreateUserRequest } from '@/features/usuarios/types';
+import { UserModal } from '@/features/usuarios/components';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
 export function UsuariosPage() {
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const pageSize = 10;
   const queryClient = useQueryClient();
 
   const isUserActive = (user: User) => {
     const status = user.status?.toUpperCase();
-    return user.active === true || status === 'ATIVO' || status === 'ACTIVE';
+    return status === 'ATIVO' || status === 'ACTIVE';
   };
 
   const getRoleLabel = (user: User) => {
@@ -46,13 +48,26 @@ export function UsuariosPage() {
   const canGoForward = !isSearching && page + 1 < totalPages;
 
   const approveMutation = useMutation({
-    mutationFn: ({ id, role }: { id: number; role: string }) => userService.approveUser(String(id), role),
+    mutationFn: ({ id, role }: { id: number; role: string }) => userService.approveUser(id, role),
     onSuccess: () => {
       toast.success('Usuário aprovado com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['users'] });
     },
     onError: (error: any) => {
       const message = error?.response?.data?.message || error?.response?.data?.error || 'Erro ao aprovar usuário.';
+      toast.error(message);
+    }
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (data: CreateUserRequest) => userService.createUser(data),
+    onSuccess: () => {
+      toast.success('Usuário criado com sucesso!');
+      setIsModalOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+    onError: (error: any) => {
+      const message = error?.response?.data?.message || error?.response?.data?.error || 'Erro ao criar usuário.';
       toast.error(message);
     }
   });
@@ -77,15 +92,25 @@ export function UsuariosPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-3 text-climbe-primary">
-          <Users size={20} />
-          <span className="text-[10px] font-black uppercase tracking-[0.2em]">Segurança</span>
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-3 text-climbe-primary">
+            <Users size={20} />
+            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Segurança</span>
+          </div>
+          <h1 className="text-4xl font-black text-climbe-secondary tracking-tighter italic">Usuários</h1>
+          <p className="text-gray-400 font-light max-w-2xl">
+            Administre os acessos e aprove as solicitações de novos colaboradores.
+          </p>
         </div>
-        <h1 className="text-4xl font-black text-climbe-secondary tracking-tighter italic">Usuários</h1>
-        <p className="text-gray-400 font-light max-w-2xl">
-          Administre os acessos e aprove as solicitações de novos colaboradores.
-        </p>
+
+        <Button 
+          onClick={() => setIsModalOpen(true)}
+          className="flex items-center gap-2 px-6 h-12 rounded-xl font-black italic shadow-lg shadow-climbe-primary/20"
+        >
+          <Users size={16} />
+          NOVO USUÁRIO
+        </Button>
       </div>
 
       <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden">
@@ -175,6 +200,13 @@ export function UsuariosPage() {
           </div>
         </div>
       </div>
+
+      <UserModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={(data) => createMutation.mutate(data)}
+        isSubmitting={createMutation.isPending}
+      />
     </div>
   );
 }

@@ -7,7 +7,9 @@ import {
   Eye,
   Download,
   PenLine,
+  ClipboardCheck,
 } from 'lucide-react';
+import { ChecklistModal } from './components/ChecklistModal';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notificationService } from '@/services/notification.service';
 import { contractService } from '@/services/contract.service';
@@ -31,13 +33,15 @@ export function ContratosPage() {
     proposalId: 0,
     startDate: format(new Date(), 'yyyy-MM-dd'),
   });
+  const [isChecklistModalOpen, setIsChecklistModalOpen] = useState(false);
+  const [checklistProposalId, setChecklistProposalId] = useState<number | null>(null);
 
   const { data: contractsPage, isLoading } = useQuery({
     queryKey: ['contracts'],
     queryFn: () => contractService.list(0, 100),
   });
 
-  const { data: proposalsPage } = useQuery({
+  const { data: proposalsPage, isLoading: isLoadingProposals } = useQuery({
     queryKey: ['proposals'],
     queryFn: () => proposalService.list(0, 100),
   });
@@ -54,6 +58,9 @@ export function ContratosPage() {
         startDate: format(new Date(), 'yyyy-MM-dd'),
       });
     },
+    onError: (error: any) => {
+      console.error('ERRO AO CRIAR CONTRATO:', error.response?.data || error.message);
+    }
   });
 
   const signMutation = useMutation({
@@ -68,9 +75,14 @@ export function ContratosPage() {
   });
 
   // Somente propostas aprovadas que não têm contrato ainda (simplificado: todas as aprovadas)
-  const approvedProposals = (proposalsPage?.content || []).filter(
-    (p: any) => p.status === 'COMMERCIAL_PROPOSAL_APPROVED'
-  );
+  const approvedProposals = (proposalsPage?.content || []).filter((p: any) => {
+    const status = (p.status || '').toUpperCase();
+    return (
+      status === 'COMMERCIAL_PROPOSAL_APPROVED' || 
+      status === 'PROPOSTA_APROVADA' || 
+      status === 'APROVADA'
+    );
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -330,6 +342,17 @@ export function ContratosPage() {
                   <div className="flex items-center gap-3">
                     <button
                       type="button"
+                      onClick={() => {
+                        setChecklistProposalId(contract.proposalId);
+                        setIsChecklistModalOpen(true);
+                      }}
+                      className="text-[10px] font-black text-climbe-primary uppercase tracking-widest hover:underline flex items-center gap-1"
+                    >
+                      <ClipboardCheck size={14} />
+                      Documentos
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => setSelectedContract(contract)}
                       className="text-[10px] font-black text-climbe-secondary uppercase tracking-widest hover:text-climbe-primary transition-colors"
                     >
@@ -380,14 +403,25 @@ export function ContratosPage() {
                     proposalId: Number(e.target.value),
                   })
                 }
-                className="w-full rounded-xl border border-transparent bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all focus:border-climbe-primary/40 focus:ring-2 focus:ring-climbe-primary/40 appearance-none"
+                disabled={isLoadingProposals}
+                className="w-full rounded-xl border border-transparent bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all focus:border-climbe-primary/40 focus:ring-2 focus:ring-climbe-primary/40 appearance-none disabled:opacity-50"
               >
-                <option value="">Selecione uma proposta...</option>
-                {approvedProposals.map((proposal: any) => (
-                  <option key={proposal.id} value={proposal.id}>
-                    #{proposal.id} - {proposal.enterpriseName}
-                  </option>
-                ))}
+                {isLoadingProposals ? (
+                  <option>Carregando propostas...</option>
+                ) : (
+                  <>
+                    <option value="">
+                      {approvedProposals.length > 0 
+                        ? 'Selecione uma proposta...' 
+                        : 'Nenhuma proposta aprovada encontrada'}
+                    </option>
+                    {approvedProposals.map((proposal: any) => (
+                      <option key={proposal.id} value={proposal.id}>
+                        {proposal.enterpriseName} (Proposta #{proposal.id})
+                      </option>
+                    ))}
+                  </>
+                )}
               </select>
             </div>
 
@@ -556,6 +590,11 @@ export function ContratosPage() {
           </div>
         )}
       </Modal>
+      <ChecklistModal 
+        isOpen={isChecklistModalOpen} 
+        onClose={() => setIsChecklistModalOpen(false)} 
+        proposalId={checklistProposalId} 
+      />
     </div>
   );
 }

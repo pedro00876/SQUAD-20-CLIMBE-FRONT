@@ -1,17 +1,9 @@
-import { FileText, Plus, User, Loader2, CheckCircle2, XCircle, Clock, ScrollText, DollarSign, Upload, Trash2, ClipboardCheck } from 'lucide-react';
+import { FileText, Plus, User, Loader2, CheckCircle2, XCircle, Clock, ScrollText, Upload, Trash2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { proposalService } from '@/services/proposal.service';
 import { enterpriseService } from '@/services/enterprise.service';
 import { contractService, type CreateContractRequest } from '@/services/contract.service';
-import {
-  documentRequirementService,
-  documentService,
-  type DocumentRequirement,
-  type DocumentRequirementStatus,
-  type DocumentType,
-} from '@/services/document.service';
 import { PropostaModal } from '@/features/propostas/components';
-import { ChecklistModal } from './components/ChecklistModal';
 import { useState } from 'react';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
@@ -23,13 +15,6 @@ import { ptBR } from 'date-fns/locale';
 import { notificationService } from '@/services/notification.service';
 import { userService } from '@/features/usuarios/services';
 
-const documentRequirementTypes: { value: DocumentType; label: string }[] = [
-  { value: 'BALANCO_PATRIMONIAL', label: 'Balanço patrimonial' },
-  { value: 'DRE', label: 'DRE' },
-  { value: 'CONTRATO_SOCIAL', label: 'Contrato social' },
-  { value: 'CNPJ', label: 'CNPJ' },
-  { value: 'PLANILHA_GERENCIAL', label: 'Planilha gerencial' },
-];
 
 export function PropostasPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -37,21 +22,13 @@ export function PropostasPage() {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isCommercialProposalModalOpen, setIsCommercialProposalModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isDocumentChecklistModalOpen, setIsDocumentChecklistModalOpen] = useState(false);
   const [selectedProposal, setSelectedProposal] = useState<any>(null);
   const { user } = useAuthContext();
   const queryClient = useQueryClient();
   const [selectedEnterpriseId, setSelectedEnterpriseId] = useState<string>('');
   const [proposalActionError, setProposalActionError] = useState('');
   const [commercialProposalFile, setCommercialProposalFile] = useState<File | null>(null);
-  const [documentChecklistDeadline, setDocumentChecklistDeadline] = useState('');
-  const [selectedDocumentTypes, setSelectedDocumentTypes] = useState<DocumentType[]>(
-    documentRequirementTypes.map((type) => type.value),
-  );
-  const [requirementRejectionReasons, setRequirementRejectionReasons] = useState<Record<number, string>>({});
   
-  const [isChecklistModalOpen, setIsChecklistModalOpen] = useState(false);
-  const [checklistProposalId, setChecklistProposalId] = useState<number | null>(null);
 
   const [contractData, setContractData] = useState<CreateContractRequest>({
     proposalId: 0,
@@ -155,47 +132,6 @@ export function PropostasPage() {
     queryFn: () => userService.listUsers(0, 100)
   });
 
-  const {
-    data: documentRequirements = [],
-    isLoading: isLoadingDocumentRequirements,
-  } = useQuery({
-    queryKey: ['document-requirements', selectedProposal?.id],
-    queryFn: () => documentRequirementService.listByProposal(Number(selectedProposal.id)),
-    enabled: isDocumentChecklistModalOpen && !!selectedProposal?.id,
-  });
-
-  const createDocumentRequirementsMutation = useMutation({
-    mutationFn: () => {
-      if (!selectedProposal?.id) {
-        throw new Error('Selecione uma proposta para solicitar documentos.');
-      }
-
-      return documentRequirementService.createForProposal(Number(selectedProposal.id), {
-        documentTypes: selectedDocumentTypes,
-        deadline: documentChecklistDeadline || undefined,
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['document-requirements', selectedProposal?.id] });
-      setProposalActionError('');
-    },
-    onError: (error: any) => {
-      setProposalActionError(error?.response?.data?.message || error?.message || 'Nao foi possivel solicitar os documentos.');
-    },
-  });
-
-  const updateDocumentRequirementMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: { status?: DocumentRequirementStatus; deadline?: string; rejectionReason?: string; validatedById?: number } }) =>
-      documentRequirementService.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['document-requirements', selectedProposal?.id] });
-      queryClient.invalidateQueries({ queryKey: ['documents'] });
-      setProposalActionError('');
-    },
-    onError: (error: any) => {
-      setProposalActionError(error?.response?.data?.message || 'Nao foi possivel atualizar o checklist documental.');
-    },
-  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -288,46 +224,7 @@ export function PropostasPage() {
     commercialProposalMutation.mutate();
   };
 
-  const openDocumentChecklistModal = (proposal: any) => {
-    setSelectedProposal(proposal);
-    setDocumentChecklistDeadline('');
-    setSelectedDocumentTypes(documentRequirementTypes.map((type) => type.value));
-    setRequirementRejectionReasons({});
-    setProposalActionError('');
-    setIsDocumentChecklistModalOpen(true);
-  };
 
-  const toggleDocumentType = (type: DocumentType) => {
-    setSelectedDocumentTypes((current) =>
-      current.includes(type)
-        ? current.filter((item) => item !== type)
-        : [...current, type],
-    );
-  };
-
-  const updateRequirementStatus = (requirement: DocumentRequirement, status: DocumentRequirementStatus) => {
-    const rejectionReason = requirementRejectionReasons[requirement.id]?.trim();
-
-    if (status === 'NON_COMPLIANT' && !rejectionReason) {
-      setProposalActionError('Informe o motivo da nao conformidade antes de reprovar o documento.');
-      return;
-    }
-
-    updateDocumentRequirementMutation.mutate({
-      id: requirement.id,
-      data: {
-        status,
-        rejectionReason: status === 'NON_COMPLIANT' ? rejectionReason : undefined,
-        validatedById: (status === 'APPROVED' || status === 'NON_COMPLIANT') && user?.id ? Number(user.id) : undefined,
-      },
-    });
-  };
-
-  const openRequirementDocument = async (documentId?: number) => {
-    if (!documentId) return;
-    const url = await documentService.getViewUrl(documentId);
-    window.open(url, '_blank', 'noopener,noreferrer');
-  };
 
   const handleDeleteProposal = () => {
     if (!selectedProposal?.id) return;
@@ -355,6 +252,7 @@ export function PropostasPage() {
       COMMERCIAL_PROPOSAL: 'Proposta comercial',
       COMMERCIAL_PROPOSAL_APPROVED: 'Aprovada',
       COMMERCIAL_PROPOSAL_REJECTED: 'Recusada',
+      ACEITA: 'Aceita (Pendente Aprovação)',
       READY_FOR_NEXT_STAGE: 'Proxima etapa',
     };
 
@@ -368,33 +266,6 @@ export function PropostasPage() {
     return <Clock size={12} />;
   };
 
-  const getDocumentTypeLabel = (type: string) => {
-    return documentRequirementTypes.find((item) => item.value === type)?.label || type || '--';
-  };
-
-  const getRequirementStatusLabel = (status?: string) => {
-    const labels: Record<string, string> = {
-      PENDING: 'Solicitado',
-      SUBMITTED: 'Enviado',
-      NON_COMPLIANT: 'Nao conforme',
-      APPROVED: 'Aprovado',
-    };
-
-    return labels[status || ''] || status || '--';
-  };
-
-  const getRequirementStatusStyle = (status?: string) => {
-    switch (status) {
-      case 'APPROVED':
-        return 'bg-climbe-primary/10 text-climbe-primary border-climbe-primary/20';
-      case 'SUBMITTED':
-        return 'bg-blue-50 text-blue-500 border-blue-100';
-      case 'NON_COMPLIANT':
-        return 'bg-red-50 text-red-500 border-red-100';
-      default:
-        return 'bg-amber-50 text-amber-600 border-amber-100';
-    }
-  };
 
   return (
     <div className="space-y-8 pb-12">
@@ -572,33 +443,14 @@ export function PropostasPage() {
                           </button>
                         )}
                         {proposal.status?.toUpperCase() === 'COMMERCIAL_PROPOSAL_APPROVED' && proposal.responsibleAnalystId && (
-                          <>
-                            <button 
-                              onClick={() => openContractModal(proposal)}
-                              className="flex items-center gap-1.5 rounded-xl bg-climbe-secondary px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white transition-all hover:scale-105"
-                            >
-                              <ScrollText size={14} />
-                              Gerar Contrato
-                            </button>
-                            <button 
-                              onClick={() => {
-                                setChecklistProposalId(proposal.id);
-                                setIsChecklistModalOpen(true);
-                              }}
-                              className="flex items-center gap-1.5 rounded-xl bg-climbe-primary/10 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-climbe-primary transition-all hover:bg-climbe-primary hover:text-climbe-secondary"
-                            >
-                              <FileText size={14} />
-                              Checklist
-                            </button>
-                          </>
+                          <button 
+                            onClick={() => openContractModal(proposal)}
+                            className="flex items-center gap-1.5 rounded-xl bg-climbe-secondary px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white transition-all hover:scale-105"
+                          >
+                            <ScrollText size={14} />
+                            Gerar Contrato
+                          </button>
                         )}
-                        <button
-                          onClick={() => openDocumentChecklistModal(proposal)}
-                          className="flex items-center gap-1.5 rounded-xl bg-gray-50 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-climbe-secondary transition-all hover:bg-climbe-primary/10 hover:text-climbe-primary"
-                        >
-                          <ClipboardCheck size={14} />
-                          Documentos
-                        </button>
                         <button
                           onClick={() => {
                             setSelectedProposal(proposal);
@@ -695,181 +547,6 @@ export function PropostasPage() {
         </div>
       </Modal>
 
-      <Modal
-        isOpen={isDocumentChecklistModalOpen}
-        onClose={() => setIsDocumentChecklistModalOpen(false)}
-        className="max-h-[90vh] max-w-3xl overflow-y-auto bg-climbe-secondary text-white"
-      >
-        <div className="space-y-6">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-climbe-primary">Checklist documental</p>
-            <h2 className="text-2xl font-black italic tracking-tight text-white">
-              Proposta #{selectedProposal?.id}
-            </h2>
-            <p className="text-xs text-slate-300">
-              Solicite formalmente os documentos da empresa, acompanhe o envio e registre a validacao do analista.
-            </p>
-          </div>
-
-          <div className="rounded-2xl bg-white/5 p-4">
-            <span className="block text-[10px] font-black uppercase tracking-widest text-slate-300">Empresa</span>
-            <strong className="text-sm italic text-white">{selectedProposal?.enterpriseName || '--'}</strong>
-          </div>
-
-          {proposalActionError && (
-            <p className="rounded-xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-xs font-bold text-red-200">
-              {proposalActionError}
-            </p>
-          )}
-
-          {isLoadingDocumentRequirements ? (
-            <div className="flex items-center justify-center rounded-3xl bg-white/5 py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-climbe-primary" />
-            </div>
-          ) : documentRequirements.length === 0 ? (
-            <div className="space-y-5 rounded-3xl border border-white/10 bg-white/5 p-5">
-              <div>
-                <h3 className="text-sm font-black uppercase tracking-widest text-white">Solicitar documentos</h3>
-                <p className="text-xs text-slate-300">
-                  Ao criar a solicitacao, o backend registra o checklist e dispara a notificacao formal para a empresa.
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">Prazo para envio</Label>
-                <Input
-                  type="date"
-                  value={documentChecklistDeadline}
-                  onChange={(event) => setDocumentChecklistDeadline(event.target.value)}
-                  className="bg-white text-slate-900"
-                />
-              </div>
-
-              <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">Documentos exigidos</Label>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {documentRequirementTypes.map((type) => (
-                    <label
-                      key={type.value}
-                      className="flex cursor-pointer items-center gap-3 rounded-xl bg-white px-4 py-3 text-sm font-bold text-slate-900 transition hover:bg-slate-50"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedDocumentTypes.includes(type.value)}
-                        onChange={() => toggleDocumentType(type.value)}
-                        className="h-4 w-4 accent-climbe-primary"
-                      />
-                      {type.label}
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-3 pt-2">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => setIsDocumentChecklistModalOpen(false)}
-                  className="font-black uppercase tracking-widest text-climbe-primary hover:bg-white/10 hover:text-climbe-primary"
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  type="button"
-                  disabled={createDocumentRequirementsMutation.isPending || selectedDocumentTypes.length === 0}
-                  onClick={() => createDocumentRequirementsMutation.mutate()}
-                  className="rounded-xl bg-climbe-primary font-black italic text-climbe-secondary shadow-lg shadow-climbe-primary/20 disabled:bg-white/10 disabled:text-slate-400"
-                >
-                  <ClipboardCheck size={16} className="mr-2" />
-                  {createDocumentRequirementsMutation.isPending ? 'SOLICITANDO...' : 'SOLICITAR DOCUMENTOS'}
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex flex-col justify-between gap-2 rounded-2xl bg-white/5 p-4 sm:flex-row sm:items-center">
-                <div>
-                  <h3 className="text-sm font-black uppercase tracking-widest text-white">Checklist solicitado</h3>
-                  <p className="text-xs text-slate-300">
-                    {documentRequirements.filter((item) => item.status === 'APPROVED').length} de {documentRequirements.length} documentos aprovados.
-                  </p>
-                </div>
-                <span className="rounded-full bg-climbe-primary/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-climbe-primary">
-                  {documentRequirements.every((item) => item.status === 'APPROVED') ? 'Completo' : 'Em andamento'}
-                </span>
-              </div>
-
-              {documentRequirements.map((requirement) => (
-                <div key={requirement.id} className="rounded-3xl bg-white p-5 text-slate-900 shadow-sm">
-                  <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
-                    <div>
-                      <p className="text-sm font-black italic text-climbe-secondary">
-                        {getDocumentTypeLabel(requirement.documentType)}
-                      </p>
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                        Prazo: {requirement.deadline ? format(new Date(requirement.deadline), 'dd/MM/yyyy', { locale: ptBR }) : 'sem prazo'}
-                      </p>
-                    </div>
-                    <span className={`inline-flex w-fit items-center rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-widest ${getRequirementStatusStyle(requirement.status)}`}>
-                      {getRequirementStatusLabel(requirement.status)}
-                    </span>
-                  </div>
-
-                  {requirement.rejectionReason && (
-                    <p className="mt-3 rounded-xl bg-red-50 px-4 py-3 text-xs font-bold text-red-500">
-                      Motivo da nao conformidade: {requirement.rejectionReason}
-                    </p>
-                  )}
-
-                  {requirement.status === 'SUBMITTED' && (
-                    <div className="mt-4 space-y-3">
-                      <textarea
-                        value={requirementRejectionReasons[requirement.id] || ''}
-                        onChange={(event) =>
-                          setRequirementRejectionReasons((current) => ({
-                            ...current,
-                            [requirement.id]: event.target.value,
-                          }))
-                        }
-                        className="min-h-20 w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-climbe-primary/40 focus:ring-2 focus:ring-climbe-primary/20"
-                        placeholder="Motivo da nao conformidade, caso seja necessario reprovar..."
-                      />
-                    </div>
-                  )}
-
-                  <div className="mt-4 flex flex-wrap justify-end gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={!requirement.documentId}
-                      onClick={() => openRequirementDocument(requirement.documentId)}
-                      className="rounded-xl text-[10px] font-black uppercase tracking-widest disabled:opacity-40"
-                    >
-                      Ver documento
-                    </Button>
-                    <Button
-                      type="button"
-                      disabled={requirement.status !== 'SUBMITTED' || updateDocumentRequirementMutation.isPending}
-                      onClick={() => updateRequirementStatus(requirement, 'NON_COMPLIANT')}
-                      className="rounded-xl bg-red-500 text-[10px] font-black uppercase tracking-widest text-white hover:bg-red-600 disabled:bg-slate-100 disabled:text-slate-400"
-                    >
-                      Nao conforme
-                    </Button>
-                    <Button
-                      type="button"
-                      disabled={requirement.status !== 'SUBMITTED' || updateDocumentRequirementMutation.isPending}
-                      onClick={() => updateRequirementStatus(requirement, 'APPROVED')}
-                      className="rounded-xl bg-climbe-primary text-[10px] font-black uppercase tracking-widest text-climbe-secondary disabled:bg-slate-100 disabled:text-slate-400"
-                    >
-                      Aprovar
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </Modal>
 
       <Modal
         isOpen={isDetailsModalOpen}
@@ -1093,11 +770,6 @@ export function PropostasPage() {
         </div>
       </Modal>
 
-      <ChecklistModal 
-        isOpen={isChecklistModalOpen} 
-        onClose={() => setIsChecklistModalOpen(false)} 
-        proposalId={checklistProposalId} 
-      />
     </div>
   );
 }

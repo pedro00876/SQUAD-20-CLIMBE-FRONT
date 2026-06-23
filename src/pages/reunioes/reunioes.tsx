@@ -14,10 +14,9 @@ import { enterpriseService } from '@/features/empresas/services';
 import type { Enterprise } from '@/features/empresas/types';
 import {
   meetingService,
-  type MeetingCreateRequest,
-  type MeetingDTO,
-  type PaginatedResponse,
 } from '@/features/reunioes/services';
+import type { Meeting, CreateMeetingRequest } from '@/features/reunioes/types';
+import type { PaginatedResponse } from '@/types/pagination';
 
 const meetingSchema = z.object({
   enterpriseId: z.coerce
@@ -45,16 +44,18 @@ const meetingSchema = z.object({
 
 type MeetingFormData = z.infer<typeof meetingSchema>;
 
-const meetingRooms = [
-  'Sala de Reuniões 1',
-  'Sala de Reuniões 2',
-  'Sala de Reuniões 3',
+// Status options for the meeting
+const meetingStatusOptions = [
+  'AGENDADA',
+  'REALIZADA',
+  'CANCELADA',
+  'ATRASADA',
 ];
 
 const rangesOverlap = (
   newStart: string,
   newEnd: string,
-  meeting: MeetingDTO
+  meeting: Meeting
 ) => {
   const existingStart = meeting.time?.slice(0, 5);
   const existingEnd = (meeting.endTime || meeting.time)?.slice(0, 5);
@@ -75,7 +76,7 @@ const formatToday = () =>
     year: 'numeric',
   }).format(new Date());
 
-const formatMeetingTime = (meeting: Partial<MeetingDTO>) => {
+const formatMeetingTime = (meeting: Partial<Meeting>) => {
   const startTime = meeting.time?.slice(0, 5);
   const endTime = meeting.endTime?.slice(0, 5);
 
@@ -86,15 +87,15 @@ const formatMeetingTime = (meeting: Partial<MeetingDTO>) => {
   return 'Horário indisponível';
 };
 
-const formatMeetingSummary = (meeting: MeetingDTO) =>
+const formatMeetingSummary = (meeting: Meeting) =>
   meeting.title || 'Reunião sem título';
 
 export function ReunioesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [meetingsResponse, setMeetingsResponse] =
-    useState<PaginatedResponse<MeetingDTO> | null>(null);
-  const [meetings, setMeetings] = useState<MeetingDTO[]>([]);
+    useState<PaginatedResponse<Meeting> | null>(null);
+  const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [page, setPage] = useState(0);
   const [pageSize] = useState(12);
   const [isLoadingMeetings, setIsLoadingMeetings] = useState(true);
@@ -104,7 +105,7 @@ export function ReunioesPage() {
   const [availableUsers, setAvailableUsers] = useState<User[]>([]);
   const [availableEnterprises, setAvailableEnterprises] = useState<Enterprise[]>([]);
   const [meetingsForAvailability, setMeetingsForAvailability] = useState<
-    MeetingDTO[]
+    Meeting[]
   >([]);
   const [isLoadingAvailability, setIsLoadingAvailability] = useState(false);
   const [availabilityError, setAvailabilityError] = useState(false);
@@ -169,11 +170,10 @@ export function ReunioesPage() {
       setMeetingsError(null);
 
       try {
-        const response = await meetingService.listMeetings({
+        const response = await meetingService.listMeetings(
           page,
-          size: pageSize,
-          sort: 'date,asc',
-        });
+          pageSize
+        );
 
         if (!isActive) {
           return;
@@ -218,16 +218,15 @@ export function ReunioesPage() {
           userService.listUsers(0, 100),
           enterpriseService.listEnterprises(0, 100),
         ]);
-        const allMeetings: MeetingDTO[] = [];
+        const allMeetings: Meeting[] = [];
         let currentPage = 0;
         let totalPages = 1;
 
         while (currentPage < totalPages) {
-          const response = await meetingService.listMeetings({
-            page: currentPage,
-            size: 100,
-            sort: 'date,asc',
-          });
+          const response = await meetingService.listMeetings(
+            currentPage,
+            100
+          );
           allMeetings.push(...(response.content || []));
           totalPages = response.totalPages || 1;
           currentPage += 1;
@@ -284,28 +283,7 @@ export function ReunioesPage() {
     [overlappingMeetings]
   );
 
-  const occupiedRooms = useMemo(
-    () =>
-      new Set(
-        overlappingMeetings
-          .filter((meeting) => meeting.inPerson && meeting.location)
-          .map((meeting) => meeting.location!.trim().toLowerCase())
-      ),
-    [overlappingMeetings]
-  );
-
-  const roomConflict = useMemo(
-    () =>
-      Boolean(
-        isInPerson &&
-        selectedLocation &&
-        occupiedRooms.has(selectedLocation.trim().toLowerCase())
-      ),
-    [isInPerson, selectedLocation, occupiedRooms]
-  );
-
-  const hasAvailabilityConflict =
-    participantConflicts.length > 0 || roomConflict;
+  const hasAvailabilityConflict = participantConflicts.length > 0;
 
   const toggleParticipant = (participantId: number) => {
     const nextParticipantIds = selectedParticipantIds.includes(participantId)
@@ -351,7 +329,7 @@ export function ReunioesPage() {
     setSubmitError(null);
 
     try {
-      const payload: MeetingCreateRequest = {
+      const payload: CreateMeetingRequest = {
         enterpriseId: data.enterpriseId,
         title: data.title,
         date: data.date,
@@ -370,7 +348,7 @@ export function ReunioesPage() {
       if (data.participantIds && data.participantIds.length > 0) {
         for (const id of data.participantIds) {
           try {
-            const participant = await userService.getUserDetails(id.toString());
+            const participant = await userService.getUserDetails(id);
             if (participant.email) {
               await notificationService.sendEmail(
                 participant.email,
@@ -660,11 +638,16 @@ export function ReunioesPage() {
                       <label className="ml-1 block text-[11px] font-black uppercase tracking-[0.2em] text-slate-200">
                         Status
                       </label>
-                      <Input
+                      <select
                         {...register('status')}
-                        placeholder="AGENDADA"
-                        className="bg-white text-slate-900 placeholder:text-slate-400"
-                      />
+                        className="w-full rounded-xl border border-transparent bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all focus:border-climbe-primary/40 focus:ring-2 focus:ring-climbe-primary/40"
+                      >
+                        {meetingStatusOptions.map((opt) => (
+                          <option key={opt} value={opt}>
+                            {opt}
+                          </option>
+                        ))}
+                      </select>
                       {errors.status ? (
                         <p className="ml-1 text-xs text-red-300">
                           {errors.status.message}
@@ -712,49 +695,14 @@ export function ReunioesPage() {
                       <label className="ml-1 block text-[11px] font-black uppercase tracking-[0.2em] text-slate-200">
                         {isInPerson ? 'Sala' : 'Link da reunião'}
                       </label>
-                      {isInPerson ? (
-                        <select
-                          value={selectedLocation || ''}
-                          onChange={(event) =>
-                            setValue('location', event.target.value, {
-                              shouldDirty: true,
-                              shouldValidate: true,
-                            })
-                          }
-                          className="w-full rounded-xl border border-transparent bg-white px-5 py-3 text-sm text-slate-900 outline-none transition-all focus:border-climbe-primary/40 focus:ring-2 focus:ring-climbe-primary/40"
-                        >
-                          <option value="">Selecione uma sala...</option>
-                          {meetingRooms.map((room) => {
-                            const occupied = occupiedRooms.has(
-                              room.toLowerCase()
-                            );
-                            return (
-                              <option
-                                key={room}
-                                value={room}
-                                disabled={occupied}
-                              >
-                                {room}
-                                {occupied ? ' (ocupada)' : ''}
-                              </option>
-                            );
-                          })}
-                        </select>
-                      ) : (
-                        <Input
-                          {...register('location')}
-                          placeholder="Link do Google Meet (opcional)"
-                          className="bg-white text-slate-900 placeholder:text-slate-400"
-                        />
-                      )}
+                      <Input
+                        {...register('location')}
+                        placeholder={isInPerson ? "Ex: Sala de Reuniões 1" : "Link do Google Meet (opcional)"}
+                        className="bg-white text-slate-900 placeholder:text-slate-400"
+                      />
                       {errors.location ? (
                         <p className="ml-1 text-xs text-red-300">
                           {errors.location.message}
-                        </p>
-                      ) : null}
-                      {roomConflict ? (
-                        <p className="ml-1 text-xs text-red-300">
-                          Sala ocupada no horário selecionado.
                         </p>
                       ) : null}
                     </div>
