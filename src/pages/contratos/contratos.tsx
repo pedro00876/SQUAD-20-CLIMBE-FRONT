@@ -16,6 +16,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notificationService } from '@/services/notification.service';
 import { contractService } from '@/services/contract.service';
+import { documentService } from '@/services/document.service';
 import type {
   Contract,
   CreateContractRequest,
@@ -313,7 +314,16 @@ export function ContratosPage() {
     setViewError('');
     setViewLoadingId(contract.id);
     try {
-      const url = await contractService.getViewUrl(contract.id);
+      let documentId = contract.documentId;
+      if (!documentId) {
+        const full = await contractService.getById(contract.id);
+        documentId = full.documentId;
+      }
+      if (!documentId) {
+        throw new Error('Contrato sem documento vinculado.');
+      }
+
+      const url = await documentService.getViewUrl(documentId);
       if (download) {
         const link = document.createElement('a');
         link.href = url;
@@ -325,7 +335,11 @@ export function ContratosPage() {
         window.open(url, '_blank', 'noopener,noreferrer');
       }
     } catch (err: any) {
-      setViewError(err?.response?.data?.message || 'Não foi possível abrir o contrato. Verifique se o PDF está disponível no sistema.');
+      setViewError(
+        err?.response?.data?.message ||
+          err?.message ||
+          'Não foi possível abrir o contrato. Verifique se o PDF está disponível no sistema.',
+      );
     } finally {
       setViewLoadingId(null);
     }

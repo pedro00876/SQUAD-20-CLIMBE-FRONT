@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import {
   BarChart3,
@@ -6,7 +7,6 @@ import {
   Eye,
   FileText,
   Loader2,
-  Plus,
   Upload,
   Folder,
   Search,
@@ -250,8 +250,13 @@ export function RelatoriosPage() {
       setSelectedFile(null);
       setUploadError('');
     },
-    onError: (error: any) => {
-      setUploadError(error?.response?.data?.message || error?.message || 'Não foi possível enviar o relatório.');
+    onError: (error: unknown) => {
+      const message = axios.isAxiosError(error)
+        ? (error.response?.data as { message?: string } | undefined)?.message || error.message
+        : error instanceof Error
+          ? error.message
+          : undefined;
+      setUploadError(message || 'Não foi possível enviar o relatório.');
     },
   });
 
@@ -372,13 +377,13 @@ export function RelatoriosPage() {
           </p>
         </div>
 
-        <Button
+        {/* <Button
           onClick={() => setIsUploadOpen(true)}
           className="shrink-0 rounded-2xl bg-climbe-primary px-6 py-6 font-black text-climbe-secondary shadow-lg shadow-climbe-primary/20 transition-all hover:scale-105"
         >
           <Plus size={20} className="mr-2" />
           ANEXAR RELATÓRIO PDF
-        </Button>
+        </Button> */}
       </div>
 
       {actionError && (
