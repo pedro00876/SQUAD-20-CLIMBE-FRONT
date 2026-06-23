@@ -107,7 +107,7 @@ export function EmpresaModal({
     >
       <div className="max-h-[80vh] space-y-6 overflow-y-auto p-2">
         <div>
-          <h2 className="text-2xl font-black italic tracking-tight text-slate-900 dark:text-white">
+          <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
             {mode === 'edit' ? 'Editar Empresa' : 'Nova Empresa'}
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-300">
@@ -117,7 +117,7 @@ export function EmpresaModal({
           </p>
         </div>
 
-        <form onSubmit={onSubmit} className="field-on-light space-y-4">
+        <form onSubmit={onSubmit} className="space-y-4">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2 md:col-span-2">
               <Label className="form-field-label">Razão Social</Label>
@@ -322,7 +322,7 @@ export function EmpresaModal({
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 rounded-xl bg-climbe-primary font-black italic text-climbe-secondary shadow-lg shadow-climbe-primary/20 hover:bg-climbe-primary/90"
+              className="flex-1 rounded-xl bg-climbe-primary font-black text-climbe-secondary shadow-lg shadow-climbe-primary/20 hover:bg-climbe-primary/90"
             >
               {isSubmitting ? 'SALVANDO...' : mode === 'edit' ? 'ATUALIZAR EMPRESA' : 'SALVAR EMPRESA'}
             </Button>

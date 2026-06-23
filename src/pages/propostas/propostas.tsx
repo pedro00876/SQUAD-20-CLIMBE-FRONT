@@ -18,6 +18,7 @@ import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select } from '@/components/ui/select';
 import { FilterChips, type FilterChip } from '@/components/ui/FilterChips';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
@@ -499,7 +500,7 @@ export function PropostasPage() {
             <FileText size={20} />
             <span className="text-[10px] font-black uppercase tracking-[0.2em]">Comercial</span>
           </div>
-          <h1 className="text-4xl font-black italic tracking-tighter text-climbe-secondary">Propostas</h1>
+          <h1 className="text-4xl font-black tracking-tighter text-climbe-secondary">Propostas</h1>
           <p className="max-w-2xl font-light text-gray-400">
             Acompanhe o status de todas as propostas enviadas e em negociação.
           </p>
@@ -507,7 +508,7 @@ export function PropostasPage() {
 
         <Button
           onClick={() => setIsWizardOpen(true)}
-          className="shrink-0 rounded-2xl bg-climbe-primary px-6 py-6 font-black italic text-climbe-secondary shadow-lg shadow-climbe-primary/20 transition-all hover:scale-105"
+          className="shrink-0 rounded-2xl bg-climbe-primary px-6 py-6 font-black text-climbe-secondary shadow-lg shadow-climbe-primary/20 transition-all hover:scale-105"
         >
           <Plus size={20} className="mr-2" />
           CRIAR NOVA PROPOSTA
@@ -534,7 +535,7 @@ export function PropostasPage() {
           <div className="flex h-24 w-24 items-center justify-center rounded-[32px] bg-gray-50 text-gray-200">
             <FileText size={48} />
           </div>
-          <h3 className="text-2xl font-bold italic text-climbe-secondary">
+          <h3 className="text-2xl font-bold text-climbe-secondary">
             {statusFilter === 'TODOS' ? 'Nenhuma proposta ativa' : 'Nenhuma proposta neste filtro'}
           </h3>
           <p className="max-w-xs text-sm text-gray-400">
@@ -563,11 +564,11 @@ export function PropostasPage() {
                     <tr key={proposal.id} className="group transition-colors hover:bg-gray-50/30">
                       <td className="px-8 py-6">
                         <div className="flex items-center gap-4">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-climbe-secondary text-xs font-black italic text-white shrink-0">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-climbe-primary/15 dark:bg-climbe-primary/25 text-xs font-black text-climbe-secondary dark:text-climbe-primary shrink-0 border border-climbe-primary/10">
                             {proposal.enterpriseName?.charAt(0)}
                           </div>
                           <div>
-                            <p className="text-sm font-bold italic text-climbe-secondary">{proposal.enterpriseName}</p>
+                            <p className="text-sm font-bold text-climbe-secondary">{proposal.enterpriseName}</p>
                             <p className="text-[10px] text-gray-400">#{proposal.id} · por {proposal.userName}</p>
                           </div>
                         </div>
@@ -733,7 +734,7 @@ export function PropostasPage() {
       >
         <div className="space-y-6">
           <div>
-            <h2 className="text-2xl font-black italic tracking-tight">Enviar Proposta Comercial</h2>
+            <h2 className="text-2xl font-black tracking-tight">Enviar Proposta Comercial</h2>
             <p className="text-xs text-muted-foreground dark:text-slate-300">Anexe o arquivo comercial para registrar esta etapa da proposta.</p>
           </div>
 
@@ -771,7 +772,7 @@ export function PropostasPage() {
               <Button
                 type="submit"
                 disabled={commercialProposalMutation.isPending || !commercialProposalFile}
-                className="flex-1 rounded-xl bg-climbe-primary font-black italic text-climbe-secondary shadow-lg shadow-climbe-primary/20 hover:bg-climbe-primary/90 disabled:bg-white/10 disabled:text-slate-400 disabled:shadow-none"
+                className="flex-1 rounded-xl bg-climbe-primary font-black text-climbe-secondary shadow-lg shadow-climbe-primary/20 hover:bg-climbe-primary/90 disabled:bg-white/10 disabled:text-slate-400 disabled:shadow-none"
               >
                 <Upload size={16} className="mr-2" />
                 {commercialProposalMutation.isPending ? 'ENVIANDO...' : 'ENVIAR'}
@@ -789,7 +790,7 @@ export function PropostasPage() {
         <div className="space-y-6">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-climbe-primary">Checklist documental</p>
-            <h2 className="text-2xl font-black italic tracking-tight">
+            <h2 className="text-2xl font-black tracking-tight">
               Proposta #{selectedProposal?.id}
             </h2>
             <p className="text-xs text-muted-foreground dark:text-slate-300">
@@ -799,7 +800,7 @@ export function PropostasPage() {
 
           <div className="rounded-2xl border border-border bg-muted/50 p-4 dark:bg-white/5">
             <span className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground dark:text-slate-300">Empresa</span>
-            <strong className="text-sm italic text-foreground dark:text-white">{selectedProposal?.enterpriseName || '--'}</strong>
+            <strong className="text-sm text-foreground dark:text-white">{selectedProposal?.enterpriseName || '--'}</strong>
           </div>
 
           {proposalActionError && (
@@ -864,7 +865,7 @@ export function PropostasPage() {
                   type="button"
                   disabled={createDocumentRequirementsMutation.isPending || selectedDocumentTypes.length === 0}
                   onClick={() => createDocumentRequirementsMutation.mutate()}
-                  className="rounded-xl bg-climbe-primary font-black italic text-climbe-secondary shadow-lg shadow-climbe-primary/20 disabled:bg-white/10 disabled:text-slate-400"
+                  className="rounded-xl bg-climbe-primary font-black text-climbe-secondary shadow-lg shadow-climbe-primary/20 disabled:bg-white/10 disabled:text-slate-400"
                 >
                   <ClipboardCheck size={16} className="mr-2" />
                   {createDocumentRequirementsMutation.isPending ? 'SOLICITANDO...' : 'SOLICITAR DOCUMENTOS'}
@@ -889,7 +890,7 @@ export function PropostasPage() {
                 <div key={requirement.id} className="rounded-3xl bg-white p-5 text-slate-900 shadow-sm">
                   <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
                     <div>
-                      <p className="text-sm font-black italic text-climbe-secondary">
+                      <p className="text-sm font-black text-climbe-secondary">
                         {getDocumentTypeLabel(requirement.documentType)}
                       </p>
                       <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
@@ -964,7 +965,7 @@ export function PropostasPage() {
       >
         <div className="space-y-6">
           <div>
-            <h2 className="text-2xl font-black italic tracking-tight">Detalhes da Proposta</h2>
+            <h2 className="text-2xl font-black tracking-tight">Detalhes da Proposta</h2>
             <p className="text-xs text-muted-foreground dark:text-slate-300">Resumo dos dados cadastrados para acompanhamento comercial.</p>
           </div>
 
@@ -1005,7 +1006,7 @@ export function PropostasPage() {
             <Button
               type="button"
               onClick={() => setIsDetailsModalOpen(false)}
-              className="rounded-xl bg-climbe-primary font-black italic text-climbe-secondary"
+              className="rounded-xl bg-climbe-primary font-black text-climbe-secondary"
             >
               FECHAR
             </Button>
@@ -1016,7 +1017,7 @@ export function PropostasPage() {
       <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)}>
         <div className="space-y-6">
           <div>
-            <h2 className="text-2xl font-black italic tracking-tight text-red-500">Excluir Proposta</h2>
+            <h2 className="text-2xl font-black tracking-tight text-red-500">Excluir Proposta</h2>
             <p className="text-xs text-gray-400">
               Esta acao remove a proposta e os registros vinculados no fluxo, como contratos, relatorios e planilhas.
             </p>
@@ -1048,7 +1049,7 @@ export function PropostasPage() {
               type="button"
               onClick={handleDeleteProposal}
               disabled={deleteMutation.isPending}
-              className="flex-1 rounded-xl bg-red-500 font-black italic text-white hover:bg-red-600"
+              className="flex-1 rounded-xl bg-red-500 font-black text-white hover:bg-red-600"
             >
               {deleteMutation.isPending ? 'EXCLUINDO...' : 'EXCLUIR'}
             </Button>
@@ -1060,7 +1061,7 @@ export function PropostasPage() {
       <Modal isOpen={isRejectModalOpen} onClose={() => setIsRejectModalOpen(false)}>
         <div className="space-y-6">
           <div>
-            <h2 className="text-2xl font-black text-red-500 italic tracking-tight">Reprovar Proposta</h2>
+            <h2 className="text-2xl font-black text-red-500 tracking-tight">Reprovar Proposta</h2>
             <p className="text-xs text-gray-400">Informe o motivo da reprovação para notificar o cliente.</p>
           </div>
 
@@ -1089,7 +1090,7 @@ export function PropostasPage() {
               <Button 
                 onClick={handleReject}
                 disabled={statusMutation.isPending || !rejectReason}
-                className="flex-1 bg-red-500 text-white font-black italic rounded-xl"
+                className="flex-1 bg-red-500 text-white font-black rounded-xl"
               >
                 {statusMutation.isPending ? 'REPROVANDO...' : 'REPROVAR E NOTIFICAR'}
               </Button>
@@ -1102,24 +1103,23 @@ export function PropostasPage() {
       <Modal isOpen={isAnalystModalOpen} onClose={() => setIsAnalystModalOpen(false)}>
         <div className="space-y-6">
           <div>
-            <h2 className="text-2xl font-black text-climbe-secondary italic tracking-tight">Atribuir Analista</h2>
+            <h2 className="text-2xl font-black text-climbe-secondary tracking-tight">Atribuir Analista</h2>
             <p className="text-xs text-gray-400">Selecione o profissional responsável por este contrato.</p>
           </div>
 
           <div className="space-y-4">
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-widest">Selecionar Analista</Label>
-              <select 
+              <Select 
                 required
                 value={selectedAnalystId}
                 onChange={e => setSelectedAnalystId(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 border-transparent rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-climbe-primary/10 transition-all outline-none border focus:border-climbe-primary/20 appearance-none"
               >
                 <option value="">Selecione um analista...</option>
                 {(usersPage?.content || []).map((u: any) => (
                   <option key={u.id} value={u.id}>{u.fullName} ({u.role || 'Analista'})</option>
                 ))}
-              </select>
+              </Select>
             </div>
 
             <div className="flex gap-3 pt-4">
@@ -1134,7 +1134,7 @@ export function PropostasPage() {
               <Button 
                 onClick={handleAssignAnalyst}
                 disabled={!selectedAnalystId}
-                className="flex-1 bg-climbe-primary text-climbe-secondary font-black italic rounded-xl"
+                className="flex-1 bg-climbe-primary text-climbe-secondary font-black rounded-xl"
               >
                 ATRIBUIR E NOTIFICAR
               </Button>
@@ -1146,7 +1146,7 @@ export function PropostasPage() {
       <Modal isOpen={isContractModalOpen} onClose={() => setIsContractModalOpen(false)}>
         <div className="space-y-6">
           <div>
-            <h2 className="text-2xl font-black italic tracking-tight text-climbe-secondary">Gerar Contrato</h2>
+            <h2 className="text-2xl font-black tracking-tight text-climbe-secondary">Gerar Contrato</h2>
             <p className="text-xs text-gray-400">Formalize a parceria com {selectedProposal?.enterpriseName}.</p>
           </div>
 
@@ -1170,7 +1170,7 @@ export function PropostasPage() {
               <Button
                 type="submit"
                 disabled={contractMutation.isPending}
-                className="flex-1 rounded-xl bg-climbe-primary font-black italic text-climbe-secondary shadow-lg shadow-climbe-primary/20"
+                className="flex-1 rounded-xl bg-climbe-primary font-black text-climbe-secondary shadow-lg shadow-climbe-primary/20"
               >
                 {contractMutation.isPending ? 'GERANDO...' : 'FINALIZAR CONTRATO'}
               </Button>

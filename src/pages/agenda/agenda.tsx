@@ -233,23 +233,23 @@ export function AgendaPage() {
             setCreateInitialDate(format(new Date(), 'yyyy-MM-dd'));
             setIsCreateOpen(true);
           }}
-          className="flex items-center gap-2 rounded-2xl bg-climbe-primary px-6 py-6 font-black italic text-climbe-secondary shadow-lg shadow-climbe-primary/20 hover:scale-105 transition-all"
+          className="flex items-center gap-2 rounded-2xl bg-climbe-primary px-6 py-6 font-black text-climbe-secondary shadow-lg shadow-climbe-primary/20 hover:scale-105 transition-all"
         >
           <Plus size={16} /> Nova Reunião
         </Button>
       </div>
 
       {/* Tabs */}
-      <div className="bg-white/80 p-1 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-1 self-start w-fit">
+      <div className="bg-white/90 dark:bg-zinc-900/90 p-1 rounded-2xl border border-gray-100 dark:border-zinc-800 shadow-sm flex items-center gap-1 self-start w-fit">
         <button
           onClick={() => setTab('calendario')}
-          className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${tab === 'calendario' ? 'bg-climbe-primary text-climbe-secondary font-black' : 'text-gray-500 hover:text-climbe-secondary'}`}
+          className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${tab === 'calendario' ? 'bg-climbe-primary text-climbe-secondary font-black' : 'text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-white'}`}
         >
           <CalendarIcon size={14} /> Calendário
         </button>
         <button
           onClick={() => setTab('lista')}
-          className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${tab === 'lista' ? 'bg-climbe-primary text-climbe-secondary font-black' : 'text-gray-500 hover:text-climbe-secondary'}`}
+          className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${tab === 'lista' ? 'bg-climbe-primary text-climbe-secondary font-black' : 'text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-white'}`}
         >
           <List size={14} /> Lista
         </button>
@@ -261,16 +261,16 @@ export function AgendaPage() {
             {/* Calendar view toggle */}
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <button onClick={handlePrev} className="p-2 hover:bg-gray-50 rounded-xl border border-gray-100 transition-colors" aria-label="Anterior">
-                  <ChevronLeft size={18} className="text-gray-600" />
+                <button onClick={handlePrev} className="p-2 hover:bg-slate-50 dark:hover:bg-zinc-800 rounded-xl border border-slate-100 dark:border-zinc-800 transition-colors" aria-label="Anterior">
+                  <ChevronLeft size={18} className="text-slate-600 dark:text-zinc-400" />
                 </button>
-                <button onClick={() => setCurrentDate(new Date())} className="px-4 py-2 hover:bg-gray-50 rounded-xl border border-gray-100 text-xs font-bold text-gray-700 transition-colors">
+                <button onClick={() => setCurrentDate(new Date())} className="px-4 py-2 hover:bg-slate-50 dark:hover:bg-zinc-800 rounded-xl border border-slate-100 dark:border-zinc-800 text-xs font-bold text-slate-700 dark:text-zinc-300 transition-colors">
                   Hoje
                 </button>
-                <button onClick={handleNext} className="p-2 hover:bg-gray-50 rounded-xl border border-gray-100 transition-colors" aria-label="Próximo">
-                  <ChevronRight size={18} className="text-gray-600" />
+                <button onClick={handleNext} className="p-2 hover:bg-slate-50 dark:hover:bg-zinc-800 rounded-xl border border-slate-100 dark:border-zinc-800 transition-colors" aria-label="Próximo">
+                  <ChevronRight size={18} className="text-slate-600 dark:text-zinc-400" />
                 </button>
-                <span className="text-lg font-black text-climbe-secondary italic ml-2">
+                <span className="text-lg font-black text-slate-900 dark:text-white ml-2">
                   {calView === 'month' && format(currentDate, 'MMMM yyyy', { locale: ptBR })}
                   {calView === 'week' && `Semana de ${format(weekDays[0], 'dd/MM')} a ${format(weekDays[6], 'dd/MM/yyyy')}`}
                   {calView === 'day' && format(currentDate, "eeee, dd 'de' MMMM", { locale: ptBR })}
@@ -278,16 +278,16 @@ export function AgendaPage() {
               </div>
 
               <div className="flex items-center gap-3">
-                <span className="text-xs text-gray-400 font-bold bg-gray-50 px-4 py-2 rounded-xl border border-gray-100 flex items-center gap-2">
+                <span className="text-xs text-slate-400 dark:text-zinc-400 font-bold bg-slate-50 dark:bg-zinc-900/90 px-4 py-2 rounded-xl border border-slate-100 dark:border-zinc-800 flex items-center gap-2">
                   <span className="h-2.5 w-2.5 rounded-full bg-climbe-primary animate-pulse" />
                   {monthEvents.length} em {format(currentDate, 'MMM', { locale: ptBR })}
                 </span>
-                <div className="bg-white/80 p-1 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-1">
+                <div className="bg-white/90 dark:bg-zinc-900/90 p-1 rounded-2xl border border-gray-100 dark:border-zinc-800 shadow-sm flex items-center gap-1">
                   {([['month', <Grid key="g" size={14} />, 'Mês'], ['week', <CalendarRange key="cr" size={14} />, 'Semana'], ['day', <CalendarDays key="cd" size={14} />, 'Dia']] as const).map(([v, icon, label]) => (
                     <button
                       key={v}
                       onClick={() => setCalView(v as CalendarView)}
-                      className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${calView === v ? 'bg-climbe-primary text-climbe-secondary' : 'text-gray-500 hover:text-climbe-secondary'}`}
+                      className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${calView === v ? 'bg-climbe-primary text-climbe-secondary' : 'text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-white'}`}
                     >
                       {icon} {label}
                     </button>
@@ -302,7 +302,7 @@ export function AgendaPage() {
                 <Card className="p-6">
                   <div className="flex items-center justify-between mb-6">
                     <div>
-                      <h3 className="font-black text-climbe-secondary italic text-sm">Próximos Compromissos</h3>
+                      <h3 className="font-black text-slate-900 dark:text-white text-sm">Próximos Compromissos</h3>
                       <p className="text-[9px] text-gray-400 uppercase tracking-widest">Reuniões agendadas</p>
                     </div>
                     <Clock size={16} className="text-gray-300" />

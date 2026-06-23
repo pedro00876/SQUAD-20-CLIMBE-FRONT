@@ -28,7 +28,7 @@ export function StageAccessDenied({ requiredRoles, currentStageLabel, hint }: St
         <Lock size={28} className="text-gray-400" />
       </div>
       <div className="space-y-1 max-w-sm">
-        <h3 className="font-black italic text-climbe-secondary text-lg">
+        <h3 className="font-black text-climbe-secondary text-lg">
           {currentStageLabel ? `Acesso restrito — ${currentStageLabel}` : 'Acesso restrito'}
         </h3>
         <p className="text-sm text-gray-400 font-light">
@@ -36,7 +36,7 @@ export function StageAccessDenied({ requiredRoles, currentStageLabel, hint }: St
           <strong className="text-climbe-secondary font-bold">{rolesDisplay}</strong>
         </p>
         {hint && (
-          <p className="text-xs text-gray-400 mt-2 italic">{hint}</p>
+          <p className="text-xs text-gray-400 mt-2">{hint}</p>
         )}
       </div>
     </div>

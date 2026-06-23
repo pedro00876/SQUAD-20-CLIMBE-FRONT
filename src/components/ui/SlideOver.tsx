@@ -48,16 +48,16 @@ export function SlideOver({ isOpen, onClose, title, children, width = 'md' }: Sl
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 28, stiffness: 280 }}
             className={clsx(
-              'fixed right-0 top-0 bottom-0 z-[90] bg-white shadow-2xl flex flex-col w-full',
+              'fixed right-0 top-0 bottom-0 z-[90] bg-white dark:bg-zinc-950 border-l border-gray-100 dark:border-zinc-800/80 shadow-2xl flex flex-col w-full text-slate-800 dark:text-white',
               WIDTH_CLASSES[width],
             )}
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-              <h2 className="text-lg font-black italic text-climbe-secondary tracking-tight">{title}</h2>
+            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 dark:border-zinc-800/80">
+              <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">{title}</h2>
               <button
                 onClick={onClose}
-                className="p-2 rounded-xl hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+                className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-zinc-800 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                 aria-label="Fechar"
               >
                 <X size={18} />

@@ -137,7 +137,7 @@ export function DashboardPage() {
 
       {/* Próximas Ações — cockpit card */}
       {(actionableProposals.length > 0 || pendingUsers.length > 0 || todayMeetings.length > 0) && (
-        <div className="bg-climbe-secondary text-white rounded-[32px] p-8">
+        <div className="bg-white border border-gray-100 dark:border-none shadow-sm dark:bg-climbe-secondary text-slate-800 dark:text-white rounded-[32px] p-8">
           <div className="flex items-center gap-2 mb-5">
             <AlertTriangle size={16} className="text-climbe-primary" />
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-climbe-primary">Próximas Ações</span>
@@ -147,13 +147,13 @@ export function DashboardPage() {
               <button
                 key={p.id}
                 onClick={() => navigate(routes.propostas)}
-                className="w-full flex items-center justify-between bg-white/10 hover:bg-white/20 rounded-2xl px-5 py-3.5 transition-all group text-left"
+                className="w-full flex items-center justify-between bg-slate-50 border border-slate-100/50 hover:bg-slate-100 dark:bg-white/10 dark:hover:bg-white/20 dark:border-transparent rounded-2xl px-5 py-3.5 transition-all group text-left text-slate-900 dark:text-white"
               >
                 <div className="flex items-center gap-3">
                   <FileText size={15} className="text-climbe-primary shrink-0" />
                   <div>
-                    <p className="text-sm font-bold">{p.enterpriseName}</p>
-                    <p className="text-[10px] text-white/60 uppercase tracking-widest">
+                    <p className="text-sm font-bold text-slate-900 dark:text-white">{p.enterpriseName}</p>
+                    <p className="text-[10px] text-slate-400 dark:text-white/60 uppercase tracking-widest font-medium">
                       {p.status === 'COMMERCIAL_PROPOSAL' ? 'Aguardando aprovação da proposta' :
                        p.status === 'IN_TRIAGE' ? 'Triagem em andamento' :
                        p.status === 'RECEIVED' ? 'Proposta recebida' : 'Ajustes pendentes'}
@@ -174,11 +174,11 @@ export function DashboardPage() {
             {pendingApproval.length > 0 && (
               <button
                 onClick={() => navigate(routes.propostas)}
-                className="w-full flex items-center justify-between bg-climbe-primary/20 hover:bg-climbe-primary/30 rounded-2xl px-5 py-3.5 transition-all group text-left"
+                className="w-full flex items-center justify-between bg-climbe-primary/10 dark:bg-climbe-primary/20 hover:bg-climbe-primary/20 dark:hover:bg-climbe-primary/30 rounded-2xl px-5 py-3.5 transition-all group text-left text-slate-900 dark:text-white"
               >
                 <div className="flex items-center gap-3">
                   <CheckCircle2 size={15} className="text-climbe-primary shrink-0" />
-                  <p className="text-sm font-bold">
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">
                     {pendingApproval.length} {pendingApproval.length === 1 ? 'proposta' : 'propostas'} aguardando aprovação
                   </p>
                 </div>
@@ -188,11 +188,11 @@ export function DashboardPage() {
             {isAdmin && pendingUsers.length > 0 && (
               <button
                 onClick={() => navigate(routes.usuarios)}
-                className="w-full flex items-center justify-between bg-white/10 hover:bg-white/20 rounded-2xl px-5 py-3.5 transition-all group text-left"
+                className="w-full flex items-center justify-between bg-slate-50 border border-slate-100/50 hover:bg-slate-100 dark:bg-white/10 dark:hover:bg-white/20 dark:border-transparent rounded-2xl px-5 py-3.5 transition-all group text-left text-slate-900 dark:text-white"
               >
                 <div className="flex items-center gap-3">
                   <Users size={15} className="text-climbe-primary shrink-0" />
-                  <p className="text-sm font-bold">
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">
                     {pendingUsers.length} {pendingUsers.length === 1 ? 'usuário aguarda aprovação' : 'usuários aguardam aprovação'}
                   </p>
                 </div>
@@ -202,11 +202,11 @@ export function DashboardPage() {
             {todayMeetings.length > 0 && (
               <button
                 onClick={() => navigate(routes.agenda)}
-                className="w-full flex items-center justify-between bg-white/10 hover:bg-white/20 rounded-2xl px-5 py-3.5 transition-all group text-left"
+                className="w-full flex items-center justify-between bg-slate-50 border border-slate-100/50 hover:bg-slate-100 dark:bg-white/10 dark:hover:bg-white/20 dark:border-transparent rounded-2xl px-5 py-3.5 transition-all group text-left text-slate-900 dark:text-white"
               >
                 <div className="flex items-center gap-3">
                   <CalendarDays size={15} className="text-climbe-primary shrink-0" />
-                  <p className="text-sm font-bold">
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">
                     {todayMeetings.length} {todayMeetings.length === 1 ? 'reunião hoje' : 'reuniões hoje'}
                   </p>
                 </div>
@@ -310,7 +310,7 @@ export function DashboardPage() {
                     onClick={() => navigate(`${routes.empresas}/${p.enterpriseId}`)}
                     className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-gray-50 transition-colors text-left group"
                   >
-                    <div className="w-8 h-8 rounded-xl bg-climbe-secondary text-white flex items-center justify-center font-black italic text-xs shrink-0">
+                    <div className="w-8 h-8 rounded-xl bg-climbe-primary/15 dark:bg-climbe-primary/25 text-climbe-secondary dark:text-climbe-primary border border-climbe-primary/10 flex items-center justify-center font-black italic text-xs shrink-0">
                       {p.enterpriseName?.charAt(0)}
                     </div>
                     <p className="text-xs font-bold text-climbe-secondary truncate flex-1">{p.enterpriseName}</p>

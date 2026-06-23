@@ -5,6 +5,8 @@ import type { DocumentType, DocumentRequirement, DocumentRequirementStatus } fro
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
 import { CheckCircle2, XCircle, Clock, FileText, Plus, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -96,7 +98,7 @@ export function ChecklistModal({ isOpen, onClose, proposalId }: ChecklistModalPr
     <Modal isOpen={isOpen} onClose={onClose} className="max-w-3xl">
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-black italic tracking-tight text-climbe-secondary">Checklist Documental</h2>
+          <h2 className="text-2xl font-black tracking-tight text-climbe-secondary">Checklist Documental</h2>
           <p className="text-xs text-gray-400">Proposta #{proposalId} — disponível após assinatura do contrato.</p>
         </div>
 
@@ -104,32 +106,30 @@ export function ChecklistModal({ isOpen, onClose, proposalId }: ChecklistModalPr
           <p className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-xs font-bold text-red-500">{error}</p>
         )}
 
-        <form onSubmit={handleCreate} className="flex items-end gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+        <form onSubmit={handleCreate} className="flex items-end gap-3 p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-800/80">
           <div className="flex-1 space-y-2">
-            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Documento Exigido</Label>
-            <select
+            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Documento Exigido</Label>
+            <Select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value as DocumentType)}
-              className="w-full px-4 py-2 text-sm bg-white border border-gray-200 rounded-xl outline-none focus:border-climbe-primary"
             >
               {documentTypes.map((t) => (
                 <option key={t.value} value={t.value}>{t.label}</option>
               ))}
-            </select>
+            </Select>
           </div>
           <div className="flex-1 space-y-2">
-            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Prazo (Opcional)</Label>
-            <input
+            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Prazo (Opcional)</Label>
+            <Input
               type="date"
               value={deadline}
               onChange={(e) => setDeadline(e.target.value)}
-              className="w-full px-4 py-2 text-sm bg-white border border-gray-200 rounded-xl outline-none focus:border-climbe-primary"
             />
           </div>
           <Button
             type="submit"
             disabled={createMutation.isPending}
-            className="bg-climbe-primary text-climbe-secondary font-black italic rounded-xl px-4 py-2"
+            className="bg-climbe-primary text-climbe-secondary font-black rounded-xl px-4 py-2 h-12"
           >
             <Plus size={16} className="mr-1" /> ADICIONAR
           </Button>
@@ -207,7 +207,7 @@ export function ChecklistModal({ isOpen, onClose, proposalId }: ChecklistModalPr
                   )}
 
                   {req.status === 'PENDING' && (
-                    <p className="text-[10px] text-gray-400 italic">Aguardando upload do documento pela empresa.</p>
+                    <p className="text-[10px] text-gray-400">Aguardando upload do documento pela empresa.</p>
                   )}
                 </div>
               );

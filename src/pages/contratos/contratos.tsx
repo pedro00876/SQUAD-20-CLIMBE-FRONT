@@ -31,6 +31,7 @@ import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select } from '@/components/ui/select';
 
 type ExplorerView = 'root' | 'folder';
 
@@ -270,7 +271,7 @@ export function ContratosPage() {
   });
 
   const approvedProposals = (proposalsPage?.content || []).filter(
-    (p) => p.status === 'COMMERCIAL_PROPOSAL_APPROVED',
+    (p: Proposal) => p.status === 'COMMERCIAL_PROPOSAL_APPROVED',
   );
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -278,7 +279,7 @@ export function ContratosPage() {
     if (!formData.proposalId) return;
 
     const proposal = approvedProposals.find(
-      (p) => p.id === formData.proposalId,
+      (p: Proposal) => p.id === formData.proposalId,
     );
 
     if (!proposal || proposal.status?.toUpperCase() !== 'COMMERCIAL_PROPOSAL_APPROVED') {
@@ -348,7 +349,7 @@ export function ContratosPage() {
             <ScrollText size={24} />
           </div>
           <div>
-            <h4 className="text-lg font-bold text-climbe-secondary italic">
+            <h4 className="text-lg font-bold text-climbe-secondary">
               Contrato #{contract.id}
             </h4>
             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
@@ -365,7 +366,7 @@ export function ContratosPage() {
                 Início
               </span>
             </div>
-            <p className="text-xs font-bold text-climbe-secondary italic">
+            <p className="text-xs font-bold text-climbe-secondary">
               {contract.startDate
                 ? format(new Date(contract.startDate), 'dd/MM/yyyy', {
                     locale: ptBR,
@@ -380,7 +381,7 @@ export function ContratosPage() {
                 Término
               </span>
             </div>
-            <p className="text-xs font-bold text-climbe-primary italic">
+            <p className="text-xs font-bold text-climbe-primary">
               {contract.endDate
                 ? format(new Date(contract.endDate), 'dd/MM/yyyy', {
                     locale: ptBR,
@@ -445,7 +446,7 @@ export function ContratosPage() {
               Comercial
             </span>
           </div>
-          <h1 className="text-4xl font-black text-climbe-secondary tracking-tighter italic">
+          <h1 className="text-4xl font-black text-climbe-secondary tracking-tighter">
             Contratos
           </h1>
           <p className="text-muted-foreground font-light max-w-2xl">
@@ -456,7 +457,7 @@ export function ContratosPage() {
 
         <Button
           onClick={() => setIsModalOpen(true)}
-          className="bg-climbe-primary text-climbe-secondary font-black italic rounded-2xl px-6 py-6 shadow-lg shadow-climbe-primary/20 hover:scale-105 transition-all shrink-0"
+          className="bg-climbe-primary text-climbe-secondary font-black rounded-2xl px-6 py-6 shadow-lg shadow-climbe-primary/20 hover:scale-105 transition-all shrink-0"
         >
           <Plus size={20} className="mr-2" />
           CRIAR NOVO CONTRATO
@@ -472,7 +473,7 @@ export function ContratosPage() {
           <div className="w-24 h-24 rounded-[32px] bg-muted flex items-center justify-center text-muted-foreground/40">
             <ScrollText size={48} />
           </div>
-          <h3 className="text-2xl font-bold text-climbe-secondary italic">
+          <h3 className="text-2xl font-bold text-climbe-secondary">
             Nenhum contrato formalizado
           </h3>
           <p className="text-sm text-muted-foreground max-w-xs">
@@ -507,7 +508,7 @@ export function ContratosPage() {
 
               {!hasFilteredFolders ? (
                 <div className="py-16 text-center space-y-3">
-                  <p className="text-lg font-bold text-climbe-secondary italic">
+                  <p className="text-lg font-bold text-climbe-secondary">
                     Nenhuma empresa ou contrato encontrado
                   </p>
                   <p className="text-sm text-muted-foreground">
@@ -530,7 +531,7 @@ export function ContratosPage() {
                           <Folder size={32} />
                         </div>
                         <div className="space-y-1 min-w-0 w-full">
-                          <p className="text-sm font-black italic text-climbe-secondary truncate">
+                          <p className="text-sm font-black text-climbe-secondary truncate">
                             {group.enterpriseName}
                           </p>
                           <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
@@ -554,12 +555,12 @@ export function ContratosPage() {
                   <button
                     type="button"
                     onClick={goToRoot}
-                    className="font-black italic text-climbe-primary hover:underline"
+                    className="font-black text-climbe-primary hover:underline"
                   >
                     Contratos
                   </button>
                   <ChevronRight size={14} className="text-muted-foreground/50" />
-                  <span className="font-black italic text-climbe-secondary truncate max-w-[240px] sm:max-w-none">
+                  <span className="font-black text-climbe-secondary truncate max-w-[240px] sm:max-w-none">
                     {selectedGroup?.enterpriseName ?? 'Pasta'}
                   </span>
                 </nav>
@@ -581,7 +582,7 @@ export function ContratosPage() {
                   <Building2 size={18} />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black italic text-climbe-secondary">
+                  <h3 className="text-lg font-black text-climbe-secondary">
                     {selectedGroup?.enterpriseName}
                   </h3>
                   <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
@@ -608,7 +609,7 @@ export function ContratosPage() {
 
               {folderContracts.length === 0 ? (
                 <div className="py-16 text-center space-y-4">
-                  <p className="text-lg font-bold text-climbe-secondary italic">
+                  <p className="text-lg font-bold text-climbe-secondary">
                     Nenhum contrato nesta pasta corresponde à busca
                   </p>
                   <Button type="button" variant="outline" onClick={goToRoot}>
@@ -632,7 +633,7 @@ export function ContratosPage() {
       >
         <div className="space-y-6">
           <div>
-            <h2 className="text-2xl font-black italic tracking-tight">
+            <h2 className="text-2xl font-black tracking-tight">
               Formalizar Contrato
             </h2>
             <p className="text-xs text-muted-foreground dark:text-slate-300">
@@ -643,7 +644,7 @@ export function ContratosPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label className="form-field-label">Proposta Aprovada</Label>
-              <select
+              <Select
                 required
                 value={formData.proposalId}
                 onChange={(e) =>
@@ -652,15 +653,14 @@ export function ContratosPage() {
                     proposalId: Number(e.target.value),
                   })
                 }
-                className="form-field-select appearance-none"
               >
                 <option value="">Selecione uma proposta...</option>
-                {approvedProposals.map((proposal) => (
+                {approvedProposals.map((proposal: Proposal) => (
                   <option key={proposal.id} value={proposal.id}>
                     #{proposal.id} - {proposal.enterpriseName}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
 
             <div className="space-y-2">
@@ -668,7 +668,6 @@ export function ContratosPage() {
               <Input
                 type="date"
                 required
-                className="form-field-control"
                 value={formData.startDate}
                 onChange={(e) =>
                   setFormData({ ...formData, startDate: e.target.value })
@@ -688,7 +687,7 @@ export function ContratosPage() {
               <Button
                 type="submit"
                 disabled={createMutation.isPending || !formData.proposalId}
-                className="flex-1 rounded-xl bg-climbe-primary font-black italic text-climbe-secondary shadow-lg shadow-climbe-primary/20 hover:bg-climbe-primary/90 disabled:bg-white/10 disabled:text-slate-400 disabled:shadow-none"
+                className="flex-1 rounded-xl bg-climbe-primary font-black text-climbe-secondary shadow-lg shadow-climbe-primary/20 hover:bg-climbe-primary/90 disabled:bg-white/10 disabled:text-slate-400 disabled:shadow-none"
               >
                 {createMutation.isPending ? 'GERANDO...' : 'FINALIZAR CONTRATO'}
               </Button>
@@ -708,7 +707,7 @@ export function ContratosPage() {
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-climbe-primary">
                   Contrato para assinatura
                 </p>
-                <h2 className="text-2xl font-black text-climbe-secondary italic tracking-tight">
+                <h2 className="text-2xl font-black text-climbe-secondary tracking-tight">
                   Contrato #{selectedContract.id}
                 </h2>
                 <p className="text-xs text-muted-foreground">
@@ -728,7 +727,7 @@ export function ContratosPage() {
                   <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">
                     Empresa
                   </p>
-                  <p className="text-sm font-bold text-climbe-secondary italic">
+                  <p className="text-sm font-bold text-climbe-secondary">
                     {selectedContract.enterpriseName}
                   </p>
                 </div>
@@ -736,7 +735,7 @@ export function ContratosPage() {
                   <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">
                     Proposta vinculada
                   </p>
-                  <p className="text-sm font-bold text-climbe-secondary italic">
+                  <p className="text-sm font-bold text-climbe-secondary">
                     #{selectedContract.proposalId}
                   </p>
                 </div>
@@ -744,7 +743,7 @@ export function ContratosPage() {
                   <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">
                     Inicio
                   </p>
-                  <p className="text-sm font-bold text-climbe-secondary italic">
+                  <p className="text-sm font-bold text-climbe-secondary">
                     {selectedContract.startDate
                       ? format(
                           new Date(selectedContract.startDate),
@@ -758,7 +757,7 @@ export function ContratosPage() {
                   <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">
                     Termino
                   </p>
-                  <p className="text-sm font-bold text-climbe-secondary italic">
+                  <p className="text-sm font-bold text-climbe-secondary">
                     {selectedContract.endDate
                       ? format(
                           new Date(selectedContract.endDate),
@@ -806,7 +805,7 @@ export function ContratosPage() {
                   signMutation.isPending || isContractSigned(selectedContract)
                 }
                 onClick={() => signMutation.mutate(selectedContract.id)}
-                className="bg-climbe-primary text-climbe-secondary font-black italic rounded-xl shadow-lg shadow-climbe-primary/20"
+                className="bg-climbe-primary text-climbe-secondary font-black rounded-xl shadow-lg shadow-climbe-primary/20"
               >
                 <PenLine size={16} className="mr-2" />
                 {isContractSigned(selectedContract)

@@ -3,6 +3,7 @@ import { User } from 'lucide-react';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Select } from '@/components/ui/select';
 import type { Enterprise } from '@/services/enterprise.service';
 
 interface PropostaModalProps {
@@ -30,18 +31,17 @@ export function PropostaModal({
     <Modal isOpen={isOpen} onClose={onClose} className="form-modal-shell max-w-lg">
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-black italic tracking-tight">Nova Proposta</h2>
+          <h2 className="text-2xl font-black tracking-tight">Nova Proposta</h2>
           <p className="text-xs text-muted-foreground dark:text-slate-300">Inicie um novo processo comercial selecionando o cliente.</p>
         </div>
 
         <form onSubmit={onSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label className="form-field-label">Selecionar Empresa</Label>
-            <select
+            <Select
               required
               value={selectedEnterpriseId}
               onChange={(e) => onSelectedEnterpriseIdChange(e.target.value)}
-              className="form-field-select"
             >
               <option value="">Selecione uma empresa...</option>
               {enterprises.map((enterprise) => (
@@ -49,7 +49,7 @@ export function PropostaModal({
                   {enterprise.tradeName || enterprise.legalName} ({enterprise.cnpj})
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
 
           <div className="space-y-2 rounded-2xl border border-border bg-muted/50 p-4 dark:border-white/10 dark:bg-white/5">
@@ -57,7 +57,7 @@ export function PropostaModal({
               <User size={14} />
               <span className="text-[10px] font-black uppercase tracking-widest">Responsável</span>
             </div>
-            <p className="text-xs font-bold italic text-foreground dark:text-slate-200">{responsibleName || 'Usuário atual'}</p>
+            <p className="text-xs font-bold text-foreground dark:text-slate-200">{responsibleName || 'Usuário atual'}</p>
           </div>
 
           <div className="flex gap-3 pt-4">
@@ -72,7 +72,7 @@ export function PropostaModal({
             <Button
               type="submit"
               disabled={isSubmitting || !selectedEnterpriseId}
-              className="flex-1 rounded-xl bg-climbe-primary font-black italic text-climbe-secondary shadow-lg shadow-climbe-primary/20 hover:bg-climbe-primary/90 disabled:bg-white/10 disabled:text-slate-400 disabled:shadow-none"
+              className="flex-1 rounded-xl bg-climbe-primary font-black text-climbe-secondary shadow-lg shadow-climbe-primary/20 hover:bg-climbe-primary/90 disabled:bg-white/10 disabled:text-slate-400 disabled:shadow-none"
             >
               {isSubmitting ? 'CRIANDO...' : 'CRIAR PROPOSTA'}
             </Button>

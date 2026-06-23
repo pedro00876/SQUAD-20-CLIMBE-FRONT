@@ -44,21 +44,21 @@ export function ConfirmDialog({
       />
 
       {/* Dialog */}
-      <div className="relative z-10 w-full max-w-md rounded-[28px] bg-white shadow-2xl p-8 space-y-6">
+      <div className="relative z-10 w-full max-w-md rounded-[28px] bg-white dark:bg-zinc-950 border border-gray-100 dark:border-zinc-800/80 shadow-2xl p-8 space-y-6 text-slate-800 dark:text-white">
         <div className="flex items-start gap-4">
-          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${variant === 'danger' ? 'bg-red-50' : 'bg-amber-50'}`}>
+          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${variant === 'danger' ? 'bg-red-50 dark:bg-red-950/30' : 'bg-amber-50 dark:bg-amber-950/30'}`}>
             <Icon size={24} className={iconClass} />
           </div>
           <div>
-            <h3 className="text-lg font-black italic text-climbe-secondary leading-tight">{title}</h3>
+            <h3 className="text-lg font-black text-slate-900 dark:text-white leading-tight">{title}</h3>
             {description && (
-              <p className="text-sm text-gray-500 mt-1 font-light">{description}</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 font-light">{description}</p>
             )}
           </div>
         </div>
 
         {children && (
-          <div className="bg-gray-50 rounded-2xl p-4 text-sm">
+          <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-2xl p-4 text-sm">
             {children}
           </div>
         )}
@@ -75,7 +75,7 @@ export function ConfirmDialog({
           <Button
             onClick={onConfirm}
             disabled={isLoading}
-            className={`flex-1 font-black italic rounded-xl ${confirmClass}`}
+            className={`flex-1 font-bold rounded-xl ${confirmClass}`}
           >
             {isLoading ? (
               <><Loader2 size={16} className="mr-2 animate-spin" /> Aguarde...</>
