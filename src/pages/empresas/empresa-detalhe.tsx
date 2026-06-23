@@ -1,11 +1,11 @@
-import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useMemo, type ReactNode } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ProcessStepper, type ProcessStage } from '@/components/ui/ProcessStepper';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { canPerformStageAction } from '@/config/roles';
-import { ArrowLeft, Building2, CheckCircle2, Info, Sparkles } from 'lucide-react';
+import { ArrowLeft, Building2, CheckCircle2, FileText, Info, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { enterpriseService } from '@/services/enterprise.service';
 import { proposalService } from '@/services/proposal.service';
@@ -13,6 +13,7 @@ import { contractService } from '@/services/contract.service';
 import { documentRequirementService } from '@/services/document.service';
 import { reportService } from '@/services/report.service';
 import { meetingService } from '@/features/reunioes/services';
+import { EnterpriseProposalPicker } from '@/features/empresas/components';
 
 import { StageCadastro } from '@/features/pipeline/components/StageCadastro';
 import { StageReuniao } from '@/features/pipeline/components/StageReuniao';
@@ -23,6 +24,7 @@ import { StageFerramentas } from '@/features/pipeline/components/StageFerramenta
 import { StageRelatorio } from '@/features/pipeline/components/StageRelatorio';
 import { StageAgendamento } from '@/features/pipeline/components/StageAgendamento';
 import { deriveStage } from '@/features/pipeline/utils/deriveStage';
+import { filterMeetingsForProposal } from '@/features/pipeline/utils/filterMeetingsForProposal';
 
 // ─── Next-step panel data ─────────────────────────────────────────────────────
 
@@ -90,15 +92,57 @@ const PROPOSAL_STATUS_LABELS: Record<string, string> = {
   COMMERCIAL_PROPOSAL: 'Proposta Comercial',
   COMMERCIAL_PROPOSAL_APPROVED: 'Proposta Aprovada',
   COMMERCIAL_PROPOSAL_REJECTED: 'Proposta Reprovada',
-    READY_FOR_NEXT_STAGE: 'Avançando',
-    COMPLETED: 'Concluída',
-  };
+  READY_FOR_NEXT_STAGE: 'Avançando',
+  COMPLETED: 'Concluída',
+};
+
+function EmpresaHeader({
+  empresa,
+  subtitle,
+  onBack,
+  children,
+}: {
+  empresa: { tradeName?: string; legalName: string; cnpj: string };
+  subtitle?: string;
+  onBack: () => void;
+  children?: ReactNode;
+}) {
+  return (
+    <div className="flex items-start gap-4 mb-6">
+      <button
+        onClick={onBack}
+        className="p-2 hover:bg-gray-100 rounded-lg transition-colors mt-1"
+      >
+        <ArrowLeft size={24} className="text-climbe-secondary" />
+      </button>
+      <div className="flex-1">
+        <div className="flex items-center gap-3 text-climbe-primary">
+          <Building2 size={20} />
+          <span className="text-[10px] font-black uppercase tracking-[0.2em]">Detalhes da Homologação</span>
+        </div>
+        <h1 className="text-4xl font-black italic tracking-tighter text-climbe-secondary mt-1">
+          {empresa.tradeName || empresa.legalName}
+        </h1>
+        <div className="flex flex-wrap items-center gap-4 mt-1">
+          <p className="text-sm font-medium text-gray-400">CNPJ: {empresa.cnpj}</p>
+          {subtitle && (
+            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+              · {subtitle}
+            </span>
+          )}
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function EmpresaDetalhePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuthContext();
   const queryClient = useQueryClient();
   const enterpriseId = Number(id);
@@ -117,16 +161,29 @@ export function EmpresaDetalhePage() {
     enabled: !!enterpriseId,
   });
 
-  const latestProposal: any | null = proposalsForEnterprise.length > 0
-    ? [...proposalsForEnterprise].sort((a: any, b: any) => b.id - a.id)[0]
+  const sortedProposals = useMemo(
+    () => [...proposalsForEnterprise].sort((a, b) => b.id - a.id),
+    [proposalsForEnterprise],
+  );
+
+  const proposalIdParam = Number(searchParams.get('proposalId')) || null;
+
+  const selectedFromUrl = proposalIdParam
+    ? sortedProposals.find((p) => p.id === proposalIdParam) ?? null
     : null;
 
-  const proposalId = latestProposal?.id ?? null;
+  const selectedProposal =
+    selectedFromUrl ?? (sortedProposals.length === 1 ? sortedProposals[0] : null);
+
+  const showPicker = sortedProposals.length > 1 && !selectedProposal;
+  const showEmptyProposals = sortedProposals.length === 0;
+
+  const proposalId = selectedProposal?.id ?? null;
 
   const { data: contractsForProposal = [], isLoading: loadingContracts } = useQuery({
     queryKey: ['contracts-proposal', proposalId],
     queryFn: () => contractService.listByProposal(proposalId!),
-    enabled: !!proposalId,
+    enabled: !!proposalId && !showPicker,
   });
 
   const latestContract: any | null = contractsForProposal.length > 0
@@ -138,24 +195,30 @@ export function EmpresaDetalhePage() {
   const { data: docRequirements = [], isLoading: loadingDocs } = useQuery({
     queryKey: ['document-requirements', proposalId],
     queryFn: () => documentRequirementService.listByProposal(proposalId!),
-    enabled: !!proposalId,
+    enabled: !!proposalId && !showPicker,
   });
 
   const { data: meetings = [], isLoading: loadingMeetings } = useQuery({
     queryKey: ['meetings-enterprise', enterpriseId],
     queryFn: () => meetingService.listMeetingsByEnterprise(enterpriseId),
-    enabled: !!enterpriseId,
+    enabled: !!enterpriseId && !showPicker && !showEmptyProposals,
   });
+
+  const filteredMeetings = useMemo(() => {
+    if (!selectedProposal) return [];
+    return filterMeetingsForProposal(meetings, selectedProposal, sortedProposals);
+  }, [meetings, selectedProposal, sortedProposals]);
 
   const { data: reports = [], isLoading: loadingReports } = useQuery({
     queryKey: ['reports-contract', contractId],
     queryFn: () => reportService.getByContract(contractId!),
-    enabled: !!contractId,
+    enabled: !!contractId && !showPicker,
   });
 
-  const isLoading =
-    loadingEmpresa ||
-    loadingProposals ||
+  const isLoadingBase = loadingEmpresa || loadingProposals;
+
+  const isLoadingFlow =
+    isLoadingBase ||
     (!!proposalId && loadingContracts) ||
     (!!proposalId && loadingDocs) ||
     (!!enterpriseId && loadingMeetings) ||
@@ -164,7 +227,7 @@ export function EmpresaDetalhePage() {
   // ── Stage derivation ───────────────────────────────────────────────────────
 
   const { stage: derivedStage, rejected } = deriveStage(
-    latestProposal,
+    selectedProposal,
     latestContract,
     docRequirements as any[],
     reports as any[],
@@ -175,30 +238,52 @@ export function EmpresaDetalhePage() {
   const currentStage: ProcessStage =
     derivedStage === 'CADASTRO' && cadastroConfirmado ? 'REUNIAO' : derivedStage;
 
-  // Allows clicking completed stages to view them (read-only)
   const [selectedStage, setSelectedStage] = useState<ProcessStage | null>(null);
   const viewStage: ProcessStage = selectedStage ?? currentStage;
 
+  useEffect(() => {
+    setSelectedStage(null);
+    setCadastroConfirmado(false);
+  }, [proposalId]);
+
   // ── Invalidation helpers ───────────────────────────────────────────────────
 
-  const refetchAll = () => {
+  const refetchAll = async () => {
+    setSelectedStage(null);
     queryClient.invalidateQueries({ queryKey: ['proposals-enterprise', enterpriseId] });
-    queryClient.invalidateQueries({ queryKey: ['contracts-proposal', proposalId] });
-    queryClient.invalidateQueries({ queryKey: ['document-requirements', proposalId] });
+    if (proposalId) {
+      queryClient.invalidateQueries({ queryKey: ['contracts-proposal', proposalId] });
+      queryClient.invalidateQueries({ queryKey: ['document-requirements', proposalId] });
+    }
     queryClient.invalidateQueries({ queryKey: ['meetings-enterprise', enterpriseId] });
-    queryClient.invalidateQueries({ queryKey: ['reports-contract', contractId] });
+    if (contractId) {
+      queryClient.invalidateQueries({ queryKey: ['reports-contract', contractId] });
+    }
+    await queryClient.refetchQueries({ queryKey: ['meetings-enterprise', enterpriseId] });
+    if (proposalId) {
+      await queryClient.refetchQueries({ queryKey: ['contracts-proposal', proposalId] });
+      await queryClient.refetchQueries({ queryKey: ['document-requirements', proposalId] });
+    }
+    if (contractId) {
+      await queryClient.refetchQueries({ queryKey: ['reports-contract', contractId] });
+    }
   };
 
-  // ── Role guards ────────────────────────────────────────────────────────────
+  const handleSelectProposal = (id: number) => {
+    setSearchParams({ proposalId: String(id) });
+  };
+
+  const handleChangeProposal = () => {
+    setSearchParams({});
+  };
 
   const userRole = user?.role ?? '';
 
   // ── Render — loading skeleton ──────────────────────────────────────────────
 
-  if (isLoading) {
+  if (isLoadingBase) {
     return (
       <div className="space-y-8 pb-12">
-        {/* Header skeleton */}
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 bg-gray-100 rounded-xl animate-pulse" />
           <div className="space-y-2">
@@ -224,6 +309,64 @@ export function EmpresaDetalhePage() {
     );
   }
 
+  // ── Picker: multiple proposals, none selected ─────────────────────────────
+
+  if (showPicker) {
+    return (
+      <div className="pb-12 overflow-hidden">
+        <EmpresaHeader
+          empresa={empresa}
+          subtitle="Selecione uma proposta"
+          onBack={() => navigate('/empresas')}
+        />
+        <div className="mb-6">
+          <p className="text-sm font-light text-gray-400 max-w-2xl">
+            Esta empresa possui {sortedProposals.length} propostas. Selecione qual deseja acompanhar no fluxo de homologação.
+          </p>
+        </div>
+        <EnterpriseProposalPicker
+          proposals={sortedProposals}
+          onSelect={handleSelectProposal}
+        />
+      </div>
+    );
+  }
+
+  // ── Empty: no proposals yet ────────────────────────────────────────────────
+
+  if (showEmptyProposals) {
+    return (
+      <div className="pb-12 overflow-hidden">
+        <EmpresaHeader empresa={empresa} onBack={() => navigate('/empresas')} />
+        <div className="flex flex-col items-center justify-center rounded-[40px] border border-gray-100 bg-white py-16 text-center shadow-sm">
+          <FileText size={48} className="mb-4 text-gray-200" />
+          <h3 className="text-lg font-bold text-gray-400">Nenhuma proposta cadastrada</h3>
+          <p className="mt-1 max-w-md text-sm text-gray-300">
+            Inicie o fluxo registrando uma reunião ou criando uma proposta para esta empresa.
+          </p>
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <Button
+              onClick={() => navigate('/propostas')}
+              className="rounded-2xl bg-climbe-primary px-6 font-black italic text-climbe-secondary"
+            >
+              Ir para Propostas
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoadingFlow) {
+    return (
+      <div className="space-y-8 pb-12">
+        <EmpresaHeader empresa={empresa} onBack={() => navigate('/empresas')} />
+        <SkeletonCard />
+        <SkeletonCard className="h-[300px]" />
+      </div>
+    );
+  }
+
   const stageTitles: Record<ProcessStage | 'CONCLUIDO', string> = {
     CADASTRO:        'Dados da Empresa',
     REUNIAO:         'Registro de Reunião',
@@ -238,46 +381,40 @@ export function EmpresaDetalhePage() {
   };
 
   const nextStep = NEXT_STEP[viewStage];
-  const proposalStatusKey = (latestProposal?.status || '').toUpperCase();
+  const proposalStatusKey = (selectedProposal?.status || '').toUpperCase();
+  const hasMultipleProposals = sortedProposals.length > 1;
 
   return (
     <div className="pb-12 overflow-hidden">
-      {/* Header */}
-      <div className="flex items-start gap-4 mb-6">
-        <button
-          onClick={() => navigate('/empresas')}
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors mt-1"
-        >
-          <ArrowLeft size={24} className="text-climbe-secondary" />
-        </button>
-        <div className="flex-1">
-          <div className="flex items-center gap-3 text-climbe-primary">
-            <Building2 size={20} />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Detalhes da Homologação</span>
-          </div>
-          <div className="flex flex-wrap items-center gap-3 mt-1">
-            <h1 className="text-4xl font-black italic tracking-tighter text-climbe-secondary">
-              {empresa.tradeName || empresa.legalName}
-            </h1>
-            {proposalStatusKey && (
-              <StatusBadge
-                status={proposalStatusBadgeStatus(proposalStatusKey)}
-                size="md"
-              />
-            )}
-          </div>
-          <div className="flex flex-wrap items-center gap-4 mt-1">
-            <p className="text-sm font-medium text-gray-400">CNPJ: {empresa.cnpj}</p>
-            {proposalStatusKey && PROPOSAL_STATUS_LABELS[proposalStatusKey] && (
-              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-                · {PROPOSAL_STATUS_LABELS[proposalStatusKey]}
-              </span>
-            )}
-          </div>
+      <EmpresaHeader
+        empresa={empresa}
+        subtitle={proposalStatusKey ? PROPOSAL_STATUS_LABELS[proposalStatusKey] : undefined}
+        onBack={() => navigate('/empresas')}
+      >
+        <div className="flex flex-wrap items-center gap-3 mt-3">
+          {proposalStatusKey && (
+            <StatusBadge
+              status={proposalStatusBadgeStatus(proposalStatusKey)}
+              size="md"
+            />
+          )}
+          {selectedProposal && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-gray-500">
+              Proposta #{selectedProposal.id}
+            </span>
+          )}
+          {hasMultipleProposals && (
+            <button
+              type="button"
+              onClick={handleChangeProposal}
+              className="text-[10px] font-bold text-climbe-primary hover:underline"
+            >
+              Trocar proposta
+            </button>
+          )}
         </div>
-      </div>
+      </EmpresaHeader>
 
-      {/* Stepper — sticky so it stays visible while scrolling stage content */}
       <div className="sticky top-0 z-10 bg-white rounded-[32px] border border-gray-100 shadow-md p-6 pb-8 mb-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-black italic text-climbe-secondary uppercase tracking-wider">Progresso do Fluxo</h3>
@@ -300,9 +437,7 @@ export function EmpresaDetalhePage() {
         />
       </div>
 
-      {/* Stage content + Next Step panel */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 items-start">
-        {/* Main stage card */}
         <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm p-8">
           <div className="flex items-center justify-between border-b border-gray-100 pb-4 mb-6">
             <div>
@@ -313,7 +448,6 @@ export function EmpresaDetalhePage() {
                 <p className="text-xs text-gray-400 mt-1">Visualizando etapa anterior — modo leitura</p>
               )}
             </div>
-            {/* Role badge */}
             <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-climbe-primary/10 text-climbe-secondary text-[10px] font-black uppercase tracking-widest">
               {formatRole(userRole)}
             </span>
@@ -331,7 +465,7 @@ export function EmpresaDetalhePage() {
             {viewStage === 'REUNIAO' && (
               <StageReuniao
                 empresa={empresa}
-                proposal={latestProposal}
+                proposal={selectedProposal}
                 userId={user?.id ? Number(user.id) : undefined}
                 canEdit={!selectedStage && canPerformStageAction(userRole, 'REUNIAO_CRIAR')}
                 onConcluir={refetchAll}
@@ -341,7 +475,7 @@ export function EmpresaDetalhePage() {
             {viewStage === 'PROPOSTA' && (
               <StageProposta
                 empresa={empresa}
-                proposal={latestProposal}
+                proposal={selectedProposal}
                 userRole={userRole}
                 canUpload={!selectedStage && canPerformStageAction(userRole, 'PROPOSTA_UPLOAD')}
                 canApprove={!selectedStage && canPerformStageAction(userRole, 'PROPOSTA_APROVAR')}
@@ -352,7 +486,7 @@ export function EmpresaDetalhePage() {
             {viewStage === 'CONTRATO' && (
               <StageContrato
                 empresa={empresa}
-                proposal={latestProposal}
+                proposal={selectedProposal}
                 contract={latestContract}
                 canCreate={!selectedStage && canPerformStageAction(userRole, 'CONTRATO_CRIAR')}
                 canAssignAnalystRole={!selectedStage && canPerformStageAction(userRole, 'CONTRATO_ANALISTA')}
@@ -363,7 +497,7 @@ export function EmpresaDetalhePage() {
             {(viewStage === 'DOCUMENTACAO' || viewStage === 'VALIDACAO') && (
               <StageDocumentacao
                 empresa={empresa}
-                proposal={latestProposal}
+                proposal={selectedProposal}
                 docRequirements={docRequirements as any[]}
                 userRole={userRole}
                 currentStage={viewStage}
@@ -379,6 +513,7 @@ export function EmpresaDetalhePage() {
                 contract={latestContract}
                 userRole={userRole}
                 canEdit={!selectedStage && canPerformStageAction(userRole, 'FERRAMENTAS_LIBERAR')}
+                meetings={meetings as any[]}
                 onConcluir={refetchAll}
               />
             )}
@@ -397,8 +532,8 @@ export function EmpresaDetalhePage() {
             {viewStage === 'APROVACAO_FINAL' && (
               <StageAgendamento
                 empresa={empresa}
-                proposal={latestProposal}
-                meetings={meetings as any[]}
+                proposal={selectedProposal}
+                meetings={filteredMeetings as any[]}
                 userRole={userRole}
                 canEdit={!selectedStage && canPerformStageAction(userRole, 'APROVACAO_FINAL')}
                 onConcluir={refetchAll}
@@ -407,7 +542,6 @@ export function EmpresaDetalhePage() {
 
             {currentStage === 'CONCLUIDO' && (
               <div className="flex flex-col items-center justify-center py-12 text-center space-y-6">
-                {/* Confetti-style decoration */}
                 <div className="relative">
                   <div className="w-24 h-24 bg-climbe-primary rounded-full flex items-center justify-center shadow-[0_0_40px_rgba(206,255,26,0.5)]">
                     <Sparkles className="w-12 h-12 text-climbe-secondary" />
@@ -418,27 +552,38 @@ export function EmpresaDetalhePage() {
                 <div>
                   <h3 className="text-3xl font-black italic text-climbe-secondary">Homologação Concluída!</h3>
                   <p className="text-gray-400 mt-2 max-w-md mx-auto font-light">
-                    A empresa <strong className="text-climbe-secondary">{empresa.tradeName || empresa.legalName}</strong> está
-                    100% homologada e ativa na nossa base.
+                    A proposta <strong className="text-climbe-secondary">#{selectedProposal?.id}</strong> da empresa{' '}
+                    <strong className="text-climbe-secondary">{empresa.tradeName || empresa.legalName}</strong> foi
+                    concluída com sucesso.
                   </p>
                 </div>
                 <div className="flex items-center gap-2 bg-green-50 text-green-700 px-6 py-3 rounded-full border border-green-100">
                   <CheckCircle2 size={16} />
                   <span className="text-sm font-bold">Processo encerrado com sucesso</span>
                 </div>
-                <Button
-                  onClick={() => navigate('/empresas')}
-                  variant="outline"
-                  className="rounded-xl font-bold mt-4"
-                >
-                  <ArrowLeft size={16} className="mr-2" /> Voltar para listagem
-                </Button>
+                <div className="flex flex-wrap justify-center gap-3">
+                  {hasMultipleProposals && (
+                    <Button
+                      onClick={handleChangeProposal}
+                      variant="outline"
+                      className="rounded-xl font-bold"
+                    >
+                      Ver outras propostas
+                    </Button>
+                  )}
+                  <Button
+                    onClick={() => navigate('/empresas')}
+                    variant="outline"
+                    className="rounded-xl font-bold"
+                  >
+                    <ArrowLeft size={16} className="mr-2" /> Voltar para listagem
+                  </Button>
+                </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* Next Step panel */}
         {currentStage !== 'CONCLUIDO' && (
           <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm p-6 space-y-4 sticky top-6">
             <div className="flex items-center gap-2 text-climbe-primary">

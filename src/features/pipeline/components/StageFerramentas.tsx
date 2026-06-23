@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CalendarDays, ShieldCheck, Loader2, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { contractService } from '@/services/contract.service';
 import { notificationService } from '@/services/notification.service';
 import { userService } from '@/features/usuarios/services';
 import { meetingService } from '@/features/reunioes/services';
+import { hasPrimeiraDataMeeting } from '@/features/pipeline/utils/deriveStage';
 
 interface Tarefa {
   id: string;
@@ -22,23 +23,46 @@ interface StageFerramentasProps {
   contract: any;
   userRole: string;
   canEdit: boolean;
-  onConcluir: () => void;
+  meetings?: { title?: string }[];
+  onConcluir: () => void | Promise<void>;
 }
 
-export function StageFerramentas({ empresa, contract, canEdit, onConcluir }: StageFerramentasProps) {
+export function StageFerramentas({
+  empresa,
+  contract,
+  canEdit,
+  meetings = [],
+  onConcluir,
+}: StageFerramentasProps) {
   const queryClient = useQueryClient();
   const [primeirData, setPrimeirData] = useState('');
   const [cnae, setCnae] = useState('');
   const [tarefas, setTarefas] = useState<Tarefa[]>([]);
   const [novaTarefa, setNovaTarefa] = useState({ descricao: '', responsavel: '', prazo: '' });
-  const [registrado, setRegistrado] = useState(false);
+  const [registrado, setRegistrado] = useState(() => hasPrimeiraDataMeeting(meetings));
   const [error, setError] = useState('');
+  const [avancando, setAvancando] = useState(false);
+
+  useEffect(() => {
+    if (hasPrimeiraDataMeeting(meetings)) {
+      setRegistrado(true);
+    }
+  }, [meetings]);
 
   const { data: usersPage } = useQuery({
     queryKey: ['users-all'],
     queryFn: () => userService.listUsers(0, 100),
   });
   const users = usersPage?.content || [];
+
+  const handleAvancar = async () => {
+    setAvancando(true);
+    try {
+      await onConcluir();
+    } finally {
+      setAvancando(false);
+    }
+  };
 
   const registrarMutation = useMutation({
     mutationFn: async () => {
@@ -87,8 +111,9 @@ export function StageFerramentas({ empresa, contract, canEdit, onConcluir }: Sta
     onSuccess: async () => {
       setRegistrado(true);
       await queryClient.invalidateQueries({ queryKey: ['meetings-enterprise', empresa.id] });
+      await queryClient.refetchQueries({ queryKey: ['meetings-enterprise', empresa.id] });
       queryClient.invalidateQueries({ queryKey: ['proposals-enterprise', empresa.id] });
-      onConcluir();
+      await handleAvancar();
     },
     onError: (err: any) => setError(err?.response?.data?.message || err?.message || 'Erro ao registrar Primeira Data.'),
   });
@@ -113,10 +138,17 @@ export function StageFerramentas({ empresa, contract, canEdit, onConcluir }: Sta
         </div>
         <div className="flex justify-end">
           <Button
-            onClick={onConcluir}
+            onClick={handleAvancar}
+            disabled={avancando}
             className="bg-climbe-primary text-climbe-secondary font-black italic rounded-xl px-8 h-12"
           >
-            IR PARA RELATÓRIO
+            {avancando ? (
+              <>
+                <Loader2 size={16} className="mr-2 animate-spin" /> CARREGANDO...
+              </>
+            ) : (
+              'IR PARA RELATÓRIO'
+            )}
           </Button>
         </div>
       </div>
