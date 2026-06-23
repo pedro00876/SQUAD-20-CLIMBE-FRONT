@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Building2, User, CalendarDays, CheckCircle2, ChevronRight, Loader2 } from 'lucide-react';
+import { Building2, User, CalendarDays, CheckCircle2, Loader2 } from 'lucide-react';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -97,26 +97,23 @@ export function ProposalCreateWizard({
         </div>
 
         {/* Step progress */}
-        <div className="flex items-center gap-1">
+        <div className="grid grid-cols-4 gap-1">
           {STEPS.map((s, i) => {
             const isActive = s.id === step;
             const isDone = i < stepIndex;
             const Icon = s.icon;
             return (
-              <div key={s.id} className="flex items-center gap-1 flex-1">
-                <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider transition-all ${
+              <div key={s.id} className="flex min-w-0 items-center justify-center">
+                <div className={`flex min-w-0 items-center justify-center gap-1 rounded-full px-2 py-1.5 text-[8px] font-black uppercase tracking-wider transition-all sm:gap-1.5 sm:px-2.5 sm:text-[9px] ${
                   isActive
                     ? 'bg-climbe-primary text-climbe-secondary'
                     : isDone
-                      ? 'bg-white/20 text-white'
-                      : 'bg-white/5 text-slate-400'
+                      ? 'bg-climbe-primary/15 text-climbe-secondary'
+                      : 'bg-muted text-muted-foreground'
                 }`}>
-                  <Icon size={10} />
-                  <span className="hidden sm:inline">{s.label}</span>
+                  <Icon size={10} className="shrink-0" />
+                  <span className="truncate">{s.label}</span>
                 </div>
-                {i < STEPS.length - 1 && (
-                  <ChevronRight size={12} className={isDone ? 'text-white/50' : 'text-slate-600'} />
-                )}
               </div>
             );
           })}
@@ -141,8 +138,8 @@ export function ProposalCreateWizard({
                   </option>
                 ))}
               </Select>
-              <div className="rounded-2xl bg-white/5 p-4 text-xs text-slate-300">
-                <p>Responsável pelo cadastro: <strong className="text-white">{currentUserName || 'Usuário atual'}</strong></p>
+              <div className="rounded-2xl border border-border bg-muted/50 p-4 text-xs text-muted-foreground">
+                <p>Responsável pelo cadastro: <strong className="text-foreground">{currentUserName || 'Usuário atual'}</strong></p>
               </div>
             </div>
           )}
@@ -163,7 +160,7 @@ export function ProposalCreateWizard({
                   </option>
                 ))}
               </Select>
-              <p className="text-xs text-slate-400">Pode ser atribuído posteriormente na etapa de contrato.</p>
+              <p className="text-xs text-muted-foreground">Pode ser atribuído posteriormente na etapa de contrato.</p>
             </div>
           )}
 
@@ -192,23 +189,23 @@ export function ProposalCreateWizard({
                   />
                 </div>
               </div>
-              <p className="text-xs text-slate-400">A reunião será criada e vinculada a esta empresa no Agenda & Reuniões.</p>
+              <p className="text-xs text-muted-foreground">A reunião será criada e vinculada a esta empresa no Agenda & Reuniões.</p>
             </div>
           )}
 
           {step === 'confirmar' && (
             <div className="space-y-3">
-              <p className="text-xs font-bold uppercase tracking-widest text-slate-300 mb-3">Resumo</p>
-              <div className="rounded-xl bg-white/5 p-4 space-y-3">
+              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">Resumo</p>
+              <div className="rounded-xl border border-border bg-muted/50 p-4 space-y-3">
                 <div>
-                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Empresa</span>
-                  <p className="text-sm font-bold text-white mt-0.5">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Empresa</span>
+                  <p className="text-sm font-bold text-foreground mt-0.5">
                     {selectedEnterprise?.tradeName || selectedEnterprise?.legalName || '--'}
                   </p>
                 </div>
                 <div>
-                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Analista</span>
-                  <p className="text-sm text-slate-200 mt-0.5">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Analista</span>
+                  <p className="text-sm font-medium text-foreground mt-0.5">
                     {analystId
                       ? users.find(u => String(u.id) === analystId)?.fullName || '--'
                       : 'A atribuir depois'}
@@ -216,8 +213,8 @@ export function ProposalCreateWizard({
                 </div>
                 {meetingDate && (
                   <div>
-                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Reunião</span>
-                    <p className="text-sm text-slate-200 mt-0.5">{meetingDate} {meetingTime}</p>
+                    <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Reunião</span>
+                    <p className="text-sm font-medium text-foreground mt-0.5">{meetingDate} {meetingTime}</p>
                   </div>
                 )}
               </div>

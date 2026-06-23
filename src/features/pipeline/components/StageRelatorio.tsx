@@ -161,7 +161,7 @@ export function StageRelatorio({
   }
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6 max-w-4xl min-w-0 overflow-hidden">
       {/* Status badge at top */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3 bg-blue-50 text-blue-800 p-4 rounded-xl text-sm flex-1 mr-4">
@@ -292,9 +292,9 @@ export function StageRelatorio({
             </div>
           )}
 
-          <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100">
+          <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100 min-w-0 overflow-hidden">
             <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-2">Parecer do Analista</span>
-            <p className="text-sm text-climbe-secondary whitespace-pre-wrap font-medium leading-relaxed">{relatorioText}</p>
+            <p className="text-sm text-climbe-secondary whitespace-pre-wrap break-all font-medium leading-relaxed">{relatorioText}</p>
           </div>
 
           {canApprove ? (
@@ -407,20 +407,20 @@ export function StageRelatorio({
           </span>
           <div className="space-y-2">
             {history.map((entry, i) => (
-              <div key={i} className="flex items-start gap-3 text-xs">
+              <div key={i} className="flex items-start gap-3 text-xs min-w-0">
                 <div className={`w-2 h-2 rounded-full mt-1 shrink-0 ${
                   entry.type === 'approved' ? 'bg-green-500' :
                   entry.type === 'correction_requested' ? 'bg-red-400' :
                   'bg-blue-400'
                 }`} />
-                <div>
+                <div className="min-w-0 break-words">
                   <span className="font-bold text-climbe-secondary">
                     {entry.type === 'approved' ? 'Aprovado' :
                      entry.type === 'correction_requested' ? 'Correção solicitada' :
                      'Submetido para revisão'}
                   </span>
-                  <span className="text-gray-400"> por {entry.by} às {entry.at}</span>
-                  {entry.note && <p className="text-gray-400 mt-0.5 italic">"{entry.note}"</p>}
+                  <span className="text-gray-600"> por {entry.by} às {entry.at}</span>
+                  {entry.note && <p className="text-gray-600 mt-0.5 italic break-all">"{entry.note}"</p>}
                 </div>
               </div>
             ))}
