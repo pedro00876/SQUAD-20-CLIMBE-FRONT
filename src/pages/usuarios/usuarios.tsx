@@ -56,14 +56,14 @@ function PendingUserRow({
   const [selectedRole, setSelectedRole] = useState(user.role ?? '');
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-5 bg-amber-50 border border-amber-100 rounded-2xl">
+    <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-5 bg-climbe-primary/5 dark:bg-climbe-primary/10 border border-climbe-primary/20 dark:border-climbe-primary/30 rounded-2xl">
       <div className="flex items-center gap-4 flex-1 min-w-0">
-        <div className="w-11 h-11 rounded-full bg-amber-200 flex items-center justify-center text-amber-700 font-black text-sm shrink-0">
+        <div className="w-11 h-11 rounded-full bg-climbe-primary/10 dark:bg-climbe-primary/20 flex items-center justify-center text-climbe-primary font-black text-sm shrink-0">
           {user.fullName.substring(0, 2).toUpperCase()}
         </div>
         <div className="min-w-0">
-          <h5 className="text-sm font-bold text-climbe-secondary italic truncate">{user.fullName}</h5>
-          <p className="text-xs text-gray-400 truncate">{user.email}</p>
+          <h5 className="text-sm font-bold text-foreground truncate">{user.fullName}</h5>
+          <p className="text-xs text-muted-foreground truncate">{user.email}</p>
         </div>
       </div>
 
@@ -72,7 +72,7 @@ function PendingUserRow({
         <select
           value={selectedRole}
           onChange={e => setSelectedRole(e.target.value)}
-          className="text-xs rounded-xl border border-amber-200 bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-climbe-primary/20 appearance-none"
+          className="text-xs h-9 min-w-[140px] rounded-xl border border-slate-200 dark:border-zinc-700/60 bg-slate-50/50 dark:bg-zinc-900/80 px-2 py-1 text-slate-900 dark:text-white outline-none transition-all focus:border-climbe-primary/60 focus:ring-2 focus:ring-climbe-primary/10 cursor-pointer"
           disabled={isLoading}
         >
           <option value="">Selecionar papel...</option>
@@ -93,7 +93,7 @@ function PendingUserRow({
         <button
           disabled={isLoading}
           onClick={() => onReject(user.id)}
-          className="flex items-center gap-1.5 px-4 py-2 bg-red-50 text-red-500 border border-red-200 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-red-500 hover:text-white transition-all disabled:opacity-50"
+          className="flex items-center gap-1.5 px-4 py-2 bg-red-50 dark:bg-red-950/30 text-red-500 border border-red-200 dark:border-red-800/40 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-red-500 hover:text-white transition-all disabled:opacity-50"
           title="Recusar acesso"
         >
           <X size={12} />
@@ -181,10 +181,10 @@ export function UsuariosPage() {
 
   if (isError) {
     return (
-      <div className="p-8 text-center bg-red-50 rounded-[32px] border border-red-100">
+      <div className="p-8 text-center bg-red-50 dark:bg-red-950/20 rounded-[32px] border border-red-100 dark:border-red-900/40">
         <ShieldAlert className="mx-auto text-red-500 mb-4" size={48} />
-        <h3 className="text-red-900 font-bold">Erro ao carregar usuários</h3>
-        <p className="text-red-600 text-sm">Verifique sua conexão com o backend.</p>
+        <h3 className="text-foreground font-bold">Erro ao carregar usuários</h3>
+        <p className="text-red-400 text-sm">Verifique sua conexão com o backend.</p>
       </div>
     );
   }
@@ -196,8 +196,8 @@ export function UsuariosPage() {
           <Users size={20} />
           <span className="text-[10px] font-black uppercase tracking-[0.2em]">Segurança</span>
         </div>
-        <h1 className="text-4xl font-black text-climbe-secondary tracking-tighter italic">Usuários</h1>
-        <p className="text-gray-400 font-light max-w-2xl">
+        <h1 className="text-4xl font-black text-foreground tracking-tighter">Usuários</h1>
+        <p className="text-muted-foreground font-light max-w-2xl">
           Administre os acessos e aprove as solicitações de novos colaboradores.
         </p>
       </div>
@@ -225,14 +225,14 @@ export function UsuariosPage() {
         </div>
       )}
 
-      <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-gray-50 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+      <div className="bg-card rounded-[32px] border border-border shadow-sm overflow-hidden">
+        <div className="p-6 border-b border-border flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <input
             type="text"
             placeholder="Buscar por nome, e-mail ou cargo..."
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(0); }}
-            className="w-full max-w-md px-5 py-3 bg-gray-50 border-transparent rounded-2xl text-sm focus:ring-2 focus:ring-climbe-primary/10 outline-none"
+            className="form-field-control flex-1 min-w-0"
           />
           <FilterChips chips={filterChips} active={statusFilter} onChange={setStatusFilter} />
         </div>
@@ -257,15 +257,15 @@ export function UsuariosPage() {
               return (
                 <div
                   key={user.id}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 hover:bg-gray-50 rounded-2xl transition-colors border border-transparent hover:border-gray-100"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 hover:bg-muted/50 rounded-2xl transition-colors border border-transparent hover:border-border"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-11 h-11 rounded-full flex items-center justify-center font-black text-sm shrink-0 bg-climbe-primary/10 text-climbe-secondary">
+                    <div className="w-11 h-11 rounded-full flex items-center justify-center font-black text-sm shrink-0 bg-climbe-primary/10 text-climbe-primary">
                       {user.fullName.substring(0, 2).toUpperCase()}
                     </div>
                     <div>
-                      <h5 className="text-sm font-bold text-climbe-secondary italic">{user.fullName}</h5>
-                      <p className="text-xs text-gray-400">{user.email}</p>
+                      <h5 className="text-sm font-bold text-foreground">{user.fullName}</h5>
+                      <p className="text-xs text-muted-foreground">{user.email}</p>
                       <div className="mt-1.5">
                         <RoleBadge role={user.role ?? ''} />
                       </div>
@@ -273,7 +273,7 @@ export function UsuariosPage() {
                   </div>
 
                   <div className="flex items-center gap-3 shrink-0">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-600 border border-green-200 rounded-full text-[10px] font-black uppercase tracking-wider">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 dark:bg-green-950/30 text-green-600 dark:text-green-400 border border-green-200 dark:border-green-800/40 rounded-full text-[10px] font-black uppercase tracking-wider">
                       <CheckCircle size={11} />
                       Ativo
                     </span>
@@ -284,8 +284,8 @@ export function UsuariosPage() {
 
             {filtered.length === 0 && (
               <div className="text-center py-12">
-                <Users size={40} className="mx-auto text-gray-200 mb-3" />
-                <p className="text-gray-400 text-sm italic">Nenhum usuário encontrado.</p>
+                <Users size={40} className="mx-auto text-muted-foreground/30 mb-3" />
+                <p className="text-muted-foreground text-sm">Nenhum usuário encontrado.</p>
               </div>
             )}
           </div>
@@ -293,8 +293,8 @@ export function UsuariosPage() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="px-6 pb-6 flex items-center justify-between border-t border-gray-50 pt-4">
-            <span className="text-xs text-gray-400">Página {page + 1} de {totalPages}</span>
+          <div className="px-6 pb-6 flex items-center justify-between border-t border-border pt-4">
+            <span className="text-xs text-muted-foreground">Página {page + 1} de {totalPages}</span>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" disabled={!canGoBack} onClick={() => setPage(p => Math.max(0, p - 1))}>
                 Anterior

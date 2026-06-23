@@ -85,7 +85,7 @@ export function StatusPieChart({ data: propData }: { data?: any[] }) {
         </PieChart>
       </ResponsiveContainer>
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-        <span className="text-2xl font-black text-climbe-secondary italic">100%</span>
+        <span className="text-2xl font-black text-climbe-secondary">100%</span>
         <span className="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Performance</span>
       </div>
     </div>

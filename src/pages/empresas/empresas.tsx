@@ -140,15 +140,15 @@ export function EmpresasPage() {
             <Building2 size={20} />
             <span className="text-[10px] font-black uppercase tracking-[0.2em]">Gerenciamento</span>
           </div>
-          <h1 className="text-4xl font-black italic tracking-tighter text-climbe-secondary">Empresas</h1>
-          <p className="max-w-2xl font-light text-gray-400">
+          <h1 className="text-4xl font-black tracking-tighter text-foreground">Empresas</h1>
+          <p className="max-w-2xl font-light text-muted-foreground">
             Acompanhe o progresso de cada empresa no fluxo de onboarding.
           </p>
         </div>
 
         <Button
           onClick={openCreateModal}
-          className="shrink-0 rounded-2xl bg-climbe-primary px-6 py-6 font-black italic text-climbe-secondary shadow-lg shadow-climbe-primary/20 transition-all hover:scale-105"
+          className="shrink-0 rounded-2xl bg-climbe-primary px-6 py-6 font-black text-climbe-secondary shadow-lg shadow-climbe-primary/20 transition-all hover:scale-105"
         >
           <Plus size={20} className="mr-2" />
           CADASTRAR EMPRESA
@@ -161,12 +161,12 @@ export function EmpresasPage() {
         </div>
       ) : enterprises.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">
-          <Building2 size={48} className="mb-4 text-gray-200" />
-          <h3 className="text-lg font-bold text-gray-400">Nenhuma empresa cadastrada</h3>
-          <p className="mt-1 text-sm text-gray-300">Cadastre a primeira empresa para iniciar o fluxo.</p>
+          <Building2 size={48} className="mb-4 text-muted-foreground/30" />
+          <h3 className="text-lg font-bold text-muted-foreground">Nenhuma empresa cadastrada</h3>
+          <p className="mt-1 text-sm text-muted-foreground/60">Cadastre a primeira empresa para iniciar o fluxo.</p>
           <Button
             onClick={openCreateModal}
-            className="mt-6 rounded-2xl bg-climbe-primary px-6 py-3 font-black italic text-climbe-secondary"
+            className="mt-6 rounded-2xl bg-climbe-primary px-6 py-3 font-black text-climbe-secondary"
           >
             <Plus size={16} className="mr-2" />
             Cadastrar empresa
@@ -182,10 +182,10 @@ export function EmpresasPage() {
               <div
                 key={enterprise.id}
                 onClick={() => navigate(`/empresas/${enterprise.id}`)}
-                className={`group relative cursor-pointer overflow-hidden rounded-[32px] border bg-white p-8 shadow-sm transition-all hover:shadow-xl ${
+                className={`group relative cursor-pointer overflow-hidden rounded-[32px] border bg-card p-8 shadow-sm transition-all hover:shadow-xl ${
                   isAlert
-                    ? 'border-red-200 ring-1 ring-red-100'
-                    : 'border-gray-100 hover:border-climbe-primary/20'
+                    ? 'border-red-200 dark:border-red-900/40 ring-1 ring-red-100 dark:ring-red-900/20'
+                    : 'border-border hover:border-climbe-primary/20'
                 }`}
               >
                 <div className="absolute right-0 top-0 -mr-16 -mt-16 h-32 w-32 rounded-full bg-climbe-primary/5 transition-transform duration-500 group-hover:scale-150" />
@@ -199,11 +199,11 @@ export function EmpresasPage() {
                 )}
 
                 <div className="relative z-10 mb-6 flex items-center gap-4">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-climbe-secondary text-xl font-black italic text-white shadow-lg">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-climbe-primary/15 dark:bg-climbe-primary/25 text-xl font-black text-climbe-secondary dark:text-climbe-primary shadow-lg border border-climbe-primary/10">
                     {enterprise.tradeName?.charAt(0) || enterprise.legalName.charAt(0)}
                   </div>
                   <div className="min-w-0">
-                    <h4 className="max-w-[180px] truncate text-lg font-bold italic leading-tight text-climbe-secondary">
+                    <h4 className="max-w-[180px] truncate text-lg font-bold leading-tight text-foreground">
                       {enterprise.tradeName || enterprise.legalName}
                     </h4>
                     <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-climbe-primary">
@@ -218,15 +218,15 @@ export function EmpresasPage() {
                 </div>
 
                 <div className="relative z-10 space-y-3">
-                  <div className="flex items-center gap-3 text-gray-400">
+                  <div className="flex items-center gap-3 text-muted-foreground">
                     <Mail size={14} className="text-climbe-primary shrink-0" />
                     <span className="truncate text-xs font-medium">{enterprise.email}</span>
                   </div>
-                  <div className="flex items-center gap-3 text-gray-400">
+                  <div className="flex items-center gap-3 text-muted-foreground">
                     <User size={14} className="text-climbe-primary shrink-0" />
                     <span className="text-xs font-medium">{enterprise.representativeName || 'N/A'}</span>
                   </div>
-                  <div className="flex items-center gap-3 text-gray-400">
+                  <div className="flex items-center gap-3 text-muted-foreground">
                     <MapPin size={14} className="text-climbe-primary shrink-0" />
                     <span className="text-xs font-medium">
                       {enterprise.address?.city || 'Local não informado'} - {enterprise.address?.state || '--'}
@@ -234,11 +234,11 @@ export function EmpresasPage() {
                   </div>
                 </div>
 
-                <div className="relative z-10 mt-6 flex items-center justify-between border-t border-gray-50 pt-5">
+                <div className="relative z-10 mt-6 flex items-center justify-between border-t border-border pt-5">
                   <button
                     type="button"
                     onClick={(e) => openEditModal(enterprise, e)}
-                    className="inline-flex items-center gap-1 text-[10px] font-bold text-gray-400 hover:text-climbe-primary transition-colors"
+                    className="inline-flex items-center gap-1 text-[10px] font-bold text-muted-foreground hover:text-climbe-primary transition-colors"
                     title="Editar dados da empresa"
                   >
                     <Pencil size={11} />

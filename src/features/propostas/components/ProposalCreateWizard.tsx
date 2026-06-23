@@ -4,6 +4,7 @@ import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select } from '@/components/ui/select';
 import type { Enterprise } from '@/services/enterprise.service';
 
 interface WizardUser {
@@ -91,7 +92,7 @@ export function ProposalCreateWizard({
         {/* Header */}
         <div>
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-climbe-primary">Nova proposta</p>
-          <h2 className="text-2xl font-black italic tracking-tight">Criar Proposta</h2>
+          <h2 className="text-2xl font-black tracking-tight">Criar Proposta</h2>
           <p className="text-xs text-muted-foreground dark:text-slate-300">Siga os passos para iniciar o fluxo de onboarding.</p>
         </div>
 
@@ -128,11 +129,10 @@ export function ProposalCreateWizard({
               <Label className="form-field-label">
                 Selecionar Empresa *
               </Label>
-              <select
+              <Select
                 required
                 value={enterpriseId}
                 onChange={e => setEnterpriseId(e.target.value)}
-                className="form-field-select"
               >
                 <option value="">Selecione uma empresa...</option>
                 {enterprises.map(e => (
@@ -140,7 +140,7 @@ export function ProposalCreateWizard({
                     {e.tradeName || e.legalName} ({e.cnpj})
                   </option>
                 ))}
-              </select>
+              </Select>
               <div className="rounded-2xl bg-white/5 p-4 text-xs text-slate-300">
                 <p>Responsável pelo cadastro: <strong className="text-white">{currentUserName || 'Usuário atual'}</strong></p>
               </div>
@@ -152,10 +152,9 @@ export function ProposalCreateWizard({
               <Label className="form-field-label">
                 Analista Responsável <span className="text-slate-400 normal-case font-medium">(opcional)</span>
               </Label>
-              <select
+              <Select
                 value={analystId}
                 onChange={e => setAnalystId(e.target.value)}
-                className="form-field-select"
               >
                 <option value="">Atribuir depois...</option>
                 {users.map(u => (
@@ -163,7 +162,7 @@ export function ProposalCreateWizard({
                     {u.fullName} {u.role ? `(${u.role})` : ''}
                   </option>
                 ))}
-              </select>
+              </Select>
               <p className="text-xs text-slate-400">Pode ser atribuído posteriormente na etapa de contrato.</p>
             </div>
           )}
@@ -203,7 +202,7 @@ export function ProposalCreateWizard({
               <div className="rounded-xl bg-white/5 p-4 space-y-3">
                 <div>
                   <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Empresa</span>
-                  <p className="text-sm font-bold italic text-white mt-0.5">
+                  <p className="text-sm font-bold text-white mt-0.5">
                     {selectedEnterprise?.tradeName || selectedEnterprise?.legalName || '--'}
                   </p>
                 </div>
@@ -241,7 +240,7 @@ export function ProposalCreateWizard({
               type="button"
               disabled={step === 'empresa' && !enterpriseId}
               onClick={handleNext}
-              className="flex-1 rounded-xl bg-climbe-primary font-black italic text-climbe-secondary disabled:bg-white/10 disabled:text-slate-400"
+              className="flex-1 rounded-xl bg-climbe-primary font-black text-climbe-secondary disabled:bg-white/10 disabled:text-slate-400"
             >
               Próximo →
             </Button>
@@ -250,7 +249,7 @@ export function ProposalCreateWizard({
               type="button"
               disabled={isSubmitting}
               onClick={handleConfirm}
-              className="flex-1 rounded-xl bg-climbe-primary font-black italic text-climbe-secondary shadow-lg disabled:bg-white/10 disabled:text-slate-400"
+              className="flex-1 rounded-xl bg-climbe-primary font-black text-climbe-secondary shadow-lg disabled:bg-white/10 disabled:text-slate-400"
             >
               {isSubmitting ? <><Loader2 size={14} className="mr-2 animate-spin" />CRIANDO...</> : 'CRIAR PROPOSTA'}
             </Button>

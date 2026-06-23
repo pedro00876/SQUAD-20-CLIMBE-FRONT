@@ -168,31 +168,27 @@
 
   /* Modal de empresa — contraste reforçado em ambos os temas */
   .form-modal-empresa {
-    @apply !border !border-slate-200 !text-slate-900 shadow-xl;
-    background-color: #ffffff !important;
+    @apply border border-slate-200 text-slate-800 shadow-xl;
+    background-color: hsl(var(--card)) !important;
   }
 
   .dark .form-modal-empresa {
-    @apply !border-transparent !text-white shadow-2xl;
-    background-color: rgb(var(--climbe-secondary-rgb)) !important;
+    @apply border-zinc-800 text-white shadow-2xl;
+    background-color: hsl(var(--card)) !important;
   }
 
   .form-modal-shell {
-    @apply !border !border-slate-200 !text-slate-900 shadow-xl;
-    background-color: #ffffff !important;
+    @apply border border-slate-200 text-slate-800 shadow-xl;
+    background-color: hsl(var(--card)) !important;
   }
 
   .dark .form-modal-shell {
-    @apply !border-transparent !text-white shadow-2xl;
-    background-color: rgb(var(--climbe-secondary-rgb)) !important;
+    @apply border-zinc-800 text-white shadow-2xl;
+    background-color: hsl(var(--card)) !important;
   }
 
   .form-field-label {
-    @apply ml-0.5 block text-[10px] font-black uppercase tracking-widest text-slate-800;
-  }
-
-  .dark .form-field-label {
-    color: #ffffff !important;
+    @apply ml-0.5 block text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-200;
   }
 
   .form-section-title {
@@ -200,43 +196,33 @@
   }
 
   .form-field-hint {
-    @apply text-[10px] text-slate-500;
-  }
-
-  .dark .form-field-hint {
-    @apply text-slate-300;
+    @apply text-[10px] text-slate-400 dark:text-slate-500;
   }
 
   .form-field-control {
-    @apply border border-slate-300 bg-slate-50 text-slate-900;
-    @apply placeholder:font-normal placeholder:italic placeholder:text-slate-400/30;
-    @apply focus:border-climbe-primary/60 focus:ring-climbe-primary/15;
-  }
-
-  .form-field-control:focus {
-    background-color: #ffffff;
+    @apply h-12 w-full rounded-2xl border border-slate-300 bg-slate-100/60 px-5 py-3 text-sm text-slate-900 outline-none transition-all;
+    @apply placeholder:font-normal placeholder:text-slate-400/40;
+    @apply focus:border-climbe-primary/60 focus:ring-4 focus:ring-climbe-primary/10 focus:bg-white;
   }
 
   .dark .form-field-control {
-    @apply border-slate-600/35 text-slate-900;
-    @apply placeholder:text-slate-500/30;
-    @apply focus:border-climbe-primary/50;
-    background-color: #ffffff;
+    @apply border-zinc-700/60 bg-zinc-900/80 text-white;
+    @apply placeholder:text-zinc-500/40;
+    @apply focus:border-climbe-primary/50 focus:ring-climbe-primary/10 focus:bg-zinc-900;
+    -webkit-text-fill-color: rgb(255 255 255) !important;
   }
 
   .form-field-select {
-    @apply w-full appearance-none rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition-all;
-    @apply focus:border-climbe-primary/60 focus:ring-2 focus:ring-climbe-primary/15;
-  }
-
-  .form-field-select:focus {
-    background-color: #ffffff;
+    @apply h-12 w-full appearance-none rounded-2xl border border-slate-300 bg-slate-100/60 px-5 py-3 text-sm text-slate-900 outline-none transition-all;
+    @apply focus:border-climbe-primary/60 focus:ring-4 focus:ring-climbe-primary/10 focus:bg-white;
+    overflow: visible;
   }
 
   .dark .form-field-select {
-    @apply border-slate-600/35 text-slate-900;
-    @apply focus:border-climbe-primary/50;
-    background-color: #ffffff;
+    @apply border-zinc-700/60 bg-zinc-900/80 text-white;
+    @apply focus:border-climbe-primary/50 focus:ring-climbe-primary/10 focus:bg-zinc-900;
+    -webkit-text-fill-color: rgb(255 255 255) !important;
+    overflow: visible;
   }
 }
 

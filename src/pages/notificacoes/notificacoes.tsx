@@ -70,25 +70,25 @@ export function NotificacoesPage() {
             <Bell size={20} />
             <span className="text-[10px] font-black uppercase tracking-[0.2em]">Central</span>
           </div>
-          <h1 className="text-4xl font-black text-climbe-secondary tracking-tighter italic">Notificações</h1>
-          <p className="text-gray-400 font-light max-w-2xl">
+          <h1 className="text-4xl font-black text-foreground tracking-tighter">Notificações</h1>
+          <p className="text-muted-foreground font-light max-w-2xl">
             Atualizações de propostas, reuniões e acessos — com links diretos para ação.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <div className="rounded-2xl bg-white p-1 shadow-sm border border-gray-100">
+          <div className="rounded-2xl bg-card p-1 shadow-sm border border-border">
             <button
               type="button"
               onClick={() => setFilter('all')}
-              className={`rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest transition ${filter === 'all' ? 'bg-climbe-secondary text-white' : 'text-gray-400 hover:text-climbe-secondary'}`}
+              className={`rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest transition ${filter === 'all' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
             >
               Todas ({notifications.length})
             </button>
             <button
               type="button"
               onClick={() => setFilter('unread')}
-              className={`rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest transition ${filter === 'unread' ? 'bg-climbe-secondary text-white' : 'text-gray-400 hover:text-climbe-secondary'}`}
+              className={`rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest transition ${filter === 'unread' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
             >
               Não lidas ({unread.length})
             </button>
@@ -98,7 +98,7 @@ export function NotificacoesPage() {
             type="button"
             disabled={unread.length === 0 || markAsReadMutation.isPending}
             onClick={markAllAsRead}
-            className="rounded-2xl bg-climbe-primary px-5 font-black italic text-climbe-secondary shadow-lg shadow-climbe-primary/20 disabled:bg-gray-100 disabled:text-gray-400 disabled:shadow-none"
+            className="rounded-2xl bg-climbe-primary px-5 font-black text-climbe-secondary shadow-lg shadow-climbe-primary/20 disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none"
           >
             <CheckCircle2 size={16} className="mr-2" />
             Marcar todas como lidas
@@ -112,19 +112,19 @@ export function NotificacoesPage() {
           <Loader2 className="h-12 w-12 animate-spin text-climbe-primary" />
         </div>
       ) : isError ? (
-        <div className="rounded-[32px] border border-red-100 bg-red-50 p-8 text-center">
-          <h3 className="text-lg font-black italic text-red-500">Não foi possível carregar as notificações</h3>
+        <div className="rounded-[32px] border border-red-200 dark:border-red-900/40 bg-red-50 dark:bg-red-950/20 p-8 text-center">
+          <h3 className="text-lg font-black text-red-500">Não foi possível carregar as notificações</h3>
           <p className="mt-2 text-sm text-red-400">Verifique se a API está ativa e tente atualizar a página.</p>
         </div>
       ) : visible.length === 0 ? (
-        <div className="bg-white p-20 rounded-[40px] border border-gray-100 shadow-sm flex flex-col items-center justify-center text-center space-y-4">
-          <div className="w-24 h-24 rounded-[32px] bg-gray-50 flex items-center justify-center text-gray-200">
+        <div className="bg-card p-20 rounded-[40px] border border-border shadow-sm flex flex-col items-center justify-center text-center space-y-4">
+          <div className="w-24 h-24 rounded-[32px] bg-muted flex items-center justify-center text-muted-foreground/40">
             <Bell size={48} />
           </div>
-          <h3 className="text-2xl font-bold text-climbe-secondary italic">
+          <h3 className="text-2xl font-bold text-foreground">
             {filter === 'unread' ? 'Todas as notificações foram lidas' : 'Nenhuma notificação ainda'}
           </h3>
-          <p className="text-sm text-gray-400 max-w-xs">
+          <p className="text-sm text-muted-foreground max-w-xs">
             As notificações geradas pelo sistema aparecerão aqui.
           </p>
         </div>
@@ -139,25 +139,25 @@ export function NotificacoesPage() {
                 key={notification.id}
                 className={`rounded-[24px] border p-6 flex items-start gap-4 transition-all ${
                   read
-                    ? 'bg-white border-gray-100 opacity-70'
-                    : 'bg-climbe-primary/5 border-climbe-primary/20 shadow-sm'
+                    ? 'bg-card border-border opacity-70'
+                    : 'bg-climbe-primary/5 border-climbe-primary/20 shadow-sm dark:bg-climbe-primary/10 dark:border-climbe-primary/30'
                 }`}
               >
-                <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${read ? 'bg-gray-100 text-gray-300' : 'bg-climbe-primary/10 text-climbe-primary'}`}>
+                <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${read ? 'bg-muted text-muted-foreground/50' : 'bg-climbe-primary/10 text-climbe-primary'}`}>
                   <Icon size={18} />
                 </div>
 
                 <div className="flex-1 space-y-3 py-0.5">
                   <div className="flex flex-col gap-1 md:flex-row md:items-start md:justify-between">
                     <div>
-                      <h5 className="font-bold text-climbe-secondary text-sm italic">
+                      <h5 className="font-bold text-foreground text-sm">
                         {config?.label ?? notification.type.replace(/_/g, ' ')}
                       </h5>
-                      <p className="mt-1 text-xs text-gray-500 font-light leading-relaxed max-w-xl">
+                      <p className="mt-1 text-xs text-muted-foreground font-light leading-relaxed max-w-xl">
                         {notification.message || 'Notificação sem mensagem.'}
                       </p>
                     </div>
-                    <span className="inline-flex items-center gap-1 text-[10px] text-gray-400 font-black uppercase tracking-widest shrink-0">
+                    <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground font-black uppercase tracking-widest shrink-0">
                       <Clock size={11} />
                       {formatDate(notification.sentAt)}
                     </span>
@@ -168,7 +168,7 @@ export function NotificacoesPage() {
                       <button
                         type="button"
                         onClick={() => navigate(config.actionRoute)}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-climbe-secondary px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white transition hover:scale-105"
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-foreground px-4 py-2 text-[10px] font-black uppercase tracking-widest text-background transition hover:scale-105"
                       >
                         {config.actionLabel}
                         <ArrowRight size={11} />
@@ -188,7 +188,7 @@ export function NotificacoesPage() {
                       type="button"
                       onClick={() => deleteMutation.mutate(notification.id)}
                       disabled={deleteMutation.isPending}
-                      className="rounded-xl bg-gray-50 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-gray-400 transition hover:bg-red-50 hover:text-red-500 disabled:opacity-50"
+                      className="rounded-xl bg-muted px-4 py-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground transition hover:bg-red-500/10 hover:text-red-500 disabled:opacity-50"
                     >
                       <Trash2 size={13} className="mr-1 inline" />
                       Excluir

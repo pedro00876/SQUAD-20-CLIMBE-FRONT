@@ -40,7 +40,7 @@ export function StatCard({ title, value, subValue, icon: Icon, trend = 'neutral'
       </div>
 
       <div className="flex items-baseline gap-1">
-        <h2 className="text-4xl font-black text-climbe-secondary italic tracking-tighter">{value}</h2>
+        <h2 className="text-4xl font-black text-climbe-secondary tracking-tighter">{value}</h2>
       </div>
     </motion.div>
   );

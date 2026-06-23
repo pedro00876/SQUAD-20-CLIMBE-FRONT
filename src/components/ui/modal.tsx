@@ -56,7 +56,7 @@ export function Modal({
             exit={{ opacity: 0, scale: 0.95, y: 12 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
             className={cn(
-              'relative w-full rounded-[28px] bg-white p-8 dark:bg-slate-900 shadow-2xl border border-gray-100/10 z-[10000] max-h-[90vh] overflow-y-auto custom-scrollbar flex flex-col gap-4 text-slate-800 dark:text-white',
+              'relative w-full rounded-[28px] bg-white p-8 dark:bg-[hsl(var(--card))] shadow-2xl border border-gray-100/10 dark:border-zinc-800/80 z-[10000] max-h-[90vh] overflow-y-auto custom-scrollbar flex flex-col gap-4 text-slate-800 dark:text-white',
               {
                 'max-w-sm': size === 'sm',
                 'max-w-md': size === 'md',

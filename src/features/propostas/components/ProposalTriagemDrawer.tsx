@@ -63,7 +63,7 @@ export function ProposalTriagemDrawer({
       <div className="space-y-6">
         <div className="rounded-2xl bg-gray-50 p-5 space-y-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-climbe-secondary text-white flex items-center justify-center font-black italic text-sm">
+            <div className="w-10 h-10 rounded-xl bg-climbe-primary/15 dark:bg-climbe-primary/25 text-climbe-secondary dark:text-climbe-primary flex items-center justify-center font-black italic text-sm border border-climbe-primary/10">
               {proposal.enterpriseName?.charAt(0)}
             </div>
             <div>

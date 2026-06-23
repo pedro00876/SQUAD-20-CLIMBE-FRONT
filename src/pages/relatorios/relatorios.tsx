@@ -315,7 +315,7 @@ export function RelatoriosPage() {
       </div>
 
       <div className="space-y-2">
-        <h4 className="text-lg font-bold italic text-climbe-secondary">Relatório #{report.id}</h4>
+        <h4 className="text-lg font-bold text-climbe-secondary">Relatório #{report.id}</h4>
         <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
           Contrato #{report.contractId} · Proposta #{report.proposalId}
         </p>
@@ -366,7 +366,7 @@ export function RelatoriosPage() {
             <BarChart3 size={20} />
             <span className="text-[10px] font-black uppercase tracking-[0.2em]">Análise</span>
           </div>
-          <h1 className="text-4xl font-black italic tracking-tighter text-climbe-secondary">Relatórios</h1>
+          <h1 className="text-4xl font-black tracking-tighter text-climbe-secondary">Relatórios</h1>
           <p className="max-w-2xl font-light text-muted-foreground">
             Relatórios organizados por empresa. Visualize ou baixe os PDFs anexados a cada contrato.
           </p>
@@ -374,7 +374,7 @@ export function RelatoriosPage() {
 
         <Button
           onClick={() => setIsUploadOpen(true)}
-          className="shrink-0 rounded-2xl bg-climbe-primary px-6 py-6 font-black italic text-climbe-secondary shadow-lg shadow-climbe-primary/20 transition-all hover:scale-105"
+          className="shrink-0 rounded-2xl bg-climbe-primary px-6 py-6 font-black text-climbe-secondary shadow-lg shadow-climbe-primary/20 transition-all hover:scale-105"
         >
           <Plus size={20} className="mr-2" />
           ANEXAR RELATÓRIO PDF
@@ -404,7 +404,7 @@ export function RelatoriosPage() {
       ) : !hasReports ? (
         <div className="flex flex-col items-center justify-center space-y-4 rounded-[40px] border border-border bg-card p-20 text-center shadow-sm">
           <FileText size={48} className="text-muted-foreground/30" />
-          <h3 className="text-2xl font-bold italic text-climbe-secondary">Nenhum relatório anexado</h3>
+          <h3 className="text-2xl font-bold text-climbe-secondary">Nenhum relatório anexado</h3>
           <p className="max-w-xs text-sm text-muted-foreground">
             Anexe um arquivo PDF para que ele possa ser consultado por empresa.
           </p>
@@ -421,7 +421,7 @@ export function RelatoriosPage() {
 
           {!hasFilteredFolders ? (
             <div className="py-16 text-center">
-              <p className="text-lg font-bold italic text-climbe-secondary">Nenhuma pasta encontrada</p>
+              <p className="text-lg font-bold text-climbe-secondary">Nenhuma pasta encontrada</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
@@ -436,7 +436,7 @@ export function RelatoriosPage() {
                     <Folder size={32} />
                   </div>
                   <div className="min-w-0 w-full space-y-1">
-                    <p className="truncate text-sm font-black italic text-climbe-secondary">
+                    <p className="truncate text-sm font-black text-climbe-secondary">
                       {group.enterpriseName}
                     </p>
                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
@@ -456,12 +456,12 @@ export function RelatoriosPage() {
               <button
                 type="button"
                 onClick={goToRoot}
-                className="font-black italic text-climbe-primary hover:underline"
+                className="font-black text-climbe-primary hover:underline"
               >
                 Relatórios
               </button>
               <ChevronRight size={14} className="text-muted-foreground/50" />
-              <span className="font-black italic text-climbe-secondary truncate max-w-[240px]">
+              <span className="font-black text-climbe-secondary truncate max-w-[240px]">
                 {selectedGroup?.enterpriseName ?? 'Pasta'}
               </span>
             </nav>
@@ -474,7 +474,7 @@ export function RelatoriosPage() {
           <div className="flex items-center gap-3 border-b border-border pb-4">
             <Building2 className="text-climbe-primary" />
             <div>
-              <h2 className="text-xl font-black italic text-climbe-secondary">
+              <h2 className="text-xl font-black text-climbe-secondary">
                 {selectedGroup?.enterpriseName}
               </h2>
               <p className="text-xs text-muted-foreground">
@@ -499,7 +499,7 @@ export function RelatoriosPage() {
       <Modal isOpen={isUploadOpen} onClose={() => setIsUploadOpen(false)} className="form-modal-shell max-w-lg">
         <div className="space-y-6">
           <div>
-            <h2 className="text-2xl font-black italic tracking-tight">Upload de Relatório</h2>
+            <h2 className="text-2xl font-black tracking-tight">Upload de Relatório</h2>
             <p className="text-xs text-muted-foreground dark:text-slate-300">
               Selecione o contrato e anexe um arquivo em formato PDF.
             </p>
@@ -553,7 +553,7 @@ export function RelatoriosPage() {
               <Button
                 type="submit"
                 disabled={uploadMutation.isPending || !selectedContractId || !selectedFile}
-                className="flex-1 rounded-xl bg-climbe-primary font-black italic text-climbe-secondary"
+                className="flex-1 rounded-xl bg-climbe-primary font-black text-climbe-secondary"
               >
                 <Upload size={16} className="mr-2" />
                 {uploadMutation.isPending ? 'ENVIANDO...' : 'ENVIAR PDF'}

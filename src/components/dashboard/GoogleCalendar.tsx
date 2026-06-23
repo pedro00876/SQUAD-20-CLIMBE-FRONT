@@ -139,7 +139,7 @@ export function GoogleCalendar() {
             <CalendarIcon size={20} />
           </div>
           <div>
-            <h3 className="font-bold text-climbe-secondary italic leading-tight">Calendário</h3>
+            <h3 className="font-bold text-climbe-secondary leading-tight">Calendário</h3>
             <p className="text-[10px] text-gray-400 uppercase tracking-widest font-medium">Google Integration</p>
           </div>
         </div>
@@ -151,7 +151,7 @@ export function GoogleCalendar() {
           >
             <ChevronLeft size={18} className="text-gray-400" />
           </button>
-          <span className="text-sm font-bold text-climbe-secondary min-w-[100px] text-center italic">
+          <span className="text-sm font-bold text-climbe-secondary min-w-[100px] text-center">
             {format(currentMonth, 'MMMM yyyy', { locale: ptBR })}
           </span>
           <button
@@ -246,7 +246,7 @@ export function GoogleCalendar() {
                   <Clock size={14} />
                 </div>
                 <div className="flex-1 overflow-hidden">
-                  <p className="text-xs font-bold text-climbe-secondary truncate italic">{event.summary}</p>
+                  <p className="text-xs font-bold text-climbe-secondary truncate">{event.summary}</p>
                   <p className="text-[10px] text-gray-400">
                     {format(new Date(event.start.dateTime || event.start.date), "dd 'de' MMMM, HH:mm", { locale: ptBR })}
                   </p>

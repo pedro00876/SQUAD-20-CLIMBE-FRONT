@@ -42,7 +42,7 @@ export function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }: Side
         {/* Logo Area */}
         <div className={`py-4 px-6 mb-4 flex items-center justify-between border-b border-climbe-support/5 h-24 ${isCollapsed ? 'lg:py-4 lg:px-2 lg:flex-col lg:justify-center lg:gap-1' : ''}`}>
           {isCollapsed ? (
-            <span className="text-2xl font-black text-climbe-primary italic tracking-tighter hidden lg:block select-none animate-in fade-in duration-500">C.</span>
+            <span className="text-2xl font-black text-climbe-primary tracking-tighter hidden lg:block select-none animate-in fade-in duration-500">C.</span>
           ) : (
             <img
               src={LOGO_BRANCA}
@@ -59,7 +59,7 @@ export function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }: Side
           >
             {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
           </button>
-
+ 
           {/* Close Button - Mobile only */}
           <button
             onClick={onClose}
@@ -68,13 +68,13 @@ export function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }: Side
             <X size={20} />
           </button>
         </div>
-
+ 
         {/* Navigation */}
         <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto custom-scrollbar pt-2">
           <p className={`px-4 text-[9px] font-black uppercase tracking-[0.25em] text-gray-500 mb-4 mt-2 transition-all ${isCollapsed ? 'lg:opacity-0 lg:h-0 lg:overflow-hidden lg:mb-0 lg:mt-0' : 'opacity-100'}`}>
             Menu Principal
           </p>
-
+ 
           {filteredMenuItems.map((item) => (
             <NavLink
               key={item.path}
@@ -87,7 +87,7 @@ export function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }: Side
                 flex items-center px-4 py-3.5 rounded-2xl transition-all duration-200 group relative
                 ${isCollapsed ? 'lg:justify-center lg:px-0 lg:h-12 lg:w-12 lg:mx-auto' : 'justify-between'}
                 ${isActive
-                  ? 'bg-climbe-primary text-climbe-secondary shadow-lg shadow-climbe-primary/15 font-black italic'
+                  ? 'bg-climbe-primary text-climbe-secondary shadow-lg shadow-climbe-primary/15 font-black'
                   : 'text-gray-400 hover:bg-climbe-support/25 hover:text-white'
                 }
               `}

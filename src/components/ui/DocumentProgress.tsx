@@ -46,7 +46,7 @@ export function DocumentProgress({ requirements, className }: DocumentProgressPr
         <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
           Progresso dos documentos
         </span>
-        <span className="text-sm font-black italic text-climbe-secondary">
+        <span className="text-sm font-black text-climbe-secondary">
           {approved} / {total} aprovados
         </span>
       </div>

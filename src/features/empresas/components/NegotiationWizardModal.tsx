@@ -317,7 +317,7 @@ export function NegotiationWizardModal({
       <div className="space-y-6 text-slate-800">
         {/* Header */}
         <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-climbe-secondary text-lg font-black italic text-white shadow-md">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-climbe-primary/15 dark:bg-climbe-primary/25 text-lg font-black text-climbe-secondary dark:text-climbe-primary shadow-md border border-climbe-primary/10">
             {enterprise.tradeName?.charAt(0) || enterprise.legalName.charAt(0)}
           </div>
           <div>
@@ -327,7 +327,7 @@ export function NegotiationWizardModal({
                 Negociação & Fluxo
               </span>
             </div>
-            <h2 className="text-xl font-black italic tracking-tight text-climbe-secondary leading-tight mt-0.5">
+            <h2 className="text-xl font-black tracking-tight text-climbe-secondary leading-tight mt-0.5">
               {enterprise.tradeName || enterprise.legalName}
             </h2>
             <p className="text-[10px] text-gray-400 font-light mt-0.5">
@@ -357,7 +357,7 @@ export function NegotiationWizardModal({
             </div>
             <Button
               onClick={handleCreateFirstProposal}
-              className="italic text-xs font-black"
+              className="text-xs font-black"
             >
               INICIAR FLUXO COMERCIAL
             </Button>
@@ -441,7 +441,7 @@ export function NegotiationWizardModal({
                       <span className="text-[10px] font-black uppercase tracking-widest bg-gray-100 px-3 py-1 rounded-full text-gray-500">
                         Etapa {steps.findIndex((s) => s.key === activeTab) + 1}
                       </span>
-                      <h3 className="text-sm font-black italic text-climbe-secondary">
+                      <h3 className="text-sm font-black text-climbe-secondary">
                         {steps.find((s) => s.key === activeTab)?.label}
                       </h3>
                     </div>
@@ -651,7 +651,7 @@ export function NegotiationWizardModal({
                   <Button
                     variant="ghost"
                     onClick={onClose}
-                    className="text-xs font-black italic"
+                    className="text-xs font-black"
                   >
                     FECHAR
                   </Button>
@@ -663,7 +663,7 @@ export function NegotiationWizardModal({
                         onClose();
                         navigate(routes.propostas);
                       }}
-                      className="text-xs font-black italic flex items-center gap-1 bg-climbe-primary text-climbe-secondary shadow-sm"
+                      className="text-xs font-black flex items-center gap-1 bg-climbe-primary text-climbe-secondary shadow-sm"
                     >
                       ACESSAR FLUXO COMERCIAL
                       <ChevronRight size={14} />

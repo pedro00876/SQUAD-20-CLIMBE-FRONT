@@ -131,23 +131,23 @@ export function ReunioesPage() {
               Agenda
             </span>
           </div>
-          <h1 className="text-4xl font-black text-climbe-secondary tracking-tighter italic">
+          <h1 className="text-4xl font-black text-foreground tracking-tighter">
             Reuniões
           </h1>
-          <p className="text-gray-400 font-light max-w-2xl">
+          <p className="text-muted-foreground font-light max-w-2xl">
             Acompanhe seus próximos compromissos, veja a data de hoje e agende
             novas reuniões com parceiros.
           </p>
         </div>
 
-        <div className="flex flex-col gap-3 rounded-[28px] border border-gray-100 bg-white px-5 py-4 shadow-sm">
+        <div className="flex flex-col gap-3 rounded-[28px] border border-border bg-card px-5 py-4 shadow-sm">
           <div className="flex items-center gap-3 text-climbe-secondary">
             <CalendarDays size={18} className="text-climbe-primary" />
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
               Hoje
             </span>
           </div>
-          <p className="text-lg font-black italic text-climbe-secondary capitalize">
+          <p className="text-lg font-black text-foreground capitalize">
             {formatToday()}
           </p>
           <Button
@@ -164,7 +164,7 @@ export function ReunioesPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm p-10">
+      <div className="bg-card rounded-[40px] border border-border shadow-sm p-10">
         <div className="space-y-6">
           <div className="flex flex-wrap items-center gap-3">
             <span className="rounded-full bg-climbe-primary/10 px-4 py-2 text-xs font-black uppercase tracking-[0.2em] text-climbe-primary">
@@ -184,7 +184,7 @@ export function ReunioesPage() {
               {Array.from({ length: 3 }).map((_, index) => (
                 <div
                   key={index}
-                  className="h-44 rounded-3xl border border-gray-100 bg-gray-50 animate-pulse"
+                  className="h-44 rounded-3xl border border-border bg-muted animate-pulse"
                 />
               ))}
             </div>
@@ -193,23 +193,23 @@ export function ReunioesPage() {
               {meetings.map((meeting) => (
                 <div
                   key={meeting.id}
-                  className="rounded-3xl border border-gray-100 bg-gray-50 p-6 shadow-sm transition-transform hover:-translate-y-1"
+                  className="rounded-3xl border border-border bg-muted p-6 shadow-sm transition-transform hover:-translate-y-1"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="space-y-2">
-                      <span className="inline-flex rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+                      <span className="inline-flex rounded-full bg-card px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
                         {meeting.status}
                       </span>
-                      <h4 className="text-lg font-black italic text-climbe-secondary">
+                      <h4 className="text-lg font-black text-foreground">
                         {formatMeetingSummary(meeting)}
                       </h4>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-muted-foreground">
                         {meeting.enterpriseName ||
                           (meeting.enterpriseId
                             ? `Empresa #${meeting.enterpriseId}`
                             : 'Empresa não informada')}
                       </p>
-                      <p className="text-sm font-semibold text-climbe-secondary">
+                      <p className="text-sm font-semibold text-foreground">
                         {meeting.date
                           ? new Date(`${meeting.date}T12:00:00`).toLocaleDateString(
                               'pt-BR',

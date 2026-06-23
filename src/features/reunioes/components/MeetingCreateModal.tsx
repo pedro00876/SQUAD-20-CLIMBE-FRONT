@@ -324,7 +324,7 @@ export function MeetingCreateModal({
         <button
           type="button"
           onClick={closeModal}
-          className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full text-slate-300 transition hover:bg-white/10 hover:text-white"
+          className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted/30 hover:text-foreground"
           aria-label="Fechar"
         >
           <X size={18} />
@@ -342,7 +342,7 @@ export function MeetingCreateModal({
           </p>
         </div>
 
-        <form className="field-on-light space-y-5" onSubmit={handleSubmit(onSubmit)}>
+        <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <label className="form-field-label">
@@ -360,7 +360,7 @@ export function MeetingCreateModal({
                 ))}
               </select>
               {errors.enterpriseId ? (
-                <p className="ml-1 text-xs text-red-300">{errors.enterpriseId.message}</p>
+                <p className="ml-1 text-xs text-danger">{errors.enterpriseId.message}</p>
               ) : null}
             </div>
 
@@ -374,7 +374,7 @@ export function MeetingCreateModal({
                 className="form-field-control"
               />
               {errors.title ? (
-                <p className="ml-1 text-xs text-red-300">{errors.title.message}</p>
+                <p className="ml-1 text-xs text-danger">{errors.title.message}</p>
               ) : null}
             </div>
 
@@ -388,7 +388,7 @@ export function MeetingCreateModal({
                 className="form-field-control"
               />
               {errors.date ? (
-                <p className="ml-1 text-xs text-red-300">{errors.date.message}</p>
+                <p className="ml-1 text-xs text-danger">{errors.date.message}</p>
               ) : null}
             </div>
 
@@ -402,7 +402,7 @@ export function MeetingCreateModal({
                 className="form-field-control"
               />
               {errors.status ? (
-                <p className="ml-1 text-xs text-red-300">{errors.status.message}</p>
+                <p className="ml-1 text-xs text-danger">{errors.status.message}</p>
               ) : null}
             </div>
 
@@ -417,7 +417,7 @@ export function MeetingCreateModal({
                 className="form-field-control"
               />
               {errors.time ? (
-                <p className="ml-1 text-xs text-red-300">{errors.time.message}</p>
+                <p className="ml-1 text-xs text-danger">{errors.time.message}</p>
               ) : null}
             </div>
 
@@ -432,7 +432,7 @@ export function MeetingCreateModal({
                 className="form-field-control"
               />
               {errors.endTime ? (
-                <p className="ml-1 text-xs text-red-300">{errors.endTime.message}</p>
+                <p className="ml-1 text-xs text-danger">{errors.endTime.message}</p>
               ) : null}
             </div>
           </div>
@@ -472,10 +472,10 @@ export function MeetingCreateModal({
                 />
               )}
               {errors.location ? (
-                <p className="ml-1 text-xs text-red-300">{errors.location.message}</p>
+                <p className="ml-1 text-xs text-danger">{errors.location.message}</p>
               ) : null}
               {roomConflict ? (
-                <p className="ml-1 text-xs text-red-300">Sala ocupada no horário selecionado.</p>
+                <p className="ml-1 text-xs text-danger">Sala ocupada no horário selecionado.</p>
               ) : null}
             </div>
 
@@ -486,8 +486,8 @@ export function MeetingCreateModal({
               <div
                 className={`flex min-h-12 items-center rounded-xl px-4 py-3 text-sm font-semibold ${
                   hasAvailabilityConflict
-                    ? 'bg-red-500/15 text-red-200'
-                    : 'bg-white/5 text-climbe-primary'
+                    ? 'bg-red-500/15 text-red-700 dark:text-red-200'
+                    : 'bg-slate-100 dark:bg-white/5 text-climbe-primary'
                 }`}
               >
                 {isLoadingAvailability
@@ -505,11 +505,11 @@ export function MeetingCreateModal({
             <label className="form-field-label">
               Participantes
             </label>
-            <div className="max-h-44 space-y-2 overflow-y-auto rounded-xl bg-white p-3 text-slate-900">
+            <div className="max-h-44 space-y-2 overflow-y-auto rounded-xl bg-slate-50/50 dark:bg-zinc-900/80 p-3 border border-slate-100 dark:border-zinc-800 text-slate-800 dark:text-slate-200">
               {isLoadingAvailability ? (
-                <p className="px-2 py-3 text-sm text-slate-500">Carregando participantes...</p>
+                <p className="px-2 py-3 text-sm text-slate-400">Carregando participantes...</p>
               ) : availableUsers.length === 0 ? (
-                <p className="px-2 py-3 text-sm text-slate-500">
+                <p className="px-2 py-3 text-sm text-slate-400">
                   Nenhum usuário disponível para seleção.
                 </p>
               ) : (
@@ -520,7 +520,7 @@ export function MeetingCreateModal({
                   return (
                     <label
                       key={participant.id}
-                      className="flex cursor-pointer items-center justify-between gap-4 rounded-lg px-2 py-2 transition hover:bg-slate-50"
+                      className="flex cursor-pointer items-center justify-between gap-4 rounded-lg px-2 py-2 transition hover:bg-slate-100 dark:hover:bg-zinc-800"
                     >
                       <span className="flex items-center gap-3">
                         <input
@@ -534,8 +534,8 @@ export function MeetingCreateModal({
                           className="h-4 w-4 rounded border-gray-300 text-climbe-primary focus:ring-climbe-primary"
                         />
                         <span>
-                          <span className="block text-sm font-bold">{participant.fullName}</span>
-                          <span className="block text-xs text-slate-500">{participant.email}</span>
+                          <span className="block text-sm font-bold text-slate-800 dark:text-slate-200">{participant.fullName}</span>
+                          <span className="block text-xs text-slate-500 dark:text-slate-400">{participant.email}</span>
                         </span>
                       </span>
                       <span
@@ -551,7 +551,7 @@ export function MeetingCreateModal({
               )}
             </div>
             {participantConflicts.length > 0 ? (
-              <p className="ml-1 text-xs text-red-300">
+              <p className="ml-1 text-xs text-danger">
                 Um ou mais participantes possuem reunião nesse horário.
               </p>
             ) : null}
@@ -568,7 +568,7 @@ export function MeetingCreateModal({
               placeholder="1. Apresentação dos resultados&#10;2. Definição de metas"
             />
             {errors.agenda ? (
-              <p className="ml-1 text-xs text-red-300">{errors.agenda.message}</p>
+              <p className="ml-1 text-xs text-danger">{errors.agenda.message}</p>
             ) : null}
           </div>
 
@@ -589,8 +589,8 @@ export function MeetingCreateModal({
               className="h-4 w-4 rounded border-gray-300 text-climbe-primary focus:ring-climbe-primary"
             />
             <div>
-              <p className="text-sm font-bold text-white">Reunião presencial</p>
-              <p className="text-xs text-slate-300">
+              <p className="text-sm font-bold text-slate-900 dark:text-white">Reunião presencial</p>
+              <p className="text-xs text-slate-500 dark:text-slate-300">
                 Desmarque para indicar uma reunião online.
               </p>
             </div>

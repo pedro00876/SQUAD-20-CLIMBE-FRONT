@@ -135,15 +135,15 @@ export function Header({ onMenuClick, isCollapsed, onToggleCollapse }: HeaderPro
           {isNotificationsOpen && (
             <div className="absolute right-0 mt-4 w-80 bg-card rounded-3xl border border-border shadow-2xl shadow-black/10 dark:shadow-black/40 overflow-hidden z-50">
               <div className="p-6 bg-muted/50 border-b border-border flex items-center justify-between">
-                <h3 className="font-bold text-foreground italic text-sm">Notificações</h3>
+                <h3 className="font-bold text-foreground text-sm">Notificações</h3>
                 {unreadCount > 0 && <span className="text-[10px] font-black bg-climbe-primary text-climbe-secondary px-2 py-0.5 rounded-full">{unreadCount} Novas</span>}
               </div>
               <div className="max-h-96 overflow-y-auto divide-y divide-border">
                 {notifications.length > 0 ? (
                    notifications.map((notification: Notification) => (
                     <div key={notification.id} className="p-5 group transition-colors hover:bg-muted/50 bg-climbe-primary/5">
-                      <div className="flex justify-between gap-2 mb-1">
-                        <p className="text-xs font-bold text-foreground leading-tight italic">
+                       <div className="flex justify-between gap-2 mb-1">
+                        <p className="text-xs font-bold text-foreground leading-tight">
                           {notification.message.length > 40 ? `${notification.message.slice(0, 40)}…` : notification.message}
                         </p>
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
