@@ -1,4 +1,5 @@
 export type DocumentType =
+  | 'COMMERCIAL_PROPOSAL'
   | 'BALANCO_PATRIMONIAL'
   | 'DRE'
   | 'CONTRATO_SOCIAL'

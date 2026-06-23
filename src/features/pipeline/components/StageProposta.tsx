@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { FileText, CheckCircle2, XCircle, Upload, Loader2, Users, User, Clock, RefreshCw } from 'lucide-react';
+import { FileText, CheckCircle2, XCircle, Upload, Loader2, Users, User, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Tooltip } from '@/components/ui/Tooltip';
 import { StatusBadge } from '@/components/ui/StatusBadge';
-import { proposalService } from '@/services/proposal.service';
 import { notificationService } from '@/services/notification.service';
+import { proposalService } from '@/services/proposal.service';
+import { submitCommercialProposal, parseApiWorkflowError } from '@/features/workflow';
 
 const REVISORES = [
   { key: 'CMO',      label: 'CMO'             },
@@ -41,11 +42,12 @@ export function StageProposta({
   const [error, setError] = useState('');
 
   const status = (proposal?.status || '').toUpperCase();
+  const isRejected = status === 'COMMERCIAL_PROPOSAL_REJECTED';
+  const canResubmit = status === 'ELIGIBLE' || isRejected;
   const propostaEnviada =
     status === 'COMMERCIAL_PROPOSAL' ||
     status === 'COMMERCIAL_PROPOSAL_APPROVED' ||
-    status === 'COMMERCIAL_PROPOSAL_REJECTED';
-  const isRejected = status === 'COMMERCIAL_PROPOSAL_REJECTED';
+    isRejected;
   const isApproved = status === 'COMMERCIAL_PROPOSAL_APPROVED';
 
   // Determine reviewer status per role
@@ -61,7 +63,8 @@ export function StageProposta({
 
   const uploadMutation = useMutation({
     mutationFn: async () => {
-      await proposalService.updateStatus(proposal.id, 'COMMERCIAL_PROPOSAL');
+      if (!file) throw new Error('Selecione o arquivo da proposta comercial.');
+      await submitCommercialProposal(proposal.id, empresa.id, file);
       if (empresa.email) {
         await notificationService.sendEmail(
           empresa.email,
@@ -73,9 +76,13 @@ export function StageProposta({
     onSuccess: () => {
       setFile(null);
       queryClient.invalidateQueries({ queryKey: ['proposals-enterprise', empresa.id] });
+      queryClient.invalidateQueries({ queryKey: ['proposals'] });
       onConcluir();
     },
-    onError: (err: any) => setError(err?.response?.data?.message || 'Erro ao enviar proposta.'),
+    onError: (err: unknown) => {
+      const parsed = parseApiWorkflowError(err);
+      setError(parsed.hint ? `${parsed.message} ${parsed.hint}` : parsed.message);
+    },
   });
 
   const approveMutation = useMutation({
@@ -91,7 +98,10 @@ export function StageProposta({
       queryClient.invalidateQueries({ queryKey: ['proposals-enterprise', empresa.id] });
       onConcluir();
     },
-    onError: (err: any) => setError(err?.response?.data?.message || 'Erro ao aprovar proposta.'),
+    onError: (err: unknown) => {
+      const parsed = parseApiWorkflowError(err);
+      setError(parsed.hint ? `${parsed.message} ${parsed.hint}` : parsed.message);
+    },
   });
 
   const rejectMutation = useMutation({
@@ -109,14 +119,17 @@ export function StageProposta({
       setRejectReason('');
       onConcluir();
     },
-    onError: (err: any) => setError(err?.response?.data?.message || 'Erro ao reprovar proposta.'),
+    onError: (err: unknown) => {
+      const parsed = parseApiWorkflowError(err);
+      setError(parsed.hint ? `${parsed.message} ${parsed.hint}` : parsed.message);
+    },
   });
 
   const isBusy = uploadMutation.isPending || approveMutation.isPending || rejectMutation.isPending;
 
   // ── Revisor Panel ──────────────────────────────────────────────────────────
 
-  function RevisorBadge({ key: rKey, label }: { key: RevisorKey; label: string }) {
+  function RevisorBadge({ rKey, label }: { rKey: RevisorKey; label: string }) {
     const rs = revisorStatus(rKey);
     const config = {
       current:  { bg: 'bg-climbe-primary text-climbe-secondary border-climbe-primary', icon: <User size={10} />, suffix: '— Você' },
@@ -153,12 +166,12 @@ export function StageProposta({
         </div>
         <div className="flex flex-wrap gap-3">
           {REVISORES.map(r => (
-            <RevisorBadge key={r.key} {...r} />
+            <RevisorBadge key={r.key} rKey={r.key} label={r.label} />
           ))}
         </div>
         <p className="text-xs text-gray-400 mt-3">
           {isRejected
-            ? 'Proposta reprovada — encerramento com notificação enviada.'
+            ? 'Proposta reprovada — reenvie o documento comercial para nova análise.'
             : isApproved
               ? 'Proposta aprovada por todos os revisores.'
               : propostaEnviada
@@ -168,9 +181,11 @@ export function StageProposta({
       </div>
 
       {/* Upload */}
-      {!propostaEnviada && (
+      {canResubmit && (
         <div className="space-y-4">
-          <h3 className="font-bold italic text-climbe-secondary text-lg">Envio de Proposta Comercial</h3>
+          <h3 className="font-bold italic text-climbe-secondary text-lg">
+            {isRejected ? 'Reenviar Proposta Comercial' : 'Envio de Proposta Comercial'}
+          </h3>
           <div className="border-2 border-dashed border-gray-200 rounded-3xl p-12 flex flex-col items-center justify-center text-center bg-gray-50 hover:bg-gray-100 transition-colors">
             <input
               type="file"
@@ -216,8 +231,15 @@ export function StageProposta({
         </div>
       )}
 
+      {/* Proposta reprovada — reenvio */}
+      {isRejected && !canUpload && (
+        <p className="text-xs text-gray-400 italic text-center">
+          Aguardando reenvio da proposta comercial pelo CMO.
+        </p>
+      )}
+
       {/* Proposta enviada — aguardando aprovação */}
-      {propostaEnviada && !isRejected && (
+      {status === 'COMMERCIAL_PROPOSAL' && (
         <div className="space-y-6">
           <div className="flex items-center justify-between bg-gray-50 p-6 rounded-2xl">
             <div className="flex items-center gap-4">
@@ -269,36 +291,6 @@ export function StageProposta({
             <p className="text-xs text-gray-400 italic text-center pt-2">
               Aguardando aprovação de CMO / CSO / CEO / Analista Contador.
             </p>
-          )}
-        </div>
-      )}
-
-      {/* Proposta reprovada — encerramento */}
-      {isRejected && (
-        <div className="space-y-4">
-          <div className="flex flex-col items-center justify-center py-10 text-center bg-red-50 rounded-3xl border border-red-100">
-            <XCircle className="w-12 h-12 text-red-400 mb-4" />
-            <h3 className="text-xl font-black italic text-red-600">Processo Encerrado</h3>
-            <p className="text-red-500/80 mt-2 max-w-md mx-auto text-sm">
-              A proposta comercial foi reprovada. A empresa foi notificada e o processo foi encerrado nesta etapa.
-            </p>
-            <div className="mt-4 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-red-400">
-              <Clock size={11} />
-              {new Date().toLocaleDateString('pt-BR')}
-            </div>
-          </div>
-
-          {canApprove && (
-            <div className="flex justify-center">
-              <Button
-                variant="outline"
-                onClick={() => { setError(''); approveMutation.mutate(); }}
-                disabled={isBusy}
-                className="flex items-center gap-2 font-bold text-climbe-secondary border-gray-200 hover:bg-gray-50"
-              >
-                <RefreshCw size={14} /> Nova tentativa — retornar para Reunião
-              </Button>
-            </div>
           )}
         </div>
       )}

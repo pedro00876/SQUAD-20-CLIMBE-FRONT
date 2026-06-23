@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { meetingService } from '@/features/reunioes/services';
-import { proposalService } from '@/services/proposal.service';
 import { notificationService } from '@/services/notification.service';
 import { canPerformStageAction } from '@/config/roles';
 import { useNavigate } from 'react-router-dom';
@@ -85,8 +84,6 @@ export function StageAgendamento({ empresa, proposal, userRole, canEdit, onConcl
 
   const reprovarMutation = useMutation({
     mutationFn: async () => {
-      await proposalService.update(proposal.id, { status: 'READY_FOR_NEXT_STAGE' });
-
       if (empresa.email) {
         await notificationService.sendEmail(
           empresa.email,
@@ -97,9 +94,6 @@ export function StageAgendamento({ empresa, proposal, userRole, canEdit, onConcl
     },
     onSuccess: () => {
       setShowRejectConfirm(false);
-      queryClient.invalidateQueries({ queryKey: ['proposals-enterprise', empresa.id] });
-      queryClient.invalidateQueries({ queryKey: ['doc-requirements', proposal?.id] });
-      queryClient.invalidateQueries({ queryKey: ['spreadsheets-contract'] });
       onConcluir();
     },
     onError: (err: any) => {
@@ -329,7 +323,7 @@ export function StageAgendamento({ empresa, proposal, userRole, canEdit, onConcl
         onClose={() => setShowRejectConfirm(false)}
         onConfirm={() => { setError(''); reprovarMutation.mutate(); }}
         title="Retornar para Verificação Documental?"
-        description="O processo será retornado para a etapa de verificação documental do próximo mês. O ciclo recomeçará a partir da documentação. A empresa será notificada."
+        description="A empresa será notificada. O status da proposta não será alterado — registre observações internamente e retome a documentação manualmente."
         confirmLabel="Sim, retornar para próximo mês"
         cancelLabel="Cancelar"
         variant="danger"

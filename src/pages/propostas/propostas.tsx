@@ -24,6 +24,15 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { notificationService } from '@/services/notification.service';
 import { userService } from '@/features/usuarios/services';
+import {
+  submitCommercialProposal,
+  parseApiWorkflowError,
+  getProposalStatusLabel,
+  canAssignAnalyst,
+  canCreateContract,
+  canCreateChecklist,
+  validateEnterpriseForEligible,
+} from '@/features/workflow';
 
 const documentRequirementTypes: { value: DocumentType; label: string }[] = [
   { value: 'BALANCO_PATRIMONIAL', label: 'Balanço patrimonial' },
@@ -103,7 +112,12 @@ export function PropostasPage() {
   const { user } = useAuthContext();
   const queryClient = useQueryClient();
   const [selectedEnterpriseId, setSelectedEnterpriseId] = useState<string>('');
-  const [proposalActionError, setProposalActionError] = useState('');
+  const [proposalActionError, setProposalActionErrorState] = useState('');
+  const [proposalActionHint, setProposalActionHint] = useState('');
+  const setProposalActionError = (msg: string, hint = '') => {
+    setProposalActionErrorState(msg);
+    setProposalActionHint(hint);
+  };
   const [commercialProposalFile, setCommercialProposalFile] = useState<File | null>(null);
   const [documentChecklistDeadline, setDocumentChecklistDeadline] = useState('');
   const [selectedDocumentTypes, setSelectedDocumentTypes] = useState<DocumentType[]>(
@@ -138,6 +152,14 @@ export function PropostasPage() {
     },
   });
 
+  const { data: triageEnterprise } = useQuery({
+    queryKey: ['enterprise', selectedProposal?.enterpriseId],
+    queryFn: () => enterpriseService.getById(Number(selectedProposal.enterpriseId)),
+    enabled: isTriagemDrawerOpen && !!selectedProposal?.enterpriseId,
+  });
+
+  const triageValidationIssues = validateEnterpriseForEligible(triageEnterprise);
+
   const statusMutation = useMutation({
     mutationFn: ({ id, status }: { id: number; status: string }) => proposalService.updateStatus(id, status),
     onSuccess: () => {
@@ -145,11 +167,10 @@ export function PropostasPage() {
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       setProposalActionError('');
     },
-    onError: (error: any) => {
-      const data = error?.response?.data;
-      const msg = data?.message || data?.detail || data?.error || (typeof data === 'string' ? data : null) || 'Não foi possível atualizar o status da proposta.';
-      console.error('[statusMutation] 400 body:', data);
-      setProposalActionError(msg);
+    onError: (error: unknown) => {
+      const parsed = parseApiWorkflowError(error);
+      setProposalActionError(parsed.message, parsed.hint);
+      console.error('[statusMutation]', parsed);
     },
   });
 
@@ -159,13 +180,9 @@ export function PropostasPage() {
         throw new Error('Selecione o arquivo da proposta comercial.');
       }
 
-      return documentService.upload(
-        {
-          enterpriseId: Number(selectedProposal.enterpriseId),
-          proposalId: Number(selectedProposal.id),
-          documentType: 'COMMERCIAL_PROPOSAL',
-          validated: false,
-        },
+      return submitCommercialProposal(
+        Number(selectedProposal.id),
+        Number(selectedProposal.enterpriseId),
         commercialProposalFile,
       );
     },
@@ -177,8 +194,9 @@ export function PropostasPage() {
       setCommercialProposalFile(null);
       setProposalActionError('');
     },
-    onError: (error: any) => {
-      setProposalActionError(error?.response?.data?.message || error?.message || 'Nao foi possivel enviar a proposta comercial.');
+    onError: (error: unknown) => {
+      const parsed = parseApiWorkflowError(error);
+      setProposalActionError(parsed.message, parsed.hint);
     },
   });
 
@@ -319,6 +337,10 @@ export function PropostasPage() {
   const handleContractSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedProposal) return;
+    if (!canCreateContract(selectedProposal.status)) {
+      setProposalActionError('Contrato só pode ser criado com proposta em COMMERCIAL_PROPOSAL_APPROVED.');
+      return;
+    }
     contractMutation.mutate({
       ...contractData,
       proposalId: selectedProposal.id,
@@ -354,6 +376,13 @@ export function PropostasPage() {
   };
 
   const openDocumentChecklistModal = (proposal: any) => {
+    if (!canCreateChecklist(proposal.status)) {
+      setProposalActionError(
+        'Checklist documental disponível apenas após assinatura do contrato (READY_FOR_NEXT_STAGE).',
+        'Assine o contrato em Contratos para liberar esta etapa.',
+      );
+      return;
+    }
     setSelectedProposal(proposal);
     setDocumentChecklistDeadline('');
     setSelectedDocumentTypes(documentRequirementTypes.map((type) => type.value));
@@ -411,20 +440,7 @@ export function PropostasPage() {
     return 'bg-gray-50 text-gray-400 border-gray-100';
   };
 
-  const getStatusLabel = (status: string) => {
-    const labels: Record<string, string> = {
-      RECEIVED: 'Recebida',
-      IN_TRIAGE: 'Em triagem',
-      ELIGIBLE: 'Triagem aprovada',
-      PENDING_ADJUSTMENTS: 'Ajustes pendentes',
-      COMMERCIAL_PROPOSAL: 'Proposta comercial',
-      COMMERCIAL_PROPOSAL_APPROVED: 'Aprovada',
-      COMMERCIAL_PROPOSAL_REJECTED: 'Recusada',
-      READY_FOR_NEXT_STAGE: 'Proxima etapa',
-    };
-
-    return labels[status?.toUpperCase()] || status || '--';
-  };
+  const getStatusLabel = (status: string) => getProposalStatusLabel(status);
 
   const getStatusIcon = (status: string) => {
     const s = status?.toUpperCase();
@@ -499,9 +515,12 @@ export function PropostasPage() {
       </div>
 
       {proposalActionError && !isCommercialProposalModalOpen && (
-        <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-xs font-bold text-red-500">
-          {proposalActionError}
-        </p>
+        <div className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-xs font-bold text-red-500 space-y-1">
+          <p>{proposalActionError}</p>
+          {proposalActionHint && (
+            <p className="font-medium text-red-400/90">{proposalActionHint}</p>
+          )}
+        </div>
       )}
 
       <FilterChips chips={filterChips} active={statusFilter} onChange={setStatusFilter} />
@@ -616,7 +635,7 @@ export function PropostasPage() {
                               </button>
                             </div>
                           )}
-                          {status === 'COMMERCIAL_PROPOSAL_APPROVED' && !proposal.responsibleAnalystId && (
+                          {canAssignAnalyst(status) && !proposal.responsibleAnalystId && (
                             <button
                               onClick={() => { setSelectedProposal(proposal); setIsAnalystModalOpen(true); }}
                               className="flex items-center gap-1.5 px-4 py-2 bg-climbe-primary text-climbe-secondary text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-105 transition-all"
@@ -625,7 +644,7 @@ export function PropostasPage() {
                               Selecionar Analista
                             </button>
                           )}
-                          {status === 'COMMERCIAL_PROPOSAL_APPROVED' && proposal.responsibleAnalystId && (
+                          {canCreateContract(status) && proposal.responsibleAnalystId && (
                             <button
                               onClick={() => openContractModal(proposal)}
                               className="flex items-center gap-1.5 rounded-xl bg-climbe-secondary px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white transition-all hover:scale-105"
@@ -637,18 +656,20 @@ export function PropostasPage() {
 
                           {/* Secondary actions in ⋯ dropdown */}
                           <ActionMenu>
-                            {status === 'COMMERCIAL_PROPOSAL_APPROVED' && proposal.responsibleAnalystId && (
+                            {canCreateChecklist(status) && (
                               <ActionMenuItem
                                 icon={FileText}
                                 label="Checklist"
                                 onClick={() => { setChecklistProposalId(proposal.id); setIsChecklistModalOpen(true); }}
                               />
                             )}
-                            <ActionMenuItem
-                              icon={ClipboardCheck}
-                              label="Documentos"
-                              onClick={() => openDocumentChecklistModal(proposal)}
-                            />
+                            {canCreateChecklist(status) && (
+                              <ActionMenuItem
+                                icon={ClipboardCheck}
+                                label="Documentos"
+                                onClick={() => openDocumentChecklistModal(proposal)}
+                              />
+                            )}
                             <ActionMenuItem
                               icon={FileText}
                               label="Ver detalhes"
@@ -688,6 +709,7 @@ export function PropostasPage() {
         onClose={() => { setIsTriagemDrawerOpen(false); setSelectedProposal(null); }}
         proposal={selectedProposal}
         isLoading={statusMutation.isPending}
+        enterpriseValidationIssues={triageValidationIssues}
         onApprove={() => {
           if (!selectedProposal) return;
           statusMutation.mutate({ id: selectedProposal.id, status: 'ELIGIBLE' }, {
@@ -701,19 +723,6 @@ export function PropostasPage() {
             { id: selectedProposal.id, status: isInTriage ? 'PENDING_ADJUSTMENTS' : 'IN_TRIAGE' },
             { onSuccess: () => setIsTriagemDrawerOpen(false) },
           );
-        }}
-        onReject={(reason) => {
-          if (!selectedProposal) return;
-          statusMutation.mutate({ id: selectedProposal.id, status: 'COMMERCIAL_PROPOSAL_REJECTED' }, {
-            onSuccess: () => {
-              notificationService.sendEmail(
-                selectedProposal.enterpriseEmail || 'contato@empresa.com',
-                `Proposta reprovada — ${selectedProposal.enterpriseName}`,
-                `Sua proposta foi reprovada: ${reason}`,
-              );
-              setIsTriagemDrawerOpen(false);
-            },
-          });
         }}
       />
 

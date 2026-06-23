@@ -12,7 +12,7 @@ import { proposalService } from '@/services/proposal.service';
 import { contractService } from '@/services/contract.service';
 import { documentRequirementService } from '@/services/document.service';
 import { reportService } from '@/services/report.service';
-import { spreadsheetService } from '@/features/spreadsheets/services';
+import { meetingService } from '@/features/reunioes/services';
 
 import { StageCadastro } from '@/features/pipeline/components/StageCadastro';
 import { StageReuniao } from '@/features/pipeline/components/StageReuniao';
@@ -33,7 +33,7 @@ const NEXT_STEP: Record<ProcessStage | 'CONCLUIDO', { who: string; action: strin
   CONTRATO:        { who: 'Compliance',            action: 'Gere o contrato e elencione o analista responsável.' },
   DOCUMENTACAO:    { who: 'Compliance / Analista', action: 'Solicite a documentação obrigatória e aguarde o envio da empresa.' },
   VALIDACAO:       { who: 'Analista Sênior',       action: 'Valide cada documento enviado pela empresa.' },
-  FERRAMENTAS:     { who: 'Analista Chefe',        action: 'Registre a Primeira Data, libere o ambiente Google Drive/Sheets e distribua tarefas.' },
+  FERRAMENTAS:     { who: 'Analista Chefe',        action: 'Registre a Primeira Data da operação e distribua tarefas aos analistas.' },
   RELATORIO:       { who: 'Analista / Sênior',     action: 'Elabore o relatório técnico, exporte em PDF e envie para aprovação.' },
   APROVACAO_FINAL: { who: 'CPO / P5',              action: 'Agende a reunião de apresentação e registre a decisão final.' },
   CONCLUIDO:       { who: '—',                     action: 'Processo concluído com sucesso.' },
@@ -134,9 +134,15 @@ export function EmpresaDetalhePage() {
   const contractId = latestContract?.id ?? null;
 
   const { data: docRequirements = [], isLoading: loadingDocs } = useQuery({
-    queryKey: ['doc-requirements', proposalId],
+    queryKey: ['document-requirements', proposalId],
     queryFn: () => documentRequirementService.listByProposal(proposalId!),
     enabled: !!proposalId,
+  });
+
+  const { data: meetings = [], isLoading: loadingMeetings } = useQuery({
+    queryKey: ['meetings-enterprise', enterpriseId],
+    queryFn: () => meetingService.listMeetingsByEnterprise(enterpriseId),
+    enabled: !!enterpriseId,
   });
 
   const { data: reports = [], isLoading: loadingReports } = useQuery({
@@ -145,19 +151,13 @@ export function EmpresaDetalhePage() {
     enabled: !!contractId,
   });
 
-  const { data: spreadsheets = [], isLoading: loadingSheets } = useQuery({
-    queryKey: ['spreadsheets-contract', contractId],
-    queryFn: () => spreadsheetService.getByContract(contractId!),
-    enabled: !!contractId,
-  });
-
   const isLoading =
     loadingEmpresa ||
     loadingProposals ||
     (!!proposalId && loadingContracts) ||
     (!!proposalId && loadingDocs) ||
-    (!!contractId && loadingReports) ||
-    (!!contractId && loadingSheets);
+    (!!enterpriseId && loadingMeetings) ||
+    (!!contractId && loadingReports);
 
   // ── Stage derivation ───────────────────────────────────────────────────────
 
@@ -166,7 +166,7 @@ export function EmpresaDetalhePage() {
     latestContract,
     docRequirements as any[],
     reports as any[],
-    spreadsheets as any[],
+    meetings as any[],
   );
 
   const [cadastroConfirmado, setCadastroConfirmado] = useState(false);
@@ -182,9 +182,9 @@ export function EmpresaDetalhePage() {
   const refetchAll = () => {
     queryClient.invalidateQueries({ queryKey: ['proposals-enterprise', enterpriseId] });
     queryClient.invalidateQueries({ queryKey: ['contracts-proposal', proposalId] });
-    queryClient.invalidateQueries({ queryKey: ['doc-requirements', proposalId] });
+    queryClient.invalidateQueries({ queryKey: ['document-requirements', proposalId] });
+    queryClient.invalidateQueries({ queryKey: ['meetings-enterprise', enterpriseId] });
     queryClient.invalidateQueries({ queryKey: ['reports-contract', contractId] });
-    queryClient.invalidateQueries({ queryKey: ['spreadsheets-contract', contractId] });
   };
 
   // ── Role guards ────────────────────────────────────────────────────────────
@@ -229,7 +229,7 @@ export function EmpresaDetalhePage() {
     CONTRATO:        'Gestão do Contrato',
     DOCUMENTACAO:    'Solicitação de Documentação',
     VALIDACAO:       'Validação de Documentos',
-    FERRAMENTAS:     'Primeira Data / Liberação de Ferramentas',
+    FERRAMENTAS:     'Primeira Data',
     RELATORIO:       'Criação do Relatório',
     APROVACAO_FINAL: 'Aprovação Final',
     CONCLUIDO:       'Processo Concluído',
@@ -351,8 +351,9 @@ export function EmpresaDetalhePage() {
               <StageContrato
                 empresa={empresa}
                 proposal={latestProposal}
+                contract={latestContract}
                 canCreate={!selectedStage && canPerformStageAction(userRole, 'CONTRATO_CRIAR')}
-                canAssignAnalyst={!selectedStage && canPerformStageAction(userRole, 'CONTRATO_ANALISTA')}
+                canAssignAnalystRole={!selectedStage && canPerformStageAction(userRole, 'CONTRATO_ANALISTA')}
                 onConcluir={refetchAll}
               />
             )}

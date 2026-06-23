@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { requirementService } from '@/features/documentos/services/requirement.service';
+import { documentRequirementService } from '@/services/document.service';
 import type { DocumentType, DocumentRequirement, DocumentRequirementStatus } from '@/features/documentos/types';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { CheckCircle2, XCircle, Clock, FileText, Plus, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 
 interface ChecklistModalProps {
   isOpen: boolean;
@@ -20,7 +19,7 @@ const documentTypes = [
   { value: 'DRE', label: 'Demonstração de Resultados (DRE)' },
   { value: 'PLANILHA_GERENCIAL', label: 'Planilha Gerencial' },
   { value: 'CNPJ', label: 'CNPJ' },
-  { value: 'CONTRATO_SOCIAL', label: 'Contrato Social' }
+  { value: 'CONTRATO_SOCIAL', label: 'Contrato Social' },
 ];
 
 export function ChecklistModal({ isOpen, onClose, proposalId }: ChecklistModalProps) {
@@ -29,29 +28,46 @@ export function ChecklistModal({ isOpen, onClose, proposalId }: ChecklistModalPr
   const [deadline, setDeadline] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
   const [validatingReqId, setValidatingReqId] = useState<number | null>(null);
+  const [error, setError] = useState('');
 
   const { data: requirements = [], isLoading } = useQuery({
-    queryKey: ['requirements', proposalId],
-    queryFn: () => requirementService.listByProposal(proposalId!),
-    enabled: !!proposalId && isOpen
+    queryKey: ['document-requirements', proposalId],
+    queryFn: () => documentRequirementService.listByProposal(proposalId!),
+    enabled: !!proposalId && isOpen,
   });
 
   const createMutation = useMutation({
-    mutationFn: () => requirementService.create(proposalId!, { documentTypes: [selectedType], deadline: deadline || undefined }),
+    mutationFn: () =>
+      documentRequirementService.createForProposal(proposalId!, {
+        documentTypes: [selectedType],
+        deadline: deadline || undefined,
+      }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['requirements', proposalId] });
+      queryClient.invalidateQueries({ queryKey: ['document-requirements', proposalId] });
       setDeadline('');
-    }
+      setError('');
+    },
+    onError: (err: any) => {
+      setError(err?.response?.data?.message || 'Não foi possível adicionar o requisito.');
+    },
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, status, reason }: { id: number, status: DocumentRequirementStatus, reason?: string }) =>
-      requirementService.update(id, { status, rejectionReason: reason }),
+    mutationFn: ({ id, status, reason }: { id: number; status: DocumentRequirementStatus; reason?: string }) => {
+      if (status === 'NON_COMPLIANT' && !reason?.trim()) {
+        throw new Error('Informe o motivo da não conformidade.');
+      }
+      return documentRequirementService.update(id, { status, rejectionReason: reason });
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['requirements', proposalId] });
+      queryClient.invalidateQueries({ queryKey: ['document-requirements', proposalId] });
       setValidatingReqId(null);
       setRejectionReason('');
-    }
+      setError('');
+    },
+    onError: (err: any) => {
+      setError(err?.response?.data?.message || err?.message || 'Não foi possível atualizar o requisito.');
+    },
   });
 
   if (!isOpen || !proposalId) return null;
@@ -62,51 +78,56 @@ export function ChecklistModal({ isOpen, onClose, proposalId }: ChecklistModalPr
   };
 
   const getStatusDisplay = (status: string) => {
-    switch(status) {
-      case 'APPROVED': return { label: 'Aprovado', color: 'text-green-600 bg-green-50', icon: <CheckCircle2 size={14} /> };
-      case 'NON_COMPLIANT': return { label: 'Recusado', color: 'text-red-600 bg-red-50', icon: <XCircle size={14} /> };
-      case 'SUBMITTED': return { label: 'Em Análise', color: 'text-blue-600 bg-blue-50', icon: <FileText size={14} /> };
-      default: return { label: 'Pendente', color: 'text-orange-600 bg-orange-50', icon: <Clock size={14} /> };
+    switch (status) {
+      case 'APPROVED':
+        return { label: 'Aprovado', color: 'text-green-600 bg-green-50', icon: <CheckCircle2 size={14} /> };
+      case 'NON_COMPLIANT':
+        return { label: 'Recusado', color: 'text-red-600 bg-red-50', icon: <XCircle size={14} /> };
+      case 'SUBMITTED':
+        return { label: 'Em Análise', color: 'text-blue-600 bg-blue-50', icon: <FileText size={14} /> };
+      default:
+        return { label: 'Pendente', color: 'text-orange-600 bg-orange-50', icon: <Clock size={14} /> };
     }
   };
 
-  const getTypeLabel = (type: string) => {
-    return documentTypes.find(t => t.value === type)?.label || type;
-  };
+  const getTypeLabel = (type: string) => documentTypes.find((t) => t.value === type)?.label || type;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="max-w-3xl">
       <div className="space-y-6">
         <div>
           <h2 className="text-2xl font-black italic tracking-tight text-climbe-secondary">Checklist Documental</h2>
-          <p className="text-xs text-gray-400">Proposta #{proposalId} - Gerencie os documentos exigidos para compliance.</p>
+          <p className="text-xs text-gray-400">Proposta #{proposalId} — disponível após assinatura do contrato.</p>
         </div>
 
-        {/* Adicionar Requisito */}
+        {error && (
+          <p className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-xs font-bold text-red-500">{error}</p>
+        )}
+
         <form onSubmit={handleCreate} className="flex items-end gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100">
           <div className="flex-1 space-y-2">
             <Label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Documento Exigido</Label>
-            <select 
+            <select
               value={selectedType}
-              onChange={e => setSelectedType(e.target.value as DocumentType)}
+              onChange={(e) => setSelectedType(e.target.value as DocumentType)}
               className="w-full px-4 py-2 text-sm bg-white border border-gray-200 rounded-xl outline-none focus:border-climbe-primary"
             >
-              {documentTypes.map(t => (
+              {documentTypes.map((t) => (
                 <option key={t.value} value={t.value}>{t.label}</option>
               ))}
             </select>
           </div>
           <div className="flex-1 space-y-2">
             <Label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Prazo (Opcional)</Label>
-            <input 
+            <input
               type="date"
               value={deadline}
-              onChange={e => setDeadline(e.target.value)}
+              onChange={(e) => setDeadline(e.target.value)}
               className="w-full px-4 py-2 text-sm bg-white border border-gray-200 rounded-xl outline-none focus:border-climbe-primary"
             />
           </div>
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             disabled={createMutation.isPending}
             className="bg-climbe-primary text-climbe-secondary font-black italic rounded-xl px-4 py-2"
           >
@@ -114,7 +135,6 @@ export function ChecklistModal({ isOpen, onClose, proposalId }: ChecklistModalPr
           </Button>
         </form>
 
-        {/* Lista de Requisitos */}
         <div className="space-y-3 max-h-[40vh] overflow-y-auto pr-2">
           {isLoading ? (
             <p className="text-center text-sm text-gray-400 py-4">Carregando...</p>
@@ -123,7 +143,7 @@ export function ChecklistModal({ isOpen, onClose, proposalId }: ChecklistModalPr
           ) : (
             requirements.map((req: DocumentRequirement) => {
               const display = getStatusDisplay(req.status);
-              
+
               return (
                 <div key={req.id} className="p-4 bg-white border border-gray-100 rounded-2xl shadow-sm space-y-3">
                   <div className="flex items-center justify-between">
@@ -145,53 +165,49 @@ export function ChecklistModal({ isOpen, onClose, proposalId }: ChecklistModalPr
                     </div>
                   )}
 
-                  {/* Ações de Validação (Simulação para quando o arquivo for enviado) */}
-                  {req.status !== 'APPROVED' && (
+                  {req.status === 'SUBMITTED' && req.documentId && (
                     <div className="pt-3 border-t border-gray-50 flex flex-col gap-2">
                       {validatingReqId === req.id ? (
                         <div className="flex gap-2">
-                          <input 
-                            type="text" 
-                            placeholder="Motivo da reprovação..." 
+                          <input
+                            type="text"
+                            placeholder="Motivo da reprovação..."
                             value={rejectionReason}
-                            onChange={e => setRejectionReason(e.target.value)}
+                            onChange={(e) => setRejectionReason(e.target.value)}
                             className="flex-1 text-xs px-3 py-1.5 border rounded-lg outline-none focus:border-red-400"
                           />
-                          <button 
+                          <button
                             onClick={() => updateMutation.mutate({ id: req.id, status: 'NON_COMPLIANT', reason: rejectionReason })}
-                            disabled={!rejectionReason || updateMutation.isPending}
+                            disabled={!rejectionReason.trim() || updateMutation.isPending}
                             className="px-3 py-1.5 bg-red-500 text-white text-[10px] font-black rounded-lg disabled:opacity-50"
                           >
                             REPROVAR
                           </button>
-                          <button onClick={() => setValidatingReqId(null)} className="px-3 py-1.5 text-xs text-gray-500">Cancelar</button>
+                          <button onClick={() => setValidatingReqId(null)} className="px-3 py-1.5 text-xs text-gray-500">
+                            Cancelar
+                          </button>
                         </div>
                       ) : (
                         <div className="flex justify-end gap-2">
-                          <button 
+                          <button
                             onClick={() => updateMutation.mutate({ id: req.id, status: 'APPROVED' })}
                             className="px-3 py-1 bg-green-50 text-green-600 text-[10px] font-black uppercase rounded-lg hover:bg-green-100 transition-colors"
                           >
                             Aprovar Doc
                           </button>
-                          <button 
+                          <button
                             onClick={() => setValidatingReqId(req.id)}
                             className="px-3 py-1 bg-red-50 text-red-600 text-[10px] font-black uppercase rounded-lg hover:bg-red-100 transition-colors"
                           >
                             Reprovar Doc
                           </button>
-                          {req.status === 'PENDING' && (
-                            <button 
-                              onClick={() => updateMutation.mutate({ id: req.id, status: 'SUBMITTED' })}
-                              className="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-black uppercase rounded-lg hover:bg-blue-100 transition-colors"
-                              title="Simular envio de documento pelo cliente"
-                            >
-                              Simular Envio
-                            </button>
-                          )}
                         </div>
                       )}
                     </div>
+                  )}
+
+                  {req.status === 'PENDING' && (
+                    <p className="text-[10px] text-gray-400 italic">Aguardando upload do documento pela empresa.</p>
                   )}
                 </div>
               );

@@ -26,6 +26,7 @@ import { proposalService, type Proposal } from '@/services/proposal.service';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -154,6 +155,9 @@ function matchesGroup(group: ContractCompanyGroup, term: string): boolean {
 }
 
 export function ContratosPage() {
+  const [searchParams] = useSearchParams();
+  const highlightProposalId = Number(searchParams.get('proposalId') || 0) || null;
+  const [signSuccessMessage, setSignSuccessMessage] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedContract, setSelectedContract] =
     useState<EnrichedContract | null>(null);
@@ -257,6 +261,9 @@ export function ContratosPage() {
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       const enriched = enrichContract(updatedContract, proposalById);
       setSelectedContract(enriched);
+      setSignSuccessMessage(
+        'Contrato assinado. A proposta avançou automaticamente para a próxima etapa (READY_FOR_NEXT_STAGE).',
+      );
     },
   });
 
@@ -271,6 +278,10 @@ export function ContratosPage() {
     const proposal = approvedProposals.find(
       (p) => p.id === formData.proposalId,
     );
+
+    if (!proposal || proposal.status?.toUpperCase() !== 'COMMERCIAL_PROPOSAL_APPROVED') {
+      return;
+    }
 
     createMutation.mutate(formData, {
       onSuccess: () => {
@@ -474,8 +485,28 @@ export function ContratosPage() {
   const hasFilteredFolders = filteredGroups.length > 0;
   const isRootView = view === 'root';
 
+  useEffect(() => {
+    if (!highlightProposalId || enrichedContracts.length === 0) return;
+    const contract = enrichedContracts.find((c) => c.proposalId === highlightProposalId);
+    if (!contract) return;
+    const group = allGroups.find((g) =>
+      g.contracts.some((c) => c.proposalId === highlightProposalId),
+    );
+    if (group) {
+      setSelectedGroupKey(getGroupKey(group));
+      setView('folder');
+      setSelectedContract(contract);
+    }
+  }, [highlightProposalId, enrichedContracts, allGroups]);
+
   return (
     <div className="space-y-8 pb-12">
+      {signSuccessMessage && (
+        <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-medium text-green-800 flex items-center gap-2">
+          <CheckCircle2 size={18} />
+          {signSuccessMessage}
+        </div>
+      )}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-3 text-climbe-primary">

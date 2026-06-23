@@ -29,7 +29,7 @@ const STAGES: StageConfig[] = [
   { id: 'CONTRATO',        label: 'Contrato',         etapaKey: 'E2' },
   { id: 'DOCUMENTACAO',    label: 'Documentação',     etapaKey: 'E3' },
   { id: 'VALIDACAO',       label: 'Validação',        etapaKey: 'E3' },
-  { id: 'FERRAMENTAS',     label: 'Análise',          etapaKey: 'E4' },
+  { id: 'FERRAMENTAS',     label: 'Primeira Data',    etapaKey: 'E4' },
   { id: 'RELATORIO',       label: 'Relatório',        etapaKey: 'E5' },
   { id: 'APROVACAO_FINAL', label: 'Aprovação Final',  etapaKey: 'E6' },
 ];
@@ -39,7 +39,7 @@ const ETAPA_GROUPS: { key: string; label: string; stageIds: ProcessStage[] }[] =
   { key: 'E1', label: 'Início',        stageIds: ['CADASTRO'] },
   { key: 'E2', label: 'Comercial',     stageIds: ['REUNIAO', 'PROPOSTA', 'CONTRATO'] },
   { key: 'E3', label: 'Documentação',  stageIds: ['DOCUMENTACAO', 'VALIDACAO'] },
-  { key: 'E4', label: 'Análise',       stageIds: ['FERRAMENTAS'] },
+  { key: 'E4', label: 'Primeira Data', stageIds: ['FERRAMENTAS'] },
   { key: 'E5', label: 'Relatório',     stageIds: ['RELATORIO'] },
   { key: 'E6', label: 'Aprovação',     stageIds: ['APROVACAO_FINAL'] },
 ];

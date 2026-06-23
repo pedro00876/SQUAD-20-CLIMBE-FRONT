@@ -85,7 +85,7 @@ export function StageDocumentacao({
           `Olá! Os seguintes documentos foram solicitados: ${selectedTypes.map(t => TYPE_LABEL[t]).join(', ')}. Prazo: ${deadline || 'a combinar'}.`,
         );
       }
-      queryClient.invalidateQueries({ queryKey: ['doc-requirements', proposal.id] });
+      queryClient.invalidateQueries({ queryKey: ['document-requirements', proposal.id] });
       onConcluir();
     },
     onError: (err: any) => setError(err?.response?.data?.message || 'Erro ao solicitar documentos.'),
@@ -94,7 +94,7 @@ export function StageDocumentacao({
   // ── Upload document ────────────────────────────────────────────────────────
 
   const uploadMutation = useMutation({
-    mutationFn: async ({ requirementId, docType, file }: { requirementId: number; docType: DocumentType; file: File }) => {
+    mutationFn: async ({ docType, file }: { docType: DocumentType; file: File }) => {
       await documentService.upload(
         {
           enterpriseId: empresa.id,
@@ -104,10 +104,9 @@ export function StageDocumentacao({
         },
         file,
       );
-      await documentRequirementService.update(requirementId, { status: 'SUBMITTED' });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['doc-requirements', proposal.id] });
+      queryClient.invalidateQueries({ queryKey: ['document-requirements', proposal.id] });
     },
     onError: (err: any) => setError(err?.response?.data?.message || 'Erro ao fazer upload do documento.'),
   });
@@ -139,7 +138,7 @@ export function StageDocumentacao({
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['doc-requirements', proposal.id] });
+      queryClient.invalidateQueries({ queryKey: ['document-requirements', proposal.id] });
       setRejectReasons({});
     },
     onError: (err: any) => setError(err?.response?.data?.message || err?.message || 'Erro ao validar documento.'),
@@ -318,7 +317,7 @@ export function StageDocumentacao({
                           const f = e.target.files?.[0];
                           if (f) {
                             setError('');
-                            uploadMutation.mutate({ requirementId: req.id, docType: req.documentType, file: f });
+                            uploadMutation.mutate({ docType: req.documentType, file: f });
                           }
                         }}
                       />
@@ -337,7 +336,7 @@ export function StageDocumentacao({
                     </>
                   )}
 
-                  {currentStage === 'VALIDACAO' && canValidar && req.status === 'SUBMITTED' && (
+                  {currentStage === 'VALIDACAO' && canValidar && req.status === 'SUBMITTED' && !!req.documentId && (
                     <div className="flex gap-2 w-full sm:w-auto flex-col">
                       <textarea
                         value={rejectReasons[req.id] || ''}
@@ -392,7 +391,7 @@ export function StageDocumentacao({
                 onClick={onConcluir}
                 className="bg-climbe-primary text-climbe-secondary font-black italic rounded-xl px-8 hover:scale-105 transition-all shadow-lg shadow-climbe-primary/20 h-14"
               >
-                DOCUMENTAÇÃO VALIDADA — LIBERAR FERRAMENTAS
+                DOCUMENTAÇÃO VALIDADA — CONTINUAR
               </Button>
             </div>
           )}
