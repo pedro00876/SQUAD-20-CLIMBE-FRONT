@@ -1,1 +1,1 @@
-export {};
+export { NotificationListener } from './NotificationListener';

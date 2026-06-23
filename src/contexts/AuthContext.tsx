@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import type { User } from '@/features/auth/types';
 import { routes } from '@/config/routes';
 import { api } from '@/services/api';
+import { disconnectNotifications } from '@/features/notificacoes/services/notification-ws';
 
 const USER_KEY = '@App:user';
 
@@ -88,6 +89,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (error) {
       console.error('Logout details', error);
     } finally {
+      disconnectNotifications();
       localStorage.removeItem(USER_KEY);
       setUser(null);
       navigate(routes.login);

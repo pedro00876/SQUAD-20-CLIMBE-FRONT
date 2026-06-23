@@ -1,14 +1,6 @@
 import { api } from './api';
 
-export interface Notification {
-  id: number;
-  userId: number;
-  message: string;
-  type: string;
-  sentAt: string;
-  userName: string;
-  // NÃO EXISTEM: title, read, createdAt
-}
+export type { Notification } from '@/features/notificacoes/types';
 
 export const notificationService = {
   listByUser: async (userId: number) => {
@@ -35,17 +27,17 @@ export const notificationService = {
         await api.post('/api/notifications', {
           userId: userRes.data.id,
           message: `${assunto} - ${corpo}`,
-          type: 'SYSTEM'
+          type: 'SYSTEM',
         });
       }
-    } catch (error) {
+    } catch {
       console.warn('Simulando envio de e-mail (usuário não encontrado no sistema):', para);
     }
   },
 
-  notifyCompliance: async (dados: any) => {
+  notifyCompliance: async (dados: unknown) => {
     // Como não existe endpoint /compliance, idealmente buscaríamos usuários com role COMPLIANCE
     // Aqui apenas simulamos o log para manter o fluxo sem quebrar.
     console.info('Notificação de Compliance registrada:', dados);
-  }
+  },
 };

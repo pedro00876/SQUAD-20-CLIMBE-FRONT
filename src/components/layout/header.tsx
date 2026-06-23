@@ -41,7 +41,7 @@ export function Header({ onMenuClick, isCollapsed, onToggleCollapse }: HeaderPro
     queryKey: ['notifications', user?.id],
     queryFn: () => user?.id ? notificationService.listByUser(Number(user.id)) : Promise.resolve([]),
     enabled: !!user?.id,
-    refetchInterval: 30000 // Refetch every 30 seconds
+    staleTime: Infinity,
   });
 
   const markAsReadMutation = useMutation({

@@ -1,4 +1,4 @@
-import { Bell, CheckCircle2, Clock, Loader2, Trash2, ArrowRight, Users, Building2, CalendarDays, ScrollText, FileText } from 'lucide-react';
+import { Bell, CheckCircle2, Clock, Loader2, Trash2, ArrowRight } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -7,58 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { notificationService, type Notification } from '@/services/notification.service';
-import { routes } from '@/config/routes';
-
-// ─── Type → action mapping ──────────────────────────────────────────────────
-
-const TYPE_CONFIG: Record<string, {
-  label: string;
-  icon: React.ComponentType<any>;
-  actionLabel: string;
-  actionRoute: string;
-}> = {
-  ACCESS_REQUEST: {
-    label: 'Solicitação de acesso',
-    icon: Users,
-    actionLabel: 'Aprovar agora',
-    actionRoute: routes.usuarios,
-  },
-  ALL_DOCUMENTS_APPROVED: {
-    label: 'Documentos aprovados',
-    icon: FileText,
-    actionLabel: 'Ver empresa',
-    actionRoute: routes.empresas,
-  },
-  MEETING: {
-    label: 'Reunião',
-    icon: CalendarDays,
-    actionLabel: 'Abrir agenda',
-    actionRoute: routes.agenda,
-  },
-  CONTRACT_CHANGE: {
-    label: 'Alteração de contrato',
-    icon: ScrollText,
-    actionLabel: 'Ver contratos',
-    actionRoute: routes.contratos,
-  },
-  TEAM_ASSIGNMENT: {
-    label: 'Atribuição de equipe',
-    icon: Building2,
-    actionLabel: 'Ver empresa',
-    actionRoute: routes.empresas,
-  },
-  RESPONSIBLE_ANALYST_ASSIGNED: {
-    label: 'Analista atribuído',
-    icon: Users,
-    actionLabel: 'Ver empresa',
-    actionRoute: routes.empresas,
-  },
-};
-
-function getTypeConfig(type?: string) {
-  if (!type) return null;
-  return TYPE_CONFIG[type.toUpperCase()] ?? null;
-}
+import { getNotificationTypeConfig } from '@/features/notificacoes/config/notification-types';
 
 function formatDate(dateStr?: string) {
   if (!dateStr) return 'Há algum tempo';
@@ -86,6 +35,7 @@ export function NotificacoesPage() {
     queryKey: ['notifications', user?.id],
     queryFn: () => user?.id ? notificationService.listByUser(Number(user.id)) : Promise.resolve([]),
     enabled: !!user?.id,
+    staleTime: Infinity,
   });
 
   const markAsReadMutation = useMutation({
@@ -182,7 +132,7 @@ export function NotificacoesPage() {
         <div className="space-y-3">
           {visible.map((notification: Notification) => {
             const read = isRead(notification);
-            const config = getTypeConfig(notification.type);
+            const config = getNotificationTypeConfig(notification.type);
             const Icon = config?.icon ?? Bell;
             return (
               <div

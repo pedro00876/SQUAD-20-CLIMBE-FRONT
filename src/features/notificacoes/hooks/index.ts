@@ -1,1 +1,1 @@
-export {};
+export { useNotificationWebSocket } from './useNotificationWebSocket';

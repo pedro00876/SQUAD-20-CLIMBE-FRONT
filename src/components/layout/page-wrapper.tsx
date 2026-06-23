@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Sidebar } from './sidebar';
 import { Header } from './header';
 import { Outlet } from 'react-router-dom';
+import { NotificationListener } from '@/features/notificacoes/components';
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -20,6 +21,7 @@ export function Layout({ children }: LayoutProps) {
 
   return (
     <div className="flex h-screen bg-background overflow-hidden font-sans transition-colors duration-300">
+      <NotificationListener />
       <Sidebar 
         isOpen={isSidebarOpen} 
         onClose={() => setIsSidebarOpen(false)} 
