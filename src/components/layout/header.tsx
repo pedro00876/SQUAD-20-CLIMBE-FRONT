@@ -11,6 +11,7 @@ import { Link } from 'react-router-dom';
 import { routes } from '@/config/routes';
 import { AnimatePresence } from 'framer-motion';
 import { GlobalSearchModal } from '@/components/ui/GlobalSearch';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -83,7 +84,7 @@ export function Header({ onMenuClick, isCollapsed, onToggleCollapse }: HeaderPro
   };
 
   return (
-    <header className="h-24 bg-white border-b border-gray-100 flex items-center justify-between px-6 lg:px-10 sticky top-0 z-40 shadow-sm gap-4">
+    <header className="h-24 bg-card border-b border-border flex items-center justify-between px-6 lg:px-10 sticky top-0 z-40 shadow-sm gap-4 transition-colors duration-300">
       {/* Menu / Collapse Button */}
       <button 
         onClick={() => {
@@ -93,7 +94,7 @@ export function Header({ onMenuClick, isCollapsed, onToggleCollapse }: HeaderPro
             onMenuClick();
           }
         }}
-        className="p-2 text-climbe-secondary hover:bg-gray-50 rounded-xl transition-colors shrink-0"
+        className="p-2 text-foreground hover:bg-muted rounded-xl transition-colors shrink-0"
         title={isCollapsed ? "Expandir menu" : "Recolher menu"}
       >
         <Menu size={24} />
@@ -102,11 +103,11 @@ export function Header({ onMenuClick, isCollapsed, onToggleCollapse }: HeaderPro
       {/* Search Area */}
       <button
         onClick={() => setIsSearchOpen(true)}
-        className="hidden sm:flex flex-1 max-w-md items-center gap-3 px-4 py-3 bg-gray-50 rounded-2xl text-sm text-gray-400 hover:bg-gray-100 transition-colors group border border-transparent hover:border-gray-200"
+        className="hidden sm:flex flex-1 max-w-md items-center gap-3 px-4 py-3 bg-muted rounded-2xl text-sm text-muted-foreground hover:bg-muted/80 transition-colors group border border-transparent hover:border-border"
       >
         <Search size={16} className="shrink-0 text-gray-400 group-hover:text-climbe-primary transition-colors" />
         <span className="flex-1 text-left font-light">Buscar empresa, proposta ou contrato...</span>
-        <span className="text-[10px] font-bold bg-gray-200 text-gray-400 px-1.5 py-0.5 rounded-md">Ctrl K</span>
+        <span className="text-[10px] font-bold bg-border text-muted-foreground px-1.5 py-0.5 rounded-md">Ctrl K</span>
       </button>
 
       {/* GlobalSearch modal */}
@@ -115,7 +116,9 @@ export function Header({ onMenuClick, isCollapsed, onToggleCollapse }: HeaderPro
       </AnimatePresence>
 
       {/* Actions & Profile */}
-      <div className="flex items-center gap-8">
+      <div className="flex items-center gap-4 lg:gap-6">
+        <ThemeToggle />
+
         {/* Notifications */}
         <div className="relative">
           <button 
@@ -130,37 +133,36 @@ export function Header({ onMenuClick, isCollapsed, onToggleCollapse }: HeaderPro
 
           {/* Notifications Dropdown */}
           {isNotificationsOpen && (
-            <div className="absolute right-0 mt-4 w-80 bg-white rounded-3xl border border-gray-100 shadow-2xl shadow-climbe-secondary/10 overflow-hidden z-50">
-              <div className="p-6 bg-gray-50/50 border-b border-gray-100 flex items-center justify-between">
-                <h3 className="font-bold text-climbe-secondary italic text-sm">Notificações</h3>
+            <div className="absolute right-0 mt-4 w-80 bg-card rounded-3xl border border-border shadow-2xl shadow-black/10 dark:shadow-black/40 overflow-hidden z-50">
+              <div className="p-6 bg-muted/50 border-b border-border flex items-center justify-between">
+                <h3 className="font-bold text-foreground italic text-sm">Notificações</h3>
                 {unreadCount > 0 && <span className="text-[10px] font-black bg-climbe-primary text-climbe-secondary px-2 py-0.5 rounded-full">{unreadCount} Novas</span>}
               </div>
-              <div className="max-h-96 overflow-y-auto divide-y divide-gray-50">
+              <div className="max-h-96 overflow-y-auto divide-y divide-border">
                 {notifications.length > 0 ? (
                    notifications.map((notification: Notification) => (
-                    <div key={notification.id} className="p-5 group transition-colors hover:bg-gray-50/50 bg-climbe-primary/5">
+                    <div key={notification.id} className="p-5 group transition-colors hover:bg-muted/50 bg-climbe-primary/5">
                       <div className="flex justify-between gap-2 mb-1">
-                        {/* `title` não existe no backend — usa mensagem truncada */}
-                        <p className="text-xs font-bold text-climbe-secondary leading-tight italic">
+                        <p className="text-xs font-bold text-foreground leading-tight italic">
                           {notification.message.length > 40 ? `${notification.message.slice(0, 40)}…` : notification.message}
                         </p>
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
                             onClick={() => markAsReadMutation.mutate(notification.id)}
-                            className="text-climbe-primary p-1 hover:bg-white rounded-md shadow-sm"
+                            className="text-climbe-primary p-1 hover:bg-card rounded-md shadow-sm"
                           >
                             <Check size={12} />
                           </button>
                           <button
                             onClick={() => deleteNotificationMutation.mutate(notification.id)}
-                            className="text-red-400 p-1 hover:bg-white rounded-md shadow-sm"
+                            className="text-red-400 p-1 hover:bg-card rounded-md shadow-sm"
                           >
                             <Trash2 size={12} />
                           </button>
                         </div>
                       </div>
-                      <p className="text-[11px] text-gray-500 mb-2 leading-relaxed">{notification.message}</p>
-                      <div className="flex items-center gap-1.5 text-[9px] text-gray-400 font-medium">
+                      <p className="text-[11px] text-muted-foreground mb-2 leading-relaxed">{notification.message}</p>
+                      <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground font-medium">
                         <Clock size={10} />
                         {formatNotificationDate(notification.sentAt)}
                       </div>
@@ -168,17 +170,17 @@ export function Header({ onMenuClick, isCollapsed, onToggleCollapse }: HeaderPro
                   ))
                 ) : (
                   <div className="p-10 text-center space-y-3">
-                    <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-200 mx-auto">
+                    <div className="w-12 h-12 bg-muted rounded-2xl flex items-center justify-center text-muted-foreground/40 mx-auto">
                       <Bell size={20} />
                     </div>
-                    <p className="text-xs text-gray-400 font-medium">Tudo limpo por aqui!</p>
+                    <p className="text-xs text-muted-foreground font-medium">Tudo limpo por aqui!</p>
                   </div>
                 )}
               </div>
               <Link
                 to={routes.notificacoes}
                 onClick={() => setIsNotificationsOpen(false)}
-                className="block text-center w-full p-4 text-[10px] font-black text-climbe-primary uppercase tracking-widest hover:bg-gray-50 transition-colors border-t border-gray-50"
+                className="block text-center w-full p-4 text-[10px] font-black text-climbe-primary uppercase tracking-widest hover:bg-muted transition-colors border-t border-border"
               >
                 Ver todas as notificações
               </Link>
@@ -187,12 +189,12 @@ export function Header({ onMenuClick, isCollapsed, onToggleCollapse }: HeaderPro
         </div>
 
         {/* Divider */}
-        <div className="w-[1px] h-8 bg-gray-100"></div>
+        <div className="w-[1px] h-8 bg-border"></div>
 
         {/* User Profile */}
         <Link to={routes.perfil} className="flex items-center gap-4 group cursor-pointer">
           <div className="flex flex-col items-end">
-            <span className="text-sm font-bold text-climbe-secondary tracking-tight">
+            <span className="text-sm font-bold text-foreground tracking-tight">
               {getFirstTwoNames(user?.name || 'Usuário')}
             </span>
             <span className="text-[10px] font-black uppercase tracking-[0.15em] text-climbe-primary">
@@ -201,9 +203,9 @@ export function Header({ onMenuClick, isCollapsed, onToggleCollapse }: HeaderPro
           </div>
           <div className="relative">
             <Avatar initials={getInitials(user?.name || 'US')} className="group-hover:ring-4 group-hover:ring-climbe-primary/10 transition-all shrink-0" />
-            <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white"></div>
+            <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-card"></div>
           </div>
-          <ChevronDown size={14} className="text-gray-400 group-hover:text-climbe-primary transition-colors" />
+          <ChevronDown size={14} className="text-muted-foreground group-hover:text-climbe-primary transition-colors" />
         </Link>
 
         {/* Logout */}
@@ -211,7 +213,7 @@ export function Header({ onMenuClick, isCollapsed, onToggleCollapse }: HeaderPro
           variant="ghost" 
           size="icon" 
           onClick={logout}
-          className="text-gray-400 hover:text-red-500 hover:bg-red-50 hover:border-red-100 rounded-xl"
+          className="text-muted-foreground hover:text-red-500 hover:bg-red-500/10 hover:border-red-500/20 rounded-xl"
         >
           <LogOut size={20} />
         </Button>

@@ -19,7 +19,7 @@ export function Layout({ children }: LayoutProps) {
   }, [isCollapsed]);
 
   return (
-    <div className="flex h-screen bg-[#F8FAFC] overflow-hidden font-sans">
+    <div className="flex h-screen bg-background overflow-hidden font-sans transition-colors duration-300">
       <Sidebar 
         isOpen={isSidebarOpen} 
         onClose={() => setIsSidebarOpen(false)} 

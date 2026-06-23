@@ -4,42 +4,56 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%; /* #F8FAFC */
-    --foreground: 222.2 47.4% 11.2%; /* #0F172A */
-    --primary: 175.3 42.5% 62.5%; /* Climbe Azul (#79C6C0) */
-    --primary-foreground: 222.2 47.4% 11.2%; /* #0F172A */
-    --border: 214.3 32% 91%; /* #E2E8F0 */
-    --muted: 210 40% 96.1%; /* #F1F5F9 */
-    --muted-foreground: 215.4 16.3% 46.9%; /* #64748B */
-    --card: 0 0% 100%; /* #FFFFFF */
-    --card-foreground: 222.2 47.4% 11.2%; /* #0F172A */
-    --success: 142.1 76.2% 36.3%; /* #16A34A */
-    --success-foreground: 355.7 100% 97.3%;
-    --warning: 38 92% 50%; /* #D97706 */
-    --warning-foreground: 48 96% 8.9%;
-    --danger: 0 84.2% 60.2%; /* #DC2626 */
-    --danger-foreground: 210 40% 98%;
-    --info: 199 89% 48%; /* #0EA5E9 */
+    /* Paleta Climbe — cores de marca preservadas, tonalidade suavizada */
+    --climbe-primary-rgb: 121 198 192;   /* #79C6C0 */
+    --climbe-secondary-rgb: 30 31 28;  /* #1E1F1C */
+    --climbe-support-rgb: 62 62 60;      /* #3E3E3C */
+    --climbe-surface-rgb: 244 247 246;   /* fundo levemente esverdeado */
+    --climbe-surface-elevated-rgb: 255 255 255;
+
+    /* Tokens semânticos — modo claro com leve tom da marca */
+    --background: 168 18% 96%;
+    --foreground: 60 4% 12%;
+    --primary: 175 35% 58%;
+    --primary-foreground: 60 4% 12%;
+    --border: 168 12% 88%;
+    --muted: 168 14% 93%;
+    --muted-foreground: 60 3% 42%;
+    --card: 0 0% 100%;
+    --card-foreground: 60 4% 12%;
+    --success: 142 55% 38%;
+    --success-foreground: 144 60% 97%;
+    --warning: 38 85% 48%;
+    --warning-foreground: 48 96% 9%;
+    --danger: 0 72% 52%;
+    --danger-foreground: 0 0% 98%;
+    --info: 199 80% 46%;
     --info-foreground: 210 40% 98%;
+
   }
 
   .dark {
-    --background: 222.2 84% 4.9%; /* #020617 */
-    --foreground: 210 40% 98%; /* #F8FAFC */
-    --primary: 175.3 42.5% 62.5%; /* Climbe Azul (#79C6C0) */
-    --primary-foreground: 222.2 47.4% 11.2%; /* #0F172A */
-    --border: 217.2 32.6% 17.5%; /* #1E293B */
-    --muted: 217.2 32.6% 17.5%; /* #1E293B */
-    --muted-foreground: 215 20.2% 65.1%; /* #94A3B8 */
-    --card: 222.2 84% 4.9%; /* #020617 */
-    --card-foreground: 210 40% 98%; /* #F8FAFC */
-    --success: 142.1 70.6% 45.3%;
-    --success-foreground: 144.4 61.9% 9.2%;
-    --warning: 37.9 90.2% 50.1%;
-    --warning-foreground: 38 92% 50%;
-    --danger: 0 72.2% 50.6%;
-    --danger-foreground: 210 40% 98%;
-    --info: 199 89% 48%;
+    color-scheme: dark;
+
+    --climbe-surface-rgb: 24 25 22;
+    --climbe-surface-elevated-rgb: 32 33 30;
+
+    --background: 60 4% 8%;
+    --foreground: 168 12% 92%;
+    --primary: 175 35% 58%;
+    --primary-foreground: 60 4% 10%;
+    --border: 60 3% 18%;
+    --muted: 60 3% 14%;
+    --muted-foreground: 168 8% 62%;
+    --card: 60 4% 11%;
+    --card-foreground: 168 12% 92%;
+    --success: 142 50% 44%;
+    --success-foreground: 144 60% 9%;
+    --warning: 38 85% 52%;
+    --warning-foreground: 48 96% 9%;
+    --danger: 0 65% 55%;
+    --danger-foreground: 0 0% 98%;
+    --info: 199 75% 50%;
     --info-foreground: 210 40% 98%;
   }
 }
@@ -51,13 +65,37 @@
     scrollbar-width: thin;
     scrollbar-color: rgba(100, 116, 139, 0.2) transparent;
   }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
     font-family: 'Poppins', sans-serif;
     font-feature-settings: 'rlig' 1, 'calt' 1;
   }
 
-  /* Global Custom Scrollbar */
+  /* Campos de formulário sempre legíveis — não herdam cor do container pai */
+  input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='submit']):not([type='button']):not([type='hidden']),
+  select,
+  textarea {
+    @apply text-slate-900;
+    -webkit-text-fill-color: rgb(15 23 42);
+  }
+
+  .dark input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='submit']):not([type='button']):not([type='hidden']),
+  .dark select,
+  .dark textarea {
+    @apply text-slate-100;
+    -webkit-text-fill-color: rgb(241 245 249);
+  }
+
+  /* Inputs com fundo claro em modais escuros */
+  .field-on-light,
+  .field-on-light input,
+  .field-on-light select,
+  .field-on-light textarea {
+    @apply text-slate-900;
+    -webkit-text-fill-color: rgb(15 23 42);
+  }
+
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -72,8 +110,62 @@
   ::-webkit-scrollbar-thumb:hover {
     background: rgba(121, 198, 192, 0.4);
   }
+
+  .dark ::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.25);
+  }
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: rgba(121, 198, 192, 0.45);
+  }
 }
 
+/* Adaptação automática de superfícies comuns ao modo escuro */
+@layer utilities {
+  .dark .bg-white {
+    background-color: hsl(var(--card));
+  }
+  .dark .bg-gray-50,
+  .dark .bg-gray-50\/50 {
+    background-color: hsl(var(--muted));
+  }
+  .dark .bg-\[\#F8FAFC\] {
+    background-color: hsl(var(--background));
+  }
+  .dark .border-gray-100,
+  .dark .border-gray-50 {
+    border-color: hsl(var(--border));
+  }
+  .dark .divide-gray-50 > :not([hidden]) ~ :not([hidden]) {
+    border-color: hsl(var(--border));
+  }
+  .dark .text-climbe-secondary {
+    color: hsl(var(--foreground));
+  }
+  .dark .text-gray-600 {
+    color: hsl(var(--muted-foreground));
+  }
+  .dark .text-gray-500,
+  .dark .text-gray-400 {
+    color: hsl(var(--muted-foreground) / 0.85);
+  }
+  .dark .hover\:bg-gray-50:hover,
+  .dark .hover\:bg-gray-100:hover {
+    background-color: hsl(var(--muted));
+  }
+  .dark .shadow-sm {
+    --tw-shadow-color: rgb(0 0 0 / 0.3);
+  }
+}
+
+@layer components {
+  .surface-card {
+    @apply rounded-3xl border border-border bg-card text-card-foreground shadow-sm;
+  }
+
+  .surface-muted {
+    @apply rounded-2xl border border-border bg-muted text-muted-foreground;
+  }
+}
 
 @layer utilities {
   .fade-up {
@@ -126,4 +218,3 @@
 #brick-container div {
   transition: opacity 0.5s ease-in;
 }
-

@@ -117,7 +117,7 @@ export function EmpresaModal({
           </p>
         </div>
 
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={onSubmit} className="field-on-light space-y-4">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2 md:col-span-2">
               <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">Razão Social</Label>

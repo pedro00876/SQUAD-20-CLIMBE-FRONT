@@ -12,21 +12,22 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       <input
         type={type}
         className={cn(
-          'flex h-12 w-full rounded-2xl border bg-gray-50 px-5 py-3 text-sm font-light transition-all file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-400 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50',
+          'flex h-12 w-full rounded-2xl border px-5 py-3 text-sm font-light transition-all',
+          'bg-gray-50 text-slate-900 placeholder:text-gray-400',
+          'dark:bg-slate-800/80 dark:text-slate-100 dark:placeholder:text-slate-400',
+          'file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-slate-900 dark:file:text-slate-100',
+          'focus:outline-none disabled:cursor-not-allowed disabled:opacity-50',
           {
-            // Default border and focus
-            'border-transparent focus:bg-white focus:border-climbe-primary/40 focus:ring-4 focus:ring-climbe-primary/10': !error && !success,
-            // Error state
-            'border-danger/30 bg-danger/5 text-danger placeholder:text-danger/40 focus:bg-white focus:border-danger focus:ring-4 focus:ring-danger/10': error,
-            // Success state
-            'border-success/30 bg-success/5 text-success placeholder:text-success/40 focus:bg-white focus:border-success focus:ring-4 focus:ring-success/10': success,
+            'border-transparent focus:bg-white focus:border-climbe-primary/40 focus:ring-4 focus:ring-climbe-primary/10 dark:focus:bg-slate-800': !error && !success,
+            'border-danger/30 bg-danger/5 text-danger placeholder:text-danger/40 focus:bg-white focus:border-danger focus:ring-4 focus:ring-danger/10 dark:focus:bg-slate-800': error,
+            'border-success/30 bg-success/5 text-success placeholder:text-success/40 focus:bg-white focus:border-success focus:ring-4 focus:ring-success/10 dark:focus:bg-slate-800': success,
           },
-          className
+          className,
         )}
         ref={ref}
         {...props}
       />
     );
-  }
+  },
 );
 Input.displayName = 'Input';

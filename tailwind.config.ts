@@ -2,13 +2,17 @@ import type { Config } from 'tailwindcss';
 
 const config: Config = {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
         climbe: {
-          primary: '#79C6C0',   // azul marca
-          secondary: '#1E1F1C', // preto marca
-          support: '#3E3E3C',   // cinza apoio
+          primary: 'rgb(var(--climbe-primary-rgb) / <alpha-value>)',
+          'primary-soft': 'rgb(var(--climbe-primary-rgb) / 0.14)',
+          secondary: 'rgb(var(--climbe-secondary-rgb) / <alpha-value>)',
+          support: 'rgb(var(--climbe-support-rgb) / <alpha-value>)',
+          surface: 'rgb(var(--climbe-surface-rgb) / <alpha-value>)',
+          'surface-elevated': 'rgb(var(--climbe-surface-elevated-rgb) / <alpha-value>)',
         },
         border: 'hsl(var(--border))',
         background: 'hsl(var(--background))',
