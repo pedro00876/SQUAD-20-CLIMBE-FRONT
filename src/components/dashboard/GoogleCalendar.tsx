@@ -5,7 +5,8 @@ import { ptBR } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { routes } from '@/config/routes';
-import { meetingService, type MeetingDTO } from '@/features/reunioes/services';
+import { meetingService } from '@/features/reunioes/services';
+import { type Meeting as MeetingDTO } from '@/features/reunioes/types';
 
 interface Event {
   id: string;
@@ -54,7 +55,7 @@ export function GoogleCalendar() {
         let totalPages = 1;
 
         while (currentPage < totalPages) {
-          const response = await meetingService.listMeetings({ page: currentPage, size: 100, sort: 'date,asc' });
+          const response = await meetingService.listMeetings(currentPage, 100);
           totalPages = response.totalPages || 1;
 
           if (!isActive) {

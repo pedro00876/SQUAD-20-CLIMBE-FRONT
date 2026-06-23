@@ -40,8 +40,8 @@ export function connectNotifications(
   stompClient = new Client({
     webSocketFactory: () =>
       new SockJS(getWsUrl(), null, {
-        withCredentials: true,
-      }),
+        transports: ['websocket', 'xhr-streaming', 'xhr-polling'],
+      } as any),
     reconnectDelay: 5000,
     heartbeatIncoming: 10000,
     heartbeatOutgoing: 10000,

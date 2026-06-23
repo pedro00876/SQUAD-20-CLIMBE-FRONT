@@ -150,8 +150,8 @@ export function NotificacoesPage() {
                 <div className="flex-1 space-y-3 py-0.5">
                   <div className="flex flex-col gap-1 md:flex-row md:items-start md:justify-between">
                     <div>
-                      <h5 className="font-bold text-foreground text-sm">
-                        {config?.label ?? notification.type.replace(/_/g, ' ')}
+                      <h5 className="font-bold text-foreground text-sm italic">
+                        {config?.label ?? notification.type?.replace(/_/g, ' ') ?? 'NOTIFICAÇÃO'}
                       </h5>
                       <p className="mt-1 text-xs text-muted-foreground font-light leading-relaxed max-w-xl">
                         {notification.message || 'Notificação sem mensagem.'}

@@ -126,7 +126,7 @@ export function DocumentosPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {docsPage.content.map((doc: Document) => (
+          {docsPage?.content?.map((doc: Document) => (
             <div key={doc.id} className="bg-card p-6 rounded-[32px] border border-border shadow-sm hover:shadow-xl transition-all group">
                <div className="flex items-start justify-between mb-6">
                  <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center text-climbe-primary group-hover:bg-climbe-primary group-hover:text-climbe-secondary transition-colors">
@@ -150,8 +150,8 @@ export function DocumentosPage() {
                
                <div className="space-y-4">
                  <div>
-                   <h4 className="font-bold text-foreground truncate" title={doc.name || doc.documentType || 'Documento'}>
-                    {doc.name || doc.documentType || 'Documento'}
+                   <h4 className="font-bold text-foreground truncate" title={doc.documentType || 'Documento'}>
+                    {doc.documentType || 'Documento'}
                    </h4>
                    <div className="flex items-center gap-2 mt-1">
                      <Building2 size={10} className="text-muted-foreground/50" />
@@ -164,7 +164,7 @@ export function DocumentosPage() {
                       {doc.createdAt ? format(new Date(doc.createdAt), "dd/MM/yyyy", { locale: ptBR }) : '--'}
                     </span>
                     <span className="px-2 py-0.5 bg-muted text-muted-foreground text-[8px] font-black uppercase tracking-widest rounded-full">
-                      {doc.type || doc.documentType || 'ARQUIVO'}
+                      {doc.documentType || 'ARQUIVO'}
                     </span>
                  </div>
                </div>

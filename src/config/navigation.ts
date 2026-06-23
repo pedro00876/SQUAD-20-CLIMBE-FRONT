@@ -14,7 +14,7 @@ import type { LogicalRole } from './roles';
 export interface NavItem {
   path: string;
   label: string;
-  icon: React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>;
+  icon: React.ElementType;
   roles: LogicalRole[];
 }
 
