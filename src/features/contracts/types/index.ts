@@ -10,7 +10,6 @@ export type ContractStatus =
 export interface Contract {
   id: number;
   proposalId: number;
-  documentId?: number;
   startDate: string | null;
   endDate: string | null;
   status: ContractStatus | null;

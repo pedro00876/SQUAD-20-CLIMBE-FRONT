@@ -36,6 +36,11 @@ export const contractService = {
     await api.delete(`/api/contracts/${id}`);
   },
 
+  getViewUrl: async (id: number): Promise<string> => {
+    const res = await api.get<string>(`/api/contracts/${id}/view`);
+    return res.data;
+  },
+
   /** Aloca equipe e dispara criação do ambiente no Google Drive/Sheets */
   allocateTeam: async (id: number, userIds: number[], roleInTeam: string): Promise<void> => {
     await api.post(

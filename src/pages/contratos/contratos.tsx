@@ -16,7 +16,6 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notificationService } from '@/services/notification.service';
 import { contractService } from '@/services/contract.service';
-import { documentService } from '@/services/document.service';
 import type {
   Contract,
   CreateContractRequest,
@@ -314,16 +313,7 @@ export function ContratosPage() {
     setViewError('');
     setViewLoadingId(contract.id);
     try {
-      let documentId = contract.documentId;
-      if (!documentId) {
-        const full = await contractService.getById(contract.id);
-        documentId = full.documentId;
-      }
-      if (!documentId) {
-        throw new Error('Contrato sem documento vinculado.');
-      }
-
-      const url = await documentService.getViewUrl(documentId);
+      const url = await contractService.getViewUrl(contract.id);
       if (download) {
         const link = document.createElement('a');
         link.href = url;
