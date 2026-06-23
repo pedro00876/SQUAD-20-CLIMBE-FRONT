@@ -320,7 +320,7 @@ export function MeetingCreateModal({
 
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 px-4 py-8">
-      <div className="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-[32px] bg-climbe-secondary p-8 text-white shadow-2xl">
+      <div className="form-modal-shell relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-[32px] p-8 shadow-2xl">
         <button
           type="button"
           onClick={closeModal}
@@ -334,10 +334,10 @@ export function MeetingCreateModal({
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-climbe-primary">
             Nova reunião
           </p>
-          <h2 className="text-3xl font-black tracking-tighter text-white italic">
+          <h2 className="text-3xl font-black tracking-tighter italic">
             Criar reunião
           </h2>
-          <p className="text-sm text-slate-300">
+          <p className="text-sm text-muted-foreground dark:text-slate-300">
             Preencha os dados abaixo para agendar a reunião.
           </p>
         </div>
@@ -345,12 +345,12 @@ export function MeetingCreateModal({
         <form className="field-on-light space-y-5" onSubmit={handleSubmit(onSubmit)}>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <label className="ml-1 block text-[11px] font-black uppercase tracking-[0.2em] text-slate-200">
+              <label className="form-field-label">
                 Empresa
               </label>
               <select
                 {...register('enterpriseId')}
-                className="w-full rounded-xl border border-transparent bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all focus:border-climbe-primary/40 focus:ring-2 focus:ring-climbe-primary/40"
+                className="form-field-select"
               >
                 <option value="">Selecione uma empresa...</option>
                 {availableEnterprises.map((e) => (
@@ -365,13 +365,13 @@ export function MeetingCreateModal({
             </div>
 
             <div className="space-y-2">
-              <label className="ml-1 block text-[11px] font-black uppercase tracking-[0.2em] text-slate-200">
+              <label className="form-field-label">
                 Título
               </label>
               <Input
                 {...register('title')}
-                placeholder="Alinhamento Estratégico"
-                className="bg-white text-slate-900 placeholder:text-slate-400"
+                placeholder="Título da reunião"
+                className="form-field-control"
               />
               {errors.title ? (
                 <p className="ml-1 text-xs text-red-300">{errors.title.message}</p>
@@ -379,13 +379,13 @@ export function MeetingCreateModal({
             </div>
 
             <div className="space-y-2">
-              <label className="ml-1 block text-[11px] font-black uppercase tracking-[0.2em] text-slate-200">
+              <label className="form-field-label">
                 Data
               </label>
               <Input
                 type="date"
                 {...register('date')}
-                className="bg-white text-slate-900 placeholder:text-slate-400"
+                className="form-field-control"
               />
               {errors.date ? (
                 <p className="ml-1 text-xs text-red-300">{errors.date.message}</p>
@@ -393,13 +393,13 @@ export function MeetingCreateModal({
             </div>
 
             <div className="space-y-2">
-              <label className="ml-1 block text-[11px] font-black uppercase tracking-[0.2em] text-slate-200">
+              <label className="form-field-label">
                 Status
               </label>
               <Input
                 {...register('status')}
                 placeholder="AGENDADA"
-                className="bg-white text-slate-900 placeholder:text-slate-400"
+                className="form-field-control"
               />
               {errors.status ? (
                 <p className="ml-1 text-xs text-red-300">{errors.status.message}</p>
@@ -407,14 +407,14 @@ export function MeetingCreateModal({
             </div>
 
             <div className="space-y-2">
-              <label className="ml-1 block text-[11px] font-black uppercase tracking-[0.2em] text-slate-200">
+              <label className="form-field-label">
                 Horário de início
               </label>
               <Input
                 type="time"
                 step="1"
                 {...register('time')}
-                className="bg-white text-slate-900 placeholder:text-slate-400"
+                className="form-field-control"
               />
               {errors.time ? (
                 <p className="ml-1 text-xs text-red-300">{errors.time.message}</p>
@@ -422,14 +422,14 @@ export function MeetingCreateModal({
             </div>
 
             <div className="space-y-2">
-              <label className="ml-1 block text-[11px] font-black uppercase tracking-[0.2em] text-slate-200">
+              <label className="form-field-label">
                 Horário de término
               </label>
               <Input
                 type="time"
                 step="1"
                 {...register('endTime')}
-                className="bg-white text-slate-900 placeholder:text-slate-400"
+                className="form-field-control"
               />
               {errors.endTime ? (
                 <p className="ml-1 text-xs text-red-300">{errors.endTime.message}</p>
@@ -439,7 +439,7 @@ export function MeetingCreateModal({
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <label className="ml-1 block text-[11px] font-black uppercase tracking-[0.2em] text-slate-200">
+              <label className="form-field-label">
                 {isInPerson ? 'Sala' : 'Link da reunião'}
               </label>
               {isInPerson ? (
@@ -451,7 +451,7 @@ export function MeetingCreateModal({
                       shouldValidate: true,
                     })
                   }
-                  className="w-full rounded-xl border border-transparent bg-white px-5 py-3 text-sm text-slate-900 outline-none transition-all focus:border-climbe-primary/40 focus:ring-2 focus:ring-climbe-primary/40"
+                  className="form-field-select"
                 >
                   <option value="">Selecione uma sala...</option>
                   {meetingRooms.map((room) => {
@@ -468,7 +468,7 @@ export function MeetingCreateModal({
                 <Input
                   {...register('location')}
                   placeholder="Link do Google Meet (opcional)"
-                  className="bg-white text-slate-900 placeholder:text-slate-400"
+                  className="form-field-control"
                 />
               )}
               {errors.location ? (
@@ -480,7 +480,7 @@ export function MeetingCreateModal({
             </div>
 
             <div className="space-y-2">
-              <label className="ml-1 block text-[11px] font-black uppercase tracking-[0.2em] text-slate-200">
+              <label className="form-field-label">
                 Disponibilidade
               </label>
               <div
@@ -502,7 +502,7 @@ export function MeetingCreateModal({
           </div>
 
           <div className="space-y-2">
-            <label className="ml-1 block text-[11px] font-black uppercase tracking-[0.2em] text-slate-200">
+            <label className="form-field-label">
               Participantes
             </label>
             <div className="max-h-44 space-y-2 overflow-y-auto rounded-xl bg-white p-3 text-slate-900">
@@ -558,13 +558,13 @@ export function MeetingCreateModal({
           </div>
 
           <div className="space-y-2">
-            <label className="ml-1 block text-[11px] font-black uppercase tracking-[0.2em] text-slate-200">
+            <label className="form-field-label">
               Pauta
             </label>
             <textarea
               {...register('agenda')}
               rows={5}
-              className="flex min-h-28 w-full rounded-xl border-transparent bg-white px-5 py-3 text-sm font-light text-slate-900 transition-all placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-climbe-primary/50"
+              className="form-field-control flex min-h-28 w-full rounded-xl px-5 py-3 text-sm font-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-climbe-primary/50"
               placeholder="1. Apresentação dos resultados&#10;2. Definição de metas"
             />
             {errors.agenda ? (

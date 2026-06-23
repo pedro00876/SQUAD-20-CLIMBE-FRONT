@@ -27,21 +27,21 @@ export function PropostaModal({
   responsibleName,
 }: PropostaModalProps) {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} className="max-w-lg bg-climbe-secondary text-white">
+    <Modal isOpen={isOpen} onClose={onClose} className="form-modal-shell max-w-lg">
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-black italic tracking-tight text-white">Nova Proposta</h2>
-          <p className="text-xs text-slate-300">Inicie um novo processo comercial selecionando o cliente.</p>
+          <h2 className="text-2xl font-black italic tracking-tight">Nova Proposta</h2>
+          <p className="text-xs text-muted-foreground dark:text-slate-300">Inicie um novo processo comercial selecionando o cliente.</p>
         </div>
 
         <form onSubmit={onSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">Selecionar Empresa</Label>
+            <Label className="form-field-label">Selecionar Empresa</Label>
             <select
               required
               value={selectedEnterpriseId}
               onChange={(e) => onSelectedEnterpriseIdChange(e.target.value)}
-              className="w-full appearance-none rounded-xl border border-transparent bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all focus:border-climbe-primary/40 focus:bg-white focus:ring-2 focus:ring-climbe-primary/40"
+              className="form-field-select"
             >
               <option value="">Selecione uma empresa...</option>
               {enterprises.map((enterprise) => (
@@ -52,12 +52,12 @@ export function PropostaModal({
             </select>
           </div>
 
-          <div className="space-y-2 rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div className="space-y-2 rounded-2xl border border-border bg-muted/50 p-4 dark:border-white/10 dark:bg-white/5">
             <div className="flex items-center gap-2 text-climbe-primary">
               <User size={14} />
               <span className="text-[10px] font-black uppercase tracking-widest">Responsável</span>
             </div>
-            <p className="text-xs font-bold italic text-slate-200">{responsibleName || 'Usuário atual'}</p>
+            <p className="text-xs font-bold italic text-foreground dark:text-slate-200">{responsibleName || 'Usuário atual'}</p>
           </div>
 
           <div className="flex gap-3 pt-4">

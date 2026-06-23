@@ -720,27 +720,27 @@ export function PropostasPage() {
       <Modal
         isOpen={isCommercialProposalModalOpen}
         onClose={() => setIsCommercialProposalModalOpen(false)}
-        className="max-w-lg bg-climbe-secondary text-white"
+        className="form-modal-shell max-w-lg"
       >
         <div className="space-y-6">
           <div>
-            <h2 className="text-2xl font-black italic tracking-tight text-white">Enviar Proposta Comercial</h2>
-            <p className="text-xs text-slate-300">Anexe o arquivo comercial para registrar esta etapa da proposta.</p>
+            <h2 className="text-2xl font-black italic tracking-tight">Enviar Proposta Comercial</h2>
+            <p className="text-xs text-muted-foreground dark:text-slate-300">Anexe o arquivo comercial para registrar esta etapa da proposta.</p>
           </div>
 
           <form onSubmit={handleCommercialProposalSubmit} className="space-y-5">
-            <div className="rounded-xl bg-gray-50 p-4 text-sm">
-              <span className="block text-[10px] font-black uppercase tracking-widest text-gray-400">Empresa</span>
-              <strong className="text-climbe-secondary">{selectedProposal?.enterpriseName || '--'}</strong>
+            <div className="rounded-xl border border-border bg-muted/50 p-4 text-sm dark:bg-gray-50">
+              <span className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground">Empresa</span>
+              <strong className="text-foreground dark:text-climbe-secondary">{selectedProposal?.enterpriseName || '--'}</strong>
             </div>
 
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">Arquivo da Proposta</Label>
+              <Label className="form-field-label">Arquivo da Proposta</Label>
               <Input
                 required
                 type="file"
                 onChange={(event) => setCommercialProposalFile(event.target.files?.[0] || null)}
-                className="bg-white text-slate-900 file:mr-4 file:rounded-lg file:border-0 file:bg-climbe-primary file:px-3 file:py-1 file:text-xs file:font-black file:text-climbe-secondary"
+                className="form-field-control file:mr-4 file:rounded-lg file:border-0 file:bg-climbe-primary file:px-3 file:py-1 file:text-xs file:font-black file:text-climbe-secondary"
               />
             </div>
 
@@ -775,22 +775,22 @@ export function PropostasPage() {
       <Modal
         isOpen={isDocumentChecklistModalOpen}
         onClose={() => setIsDocumentChecklistModalOpen(false)}
-        className="max-h-[90vh] max-w-3xl overflow-y-auto bg-climbe-secondary text-white"
+        className="form-modal-shell max-h-[90vh] max-w-3xl overflow-y-auto"
       >
         <div className="space-y-6">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-climbe-primary">Checklist documental</p>
-            <h2 className="text-2xl font-black italic tracking-tight text-white">
+            <h2 className="text-2xl font-black italic tracking-tight">
               Proposta #{selectedProposal?.id}
             </h2>
-            <p className="text-xs text-slate-300">
+            <p className="text-xs text-muted-foreground dark:text-slate-300">
               Solicite formalmente os documentos da empresa, acompanhe o envio e registre a validacao do analista.
             </p>
           </div>
 
-          <div className="rounded-2xl bg-white/5 p-4">
-            <span className="block text-[10px] font-black uppercase tracking-widest text-slate-300">Empresa</span>
-            <strong className="text-sm italic text-white">{selectedProposal?.enterpriseName || '--'}</strong>
+          <div className="rounded-2xl border border-border bg-muted/50 p-4 dark:bg-white/5">
+            <span className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground dark:text-slate-300">Empresa</span>
+            <strong className="text-sm italic text-foreground dark:text-white">{selectedProposal?.enterpriseName || '--'}</strong>
           </div>
 
           {proposalActionError && (
@@ -804,26 +804,26 @@ export function PropostasPage() {
               <Loader2 className="h-8 w-8 animate-spin text-climbe-primary" />
             </div>
           ) : documentRequirements.length === 0 ? (
-            <div className="space-y-5 rounded-3xl border border-white/10 bg-white/5 p-5">
+            <div className="space-y-5 rounded-3xl border border-border bg-muted/40 p-5 dark:border-white/10 dark:bg-white/5">
               <div>
-                <h3 className="text-sm font-black uppercase tracking-widest text-white">Solicitar documentos</h3>
-                <p className="text-xs text-slate-300">
+                <h3 className="text-sm font-black uppercase tracking-widest text-foreground dark:text-white">Solicitar documentos</h3>
+                <p className="text-xs text-muted-foreground dark:text-slate-300">
                   Ao criar a solicitacao, o backend registra o checklist e dispara a notificacao formal para a empresa.
                 </p>
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">Prazo para envio</Label>
+                <Label className="form-field-label">Prazo para envio</Label>
                 <Input
                   type="date"
                   value={documentChecklistDeadline}
                   onChange={(event) => setDocumentChecklistDeadline(event.target.value)}
-                  className="bg-white text-slate-900"
+                  className="form-field-control"
                 />
               </div>
 
               <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">Documentos exigidos</Label>
+                <Label className="form-field-label">Documentos exigidos</Label>
                 <div className="grid gap-2 sm:grid-cols-2">
                   {documentRequirementTypes.map((type) => (
                     <label
@@ -951,41 +951,41 @@ export function PropostasPage() {
       <Modal
         isOpen={isDetailsModalOpen}
         onClose={() => setIsDetailsModalOpen(false)}
-        className="max-w-lg bg-climbe-secondary text-white"
+        className="form-modal-shell max-w-lg"
       >
         <div className="space-y-6">
           <div>
-            <h2 className="text-2xl font-black italic tracking-tight text-white">Detalhes da Proposta</h2>
-            <p className="text-xs text-slate-300">Resumo dos dados cadastrados para acompanhamento comercial.</p>
+            <h2 className="text-2xl font-black italic tracking-tight">Detalhes da Proposta</h2>
+            <p className="text-xs text-muted-foreground dark:text-slate-300">Resumo dos dados cadastrados para acompanhamento comercial.</p>
           </div>
 
           <div className="grid gap-3 text-sm">
-            <div className="rounded-xl bg-gray-50 p-4">
-              <span className="block text-[10px] font-black uppercase tracking-widest text-gray-400">Empresa</span>
-              <strong className="text-climbe-secondary">{selectedProposal?.enterpriseName || '--'}</strong>
+            <div className="rounded-xl border border-border bg-muted/50 p-4">
+              <span className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground">Empresa</span>
+              <strong className="text-foreground">{selectedProposal?.enterpriseName || '--'}</strong>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-xl bg-gray-50 p-4">
-                <span className="block text-[10px] font-black uppercase tracking-widest text-gray-400">Criado por</span>
-                <strong className="text-climbe-secondary">{selectedProposal?.userName || '--'}</strong>
+              <div className="rounded-xl border border-border bg-muted/50 p-4">
+                <span className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground">Criado por</span>
+                <strong className="text-foreground">{selectedProposal?.userName || '--'}</strong>
               </div>
 
-              <div className="rounded-xl bg-gray-50 p-4">
-                <span className="block text-[10px] font-black uppercase tracking-widest text-gray-400">Analista</span>
-                <strong className="text-climbe-secondary">{selectedProposal?.responsibleAnalystName || 'Pendente'}</strong>
+              <div className="rounded-xl border border-border bg-muted/50 p-4">
+                <span className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground">Analista</span>
+                <strong className="text-foreground">{selectedProposal?.responsibleAnalystName || 'Pendente'}</strong>
               </div>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-xl bg-gray-50 p-4">
-                <span className="block text-[10px] font-black uppercase tracking-widest text-gray-400">Status</span>
-                <strong className="text-climbe-secondary">{getStatusLabel(selectedProposal?.status)}</strong>
+              <div className="rounded-xl border border-border bg-muted/50 p-4">
+                <span className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground">Status</span>
+                <strong className="text-foreground">{getStatusLabel(selectedProposal?.status)}</strong>
               </div>
 
-              <div className="rounded-xl bg-gray-50 p-4">
-                <span className="block text-[10px] font-black uppercase tracking-widest text-gray-400">Data</span>
-                <strong className="text-climbe-secondary">
+              <div className="rounded-xl border border-border bg-muted/50 p-4">
+                <span className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground">Data</span>
+                <strong className="text-foreground">
                   {selectedProposal?.createdAt ? format(new Date(selectedProposal.createdAt), 'dd/MM/yyyy', { locale: ptBR }) : '--'}
                 </strong>
               </div>

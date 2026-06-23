@@ -165,6 +165,79 @@
   .surface-muted {
     @apply rounded-2xl border border-border bg-muted text-muted-foreground;
   }
+
+  /* Modal de empresa — contraste reforçado em ambos os temas */
+  .form-modal-empresa {
+    @apply !border !border-slate-200 !text-slate-900 shadow-xl;
+    background-color: #ffffff !important;
+  }
+
+  .dark .form-modal-empresa {
+    @apply !border-transparent !text-white shadow-2xl;
+    background-color: rgb(var(--climbe-secondary-rgb)) !important;
+  }
+
+  .form-modal-shell {
+    @apply !border !border-slate-200 !text-slate-900 shadow-xl;
+    background-color: #ffffff !important;
+  }
+
+  .dark .form-modal-shell {
+    @apply !border-transparent !text-white shadow-2xl;
+    background-color: rgb(var(--climbe-secondary-rgb)) !important;
+  }
+
+  .form-field-label {
+    @apply ml-0.5 block text-[10px] font-black uppercase tracking-widest text-slate-800;
+  }
+
+  .dark .form-field-label {
+    color: #ffffff !important;
+  }
+
+  .form-section-title {
+    @apply text-xs font-black uppercase tracking-widest text-climbe-primary;
+  }
+
+  .form-field-hint {
+    @apply text-[10px] text-slate-500;
+  }
+
+  .dark .form-field-hint {
+    @apply text-slate-300;
+  }
+
+  .form-field-control {
+    @apply border border-slate-300 bg-slate-50 text-slate-900;
+    @apply placeholder:font-normal placeholder:italic placeholder:text-slate-400/30;
+    @apply focus:border-climbe-primary/60 focus:ring-climbe-primary/15;
+  }
+
+  .form-field-control:focus {
+    background-color: #ffffff;
+  }
+
+  .dark .form-field-control {
+    @apply border-slate-600/35 text-slate-900;
+    @apply placeholder:text-slate-500/30;
+    @apply focus:border-climbe-primary/50;
+    background-color: #ffffff;
+  }
+
+  .form-field-select {
+    @apply w-full appearance-none rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition-all;
+    @apply focus:border-climbe-primary/60 focus:ring-2 focus:ring-climbe-primary/15;
+  }
+
+  .form-field-select:focus {
+    background-color: #ffffff;
+  }
+
+  .dark .form-field-select {
+    @apply border-slate-600/35 text-slate-900;
+    @apply focus:border-climbe-primary/50;
+    background-color: #ffffff;
+  }
 }
 
 @layer utilities {

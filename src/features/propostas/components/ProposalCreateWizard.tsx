@@ -86,13 +86,13 @@ export function ProposalCreateWizard({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} className="max-w-lg bg-climbe-secondary text-white">
+    <Modal isOpen={isOpen} onClose={handleClose} className="form-modal-shell max-w-lg">
       <div className="space-y-6">
         {/* Header */}
         <div>
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-climbe-primary">Nova proposta</p>
-          <h2 className="text-2xl font-black italic tracking-tight text-white">Criar Proposta</h2>
-          <p className="text-xs text-slate-300">Siga os passos para iniciar o fluxo de onboarding.</p>
+          <h2 className="text-2xl font-black italic tracking-tight">Criar Proposta</h2>
+          <p className="text-xs text-muted-foreground dark:text-slate-300">Siga os passos para iniciar o fluxo de onboarding.</p>
         </div>
 
         {/* Step progress */}
@@ -125,14 +125,14 @@ export function ProposalCreateWizard({
         <div className="min-h-[160px]">
           {step === 'empresa' && (
             <div className="space-y-4">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">
+              <Label className="form-field-label">
                 Selecionar Empresa *
               </Label>
               <select
                 required
                 value={enterpriseId}
                 onChange={e => setEnterpriseId(e.target.value)}
-                className="w-full appearance-none rounded-xl border border-transparent bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all focus:border-climbe-primary/40 focus:ring-2 focus:ring-climbe-primary/40"
+                className="form-field-select"
               >
                 <option value="">Selecione uma empresa...</option>
                 {enterprises.map(e => (
@@ -149,13 +149,13 @@ export function ProposalCreateWizard({
 
           {step === 'analista' && (
             <div className="space-y-4">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">
+              <Label className="form-field-label">
                 Analista Responsável <span className="text-slate-400 normal-case font-medium">(opcional)</span>
               </Label>
               <select
                 value={analystId}
                 onChange={e => setAnalystId(e.target.value)}
-                className="w-full appearance-none rounded-xl border border-transparent bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all focus:border-climbe-primary/40 focus:ring-2 focus:ring-climbe-primary/40"
+                className="form-field-select"
               >
                 <option value="">Atribuir depois...</option>
                 {users.map(u => (
@@ -170,7 +170,7 @@ export function ProposalCreateWizard({
 
           {step === 'reuniao' && (
             <div className="space-y-4">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">
+              <Label className="form-field-label">
                 Reunião Comercial <span className="text-slate-400 normal-case font-medium">(opcional)</span>
               </Label>
               <div className="grid grid-cols-2 gap-3">
@@ -180,7 +180,7 @@ export function ProposalCreateWizard({
                     type="date"
                     value={meetingDate}
                     onChange={e => setMeetingDate(e.target.value)}
-                    className="bg-white text-slate-900"
+                    className="form-field-control"
                   />
                 </div>
                 <div>
@@ -189,7 +189,7 @@ export function ProposalCreateWizard({
                     type="time"
                     value={meetingTime}
                     onChange={e => setMeetingTime(e.target.value)}
-                    className="bg-white text-slate-900"
+                    className="form-field-control"
                   />
                 </div>
               </div>

@@ -13,8 +13,8 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         type={type}
         className={cn(
           'flex h-12 w-full rounded-2xl border px-5 py-3 text-sm font-light transition-all',
-          'bg-gray-50 text-slate-900 placeholder:text-gray-400',
-          'dark:bg-slate-800/80 dark:text-slate-100 dark:placeholder:text-slate-400',
+          'placeholder:font-normal placeholder:italic placeholder:text-gray-400/30',
+          'dark:bg-slate-800/80 dark:text-slate-100 dark:placeholder:text-slate-500/30 dark:placeholder:italic',
           'file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-slate-900 dark:file:text-slate-100',
           'focus:outline-none disabled:cursor-not-allowed disabled:opacity-50',
           {

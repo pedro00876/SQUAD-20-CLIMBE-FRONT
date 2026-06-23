@@ -183,21 +183,21 @@ export function RelatoriosPage() {
         </div>
       )}
 
-      <Modal isOpen={isUploadOpen} onClose={() => setIsUploadOpen(false)} className="max-w-lg bg-climbe-secondary text-white">
+      <Modal isOpen={isUploadOpen} onClose={() => setIsUploadOpen(false)} className="form-modal-shell max-w-lg">
         <div className="space-y-6">
           <div>
-            <h2 className="text-2xl font-black italic tracking-tight text-white">Upload de Relatório</h2>
-            <p className="text-xs text-slate-300">Selecione o contrato e anexe um arquivo em formato PDF.</p>
+            <h2 className="text-2xl font-black italic tracking-tight">Upload de Relatório</h2>
+            <p className="text-xs text-muted-foreground dark:text-slate-300">Selecione o contrato e anexe um arquivo em formato PDF.</p>
           </div>
 
           <form onSubmit={handleUploadSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">Contrato</Label>
+              <Label className="form-field-label">Contrato</Label>
               <select
                 required
                 value={selectedContractId}
                 onChange={(event) => setSelectedContractId(event.target.value)}
-                className="w-full rounded-xl border border-transparent bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all focus:border-climbe-primary/40 focus:ring-2 focus:ring-climbe-primary/40"
+                className="form-field-select"
               >
                 <option value="">Selecione um contrato...</option>
                 {contracts.map((contract) => (
@@ -210,13 +210,13 @@ export function RelatoriosPage() {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200">Arquivo PDF</Label>
+              <Label className="form-field-label">Arquivo PDF</Label>
               <Input
                 required
                 type="file"
                 accept="application/pdf,.pdf"
                 onChange={handleFileChange}
-                className="bg-white text-slate-900 file:mr-4 file:rounded-lg file:border-0 file:bg-climbe-primary file:px-3 file:py-1 file:text-xs file:font-black file:text-climbe-secondary"
+                className="form-field-control file:mr-4 file:rounded-lg file:border-0 file:bg-climbe-primary file:px-3 file:py-1 file:text-xs file:font-black file:text-climbe-secondary"
               />
             </div>
 
